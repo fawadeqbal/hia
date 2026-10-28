@@ -1,0 +1,29 @@
+# Builds a NestJS app from the monorepo.
+# docker build -f docker/Dockerfile.node --build-arg APP=api -t ecommerce-api .
+# docker build -f docker/Dockerfile.node --build-arg APP=worker -t ecommerce-worker .
+ARG NODE_VERSION=22-alpine
+
+FROM node:${NODE_VERSION} AS base
+RUN apk add --no-cache libc6-compat openssl && corepack enable
+WORKDIR /app
+
+FROM base AS pruner
+ARG APP
+COPY . .
+RUN pnpm dlx turbo@^2 prune @ecommerce/${APP} --docker
+
+FROM base AS builder
+ARG APP
+COPY --from=pruner /app/out/json/ .
+RUN pnpm install --frozen-lockfile
+COPY --from=pruner /app/out/full/ .
+RUN pnpm turbo run build --filter=@ecommerce/${APP}...
+RUN pnpm prune --prod
+
+FROM base AS runner
+ARG APP
+ENV NODE_ENV=production
+COPY --from=builder /app .
+WORKDIR /app/apps/${APP}
+EXPOSE 4000
+CMD ["node", "dist/main.js"]

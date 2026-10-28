@@ -1,0 +1,22 @@
+/** Example values for previews and test sends from the admin template editor. */
+export const SAMPLE_EMAIL_DATA: Record<string, unknown> = {
+  firstName: 'Sana',
+  storeName: 'Ecommerce',
+  orderNumber: 'ORD-261012-ABCDE',
+  total: 'Rs 4,999.00',
+  trackingNumber: 'TCS123456789',
+  trackingUrl: 'https://example.com/track/TCS123456789',
+  rmaNumber: 'RMA-261012-XYZ',
+  productName: 'Samsung Galaxy A55',
+  vendorName: 'Demo Electronics',
+  code: '482913',
+  itemCount: 2,
+  points: 120,
+  amount: 'Rs 1,000.00',
+  cartUrl: 'http://localhost:3000/cart',
+  orderUrl: 'http://localhost:3000/account/orders',
+  verifyUrl: 'http://localhost:3000/verify-email?token=sample',
+  resetUrl: 'http://localhost:3000/reset-password?token=sample',
+  ctaUrl: 'http://localhost:3000',
+  unsubscribeUrl: 'http://localhost:3000/unsubscribe',
+};

@@ -1,0 +1,12 @@
+pnpm install
+docker compose down -v
+pnpm infra:up
+pnpm db:migrate --name init
+pnpm db:seed
+pnpm dev
+
+
+Done: 0 products added, 194 already there (updated).
+Stores: Demo Electronics (vendor@example.com) and Style Street (style@example.com), password Vendor@12345
+Done: 3 customers, 12 orders, 3 returns, 12 reviews, 8 questions.
+Customers: ali@example.com, ayesha@example.com, bilal@example.com — password Customer@12345

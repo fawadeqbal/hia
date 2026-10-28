@@ -1,0 +1,23 @@
+{
+  "name": "@ecommerce/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Typed client for the NestJS API, shared by web, admin and vendor (consumed as source)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "clean": "rimraf .turbo"
+  },
+  "dependencies": {
+    "@ecommerce/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@ecommerce/config": "workspace:*",
+    "typescript": "^5.7.3",
+    "eslint": "^9.18.0",
+    "rimraf": "^6.0.1"
+  }
+}

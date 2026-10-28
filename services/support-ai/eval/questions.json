@@ -1,0 +1,22 @@
+[
+  {"q": "How can I track my order?", "expect": ["Tracking an Order"]},
+  {"q": "I ordered as a guest, how do I see my order?", "expect": ["Tracking an Order"]},
+  {"q": "Can I cancel my order after it has shipped?", "expect": ["Cancelling an Order"]},
+  {"q": "What does Packed mean?", "expect": ["Order Status Meanings"]},
+  {"q": "Why did my order arrive in two parcels?", "expect": ["About the Marketplace"]},
+  {"q": "Which payment methods do you accept?", "expect": ["Payment Methods", "Payment Options and Limits"]},
+  {"q": "Can I pay cash on delivery?", "expect": ["Payment Methods", "Payment Options and Limits"]},
+  {"q": "My payment failed, what now?", "expect": ["Payment Failed or Not Completed"]},
+  {"q": "How do I return a product?", "expect": ["Returns"]},
+  {"q": "How many days do I have to return something?", "expect": ["Return Window", "Returns"]},
+  {"q": "When will I get my refund?", "expect": ["Refunds"]},
+  {"q": "How much is shipping?", "expect": ["Shipping Charges"]},
+  {"q": "How do I use a coupon code?", "expect": ["Coupons and Gift Cards"]},
+  {"q": "How do loyalty points work?", "expect": ["Loyalty Points", "Loyalty Points Rules"]},
+  {"q": "I forgot my password", "expect": ["Forgot Password"]},
+  {"q": "Where can I download my invoice?", "expect": ["Invoices"]},
+  {"q": "How do I stop marketing emails?", "expect": ["Wishlist, Addresses and Emails"]},
+  {"q": "I want to sell my products on your site", "expect": ["Selling on the Marketplace"]},
+  {"q": "Refund kab milega?", "expect": ["Refunds"]},
+  {"q": "Order cancel kaise karun?", "expect": ["Cancelling an Order"]}
+]

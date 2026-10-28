@@ -1,0 +1,68 @@
+# Deploys main to the shared Oracle server (same steps as `bash deploy/server.sh`).
+#
+# Repository → Settings → Secrets and variables → Actions → Secrets:
+#   SERVER_HOST      149.118.50.111
+#   SERVER_USER      opc
+#   SERVER_SSH_KEY   private key of the deploy key (its .pub is in the server's ~/.ssh/authorized_keys)
+#   ENV_SERVER_FILE  optional: full contents of .env.server (when set, it replaces the server's copy)
+#
+# The server keeps its own ~/ecommerce/.env.server, so ENV_SERVER_FILE is only needed to change settings from GitHub.
+name: Deploy to server
+
+# Runs after CI passes on main (or by hand from the Actions tab).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Set up SSH
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        run: |
+          [ -n "$SERVER_HOST" ] && [ -n "$SERVER_SSH_KEY" ] || { echo "SERVER_HOST / SERVER_SSH_KEY secrets are missing"; exit 1; }
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$SERVER_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          printf 'Host server\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/deploy_key\n  ServerAliveInterval 30\n' \
+            "$SERVER_HOST" "${{ secrets.SERVER_USER }}" > ~/.ssh/config
+
+      - name: Upload code
+        run: |
+          tar --exclude=node_modules --exclude=.next --exclude=dist --exclude=.turbo --exclude=.git \
+              --exclude='.env*' --exclude='*.exe' --exclude=__pycache__ --exclude=.venv --exclude=coverage \
+              -czf /tmp/ecommerce.tgz .
+          ssh server "mkdir -p ~/ecommerce"
+          scp -q /tmp/ecommerce.tgz server:~/ecommerce-upload.tgz
+          ssh server "tar xzf ~/ecommerce-upload.tgz -C ~/ecommerce && rm ~/ecommerce-upload.tgz"
+
+      - name: Upload settings (optional)
+        env:
+          ENV_SERVER_FILE: ${{ secrets.ENV_SERVER_FILE }}
+        run: |
+          [ -n "$ENV_SERVER_FILE" ] || { echo "No ENV_SERVER_FILE secret - keeping the server's .env.server"; exit 0; }
+          printf '%s\n' "$ENV_SERVER_FILE" > /tmp/env.server
+          scp -q /tmp/env.server server:~/ecommerce/.env.server.new
+          ssh server "chmod 600 ~/ecommerce/.env.server.new"
+          rm /tmp/env.server
+
+      - name: Build and start on the server
+        run: ssh server "bash ~/ecommerce/deploy/server.sh --remote"

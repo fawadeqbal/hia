@@ -1,0 +1,17 @@
+{
+  "extends": "@ecommerce/config/tsconfig/nestjs.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "types": [
+      "node",
+      "jest"
+    ],
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false
+  },
+  "include": [
+    "src"
+  ]
+}

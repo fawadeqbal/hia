@@ -1,0 +1,43 @@
+{
+  "name": "@ecommerce/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Customer-facing storefront (SSR/ISR, SEO)",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf .next .turbo",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@ecommerce/api-client": "workspace:*",
+    "@ecommerce/types": "workspace:*",
+    "@ecommerce/ui": "workspace:*",
+    "@hookform/resolvers": "^3.10.0",
+    "@tanstack/react-query": "^5.64.2",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "react-markdown": "9.0.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@ecommerce/config": "workspace:*",
+    "@eslint/eslintrc": "^3.2.0",
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "^15.1.6",
+    "postcss": "^8.5.1",
+    "rimraf": "^6.0.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3"
+  }
+}

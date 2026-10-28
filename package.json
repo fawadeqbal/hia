@@ -1,0 +1,40 @@
+{
+  "name": "ecommerce-platform",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@ecommerce/web...",
+    "dev:admin": "turbo run dev --filter=@ecommerce/admin...",
+    "dev:vendor": "turbo run dev --filter=@ecommerce/vendor...",
+    "dev:api": "turbo run dev --filter=@ecommerce/api... --filter=@ecommerce/worker...",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,yml,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md,yml,css}\"",
+    "clean": "turbo run clean && rimraf node_modules .turbo",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "db:generate": "pnpm --filter @ecommerce/database db:generate",
+    "db:migrate": "pnpm --filter @ecommerce/database db:migrate",
+    "db:deploy": "pnpm --filter @ecommerce/database db:deploy",
+    "db:push": "pnpm --filter @ecommerce/database db:push",
+    "db:seed": "pnpm --filter @ecommerce/database db:seed",
+    "db:studio": "pnpm --filter @ecommerce/database db:studio",
+    "db:reset": "pnpm --filter @ecommerce/database db:reset",
+    "email:preview": "pnpm --filter @ecommerce/email-templates preview"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1"
+  }
+}

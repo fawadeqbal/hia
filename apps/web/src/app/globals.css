@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ KADAM tokens
+   Colours, radii and motion live in tailwind.config.ts. The CSS variables below are for
+   the few places plain CSS needs them (scrollbars, focus ring, sticky offsets). */
+:root {
+  /* --font-archivo is set by next/font in app/layout.tsx (variable weight + width axes). */
+  --font-sans:
+    var(--font-archivo), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ink: 23 21 19;
+  --clay: 182 70 28;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Height of the visible part of the sticky header; kept up to date by <HeaderShell />. */
+  --header-h: 112px;
+}
+
+body {
+  @apply bg-gray-50 text-[15px] leading-[1.45] text-gray-900 antialiased;
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+/* Respect users who turn animations off. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  /* In-page links and focused fields land below the sticky header, not under it. */
+  scroll-padding-top: calc(var(--header-h) + 16px);
+}
+
+@layer base {
+  /* Headings use the condensed cut of Archivo: tall, tight, confident. */
+  h1,
+  h2 {
+    font-stretch: 82%;
+  }
+  h3 {
+    font-stretch: 92%;
+  }
+
+  /* Interaction feel: smooth colour changes, a small press on real buttons, a clear focus ring. */
+  button,
+  a {
+    transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+    transition-duration: 160ms;
+    transition-timing-function: var(--ease-out);
+  }
+  button:not(:disabled):active {
+    transform: scale(0.98);
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--ink));
+    outline-offset: 2px;
+  }
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+  }
+  ::selection {
+    background: theme('colors.accent.DEFAULT');
+    color: rgb(var(--ink));
+  }
+}
+
+@layer components {
+  /* Big condensed uppercase headline (hero, section titles, campaign tiles). */
+  .type-display {
+    font-weight: 800;
+    font-stretch: 68%;
+    text-transform: uppercase;
+    line-height: 0.9;
+    letter-spacing: -0.005em;
+  }
+  /* Small uppercase label above titles, on badges and in menus. */
+  .type-eyebrow {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  /* Underline that grows from the left on hover (text links in menus and footers). */
+  .link-grow {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    transition:
+      background-size 0.35s var(--ease-out),
+      color 0.16s var(--ease-out);
+  }
+  .link-grow:hover,
+  .link-grow:focus-visible {
+    background-size: 100% 1px;
+  }
+  /* Loading placeholder with a moving sheen. */
+  .skeleton {
+    background: linear-gradient(
+        90deg,
+        theme('colors.gray.100') 0%,
+        theme('colors.gray.200') 50%,
+        theme('colors.gray.100') 100%
+      )
+      0 0 / 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+}
+
+@keyframes toast-time {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@layer utilities {
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* safety net: nothing may widen the page sideways on phones */
+html,
+body {
+  overflow-x: clip;
+}
+
+@layer base {
+  /* ---- Scrollbars: thin ink thumb that fades in while the area is hovered ---- */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  *:hover,
+  *:focus-within {
+    scrollbar-color: rgb(var(--ink) / 0.28) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: transparent;
+    transition: background 0.3s ease;
+  }
+  *:hover::-webkit-scrollbar-thumb,
+  *:focus-within::-webkit-scrollbar-thumb {
+    background: rgb(var(--ink) / 0.28);
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--ink) / 0.5);
+  }
+  /* The page itself scrolls without a visible bar, so nothing cuts into the full-width header. */
+  html {
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
+}

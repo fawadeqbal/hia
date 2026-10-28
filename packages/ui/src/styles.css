@@ -1,0 +1,4 @@
+/* Shared base styles imported by each app's globals.css (optional). */
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}

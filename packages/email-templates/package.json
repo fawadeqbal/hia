@@ -1,0 +1,41 @@
+{
+  "name": "@ecommerce/email-templates",
+  "version": "0.0.0",
+  "private": true,
+  "description": "React Email templates + renderer for every platform email",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "preview": "email dev --dir src/templates --port 3003",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "clean": "rimraf dist .turbo"
+  },
+  "dependencies": {
+    "@ecommerce/types": "workspace:*",
+    "@react-email/components": "^0.0.32",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@ecommerce/config": "workspace:*",
+    "react-email": "^3.0.6",
+    "typescript": "^5.7.3",
+    "eslint": "^9.18.0",
+    "rimraf": "^6.0.1",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "@types/node": "^22.10.7"
+  }
+}
