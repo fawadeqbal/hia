@@ -4,7 +4,7 @@ import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: { default: 'Admin', template: '%s | Admin' },
+  title: { default: 'HIA Furniture Admin', template: '%s | HIA Admin' },
   robots: { index: false, follow: false },
 };
 

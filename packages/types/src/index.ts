@@ -33,6 +33,8 @@ export * from './seo/seo';
 export * from './orders/documents';
 export * from './orders/tools';
 export * from './support/assistant';
+export * from './support/inquiry';
+export * from './schemas/inquiry.schema';
 export * from './schemas/seo.schema';
 export * from './schemas/common';
 export * from './schemas/auth.schema';

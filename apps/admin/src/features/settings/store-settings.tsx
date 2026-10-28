@@ -127,7 +127,7 @@ export function StoreSettings() {
     <div className="mx-auto max-w-4xl p-6">
       <PageHeader
         title="Store settings"
-        description="Store details, checkout, shipping, seller, returns, loyalty and customer-segment settings."
+        description="Shop details shown on the website, checkout, delivery, returns and reviews."
         actions={
           <Button
             loading={save.isPending}

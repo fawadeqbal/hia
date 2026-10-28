@@ -110,7 +110,7 @@ export function CategoryList() {
     <div className="mx-auto max-w-6xl p-6">
       <PageHeader
         title="Categories"
-        description="The category tree used for storefront navigation, filters and commission rules."
+        description="Product groups shown in the website menu and filters."
         actions={
           <Link href="/catalog/categories/new" className={buttonStyles()}>
             New category

@@ -74,6 +74,11 @@ export const queryKeys = {
     adminReviews: (params: object) => ['reviews', 'admin-reviews', params] as const,
     adminQuestions: (params: object) => ['reviews', 'admin-questions', params] as const,
   },
+  inquiries: {
+    all: ['inquiries'] as const,
+    adminList: (params: object) => ['inquiries', 'admin-list', params] as const,
+    detail: (id: string) => ['inquiries', 'detail', id] as const,
+  },
   returns: {
     all: ['returns'] as const,
     mine: (params: object) => ['returns', 'mine', params] as const,

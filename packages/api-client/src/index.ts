@@ -16,6 +16,7 @@ export { addressesApi, checkoutApi, ordersApi } from './endpoints/orders';
 export { paymentsApi } from './endpoints/payments';
 export { shippingApi } from './endpoints/shipping';
 export { returnsApi } from './endpoints/returns';
+export { inquiriesApi, type InquiryListQuery } from './endpoints/inquiries';
 export { reviewsApi } from './endpoints/reviews';
 export { wishlistApi } from './endpoints/wishlist';
 export { promotionsApi } from './endpoints/promotions';

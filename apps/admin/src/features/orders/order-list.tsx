@@ -85,7 +85,7 @@ export function AdminOrderList() {
       key: 'items',
       header: 'Items',
       align: 'right',
-      cell: (o) => `${o.itemCount}${o.vendorCount > 1 ? ` (${o.vendorCount} sellers)` : ''}`,
+      cell: (o) => o.itemCount,
     },
     {
       key: 'payment',
@@ -110,7 +110,7 @@ export function AdminOrderList() {
     <div className="mx-auto max-w-6xl p-6">
       <PageHeader
         title="Orders"
-        description="Every order across all sellers."
+        description="Every order placed on the website or added by you."
         actions={
           <Link href="/orders/new" className={buttonStyles()}>
             Manual order

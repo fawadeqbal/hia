@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { LowStockReport } from '@/features/inventory/low-stock-report';
+import { InventoryPage } from '@/features/inventory/inventory-page';
 
-export const metadata: Metadata = { title: 'Inventory' };
+export const metadata: Metadata = { title: 'Stock' };
 
 export default function Page() {
-  return <LowStockReport />;
+  return <InventoryPage />;
 }

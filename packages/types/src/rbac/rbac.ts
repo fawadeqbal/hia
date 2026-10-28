@@ -5,7 +5,7 @@
  */
 export const ADMIN_AREAS = [
   { key: 'catalog', label: 'Catalog & products', routes: ['catalog', 'products'] },
-  { key: 'orders', label: 'Orders', routes: ['orders'] },
+  { key: 'orders', label: 'Orders & inquiries', routes: ['orders', 'inquiries'] },
   { key: 'returns', label: 'Returns', routes: ['returns'] },
   { key: 'customers', label: 'Customers', routes: ['customers'] },
   { key: 'vendors', label: 'Sellers & payouts', routes: ['vendors', 'payouts'] },

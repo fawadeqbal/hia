@@ -158,7 +158,6 @@ export function ReturnDetail({ id }: { id: string }) {
             items={[
               { label: 'Customer', value: r.customer.name },
               { label: 'Email', value: r.customer.email },
-              { label: 'Seller', value: r.vendor?.name ?? null },
               { label: 'Items value', value: money(r.itemsTotal) },
               {
                 label: 'Refund method',

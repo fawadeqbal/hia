@@ -75,7 +75,7 @@ export function CouponList() {
     <div className="mx-auto max-w-6xl p-6">
       <PageHeader
         title="Coupons"
-        description="Store-wide codes (paid by the store). Sellers create their own coupons in the seller center."
+        description="Discount codes customers enter at checkout."
         actions={
           <Link href="/promotions/coupons/new" className={buttonStyles()}>
             New coupon

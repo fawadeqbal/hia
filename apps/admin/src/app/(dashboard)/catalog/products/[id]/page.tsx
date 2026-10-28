@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { AdminProductDetail } from '@/features/products/product-detail';
+import { ProductEditor } from '@/features/products/product-editor';
 
-export const metadata: Metadata = { title: 'Product' };
+export const metadata: Metadata = { title: 'Edit product' };
 
-export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <AdminProductDetail id={id} />;
+  return <ProductEditor id={id} />;
 }

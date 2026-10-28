@@ -168,7 +168,7 @@ export function ZoneForm({ zone }: { zone?: ShippingZoneDto }) {
                   error={e?.estimatedDays?.message}
                 />
                 <Input
-                  label="Free when seller subtotal ≥"
+                  label="Free when order subtotal ≥"
                   type="number"
                   step="0.01"
                   {...register(`rates.${i}.freeAbove`, optionalNumber)}

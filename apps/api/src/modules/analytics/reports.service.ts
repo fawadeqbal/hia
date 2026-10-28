@@ -139,15 +139,29 @@ export class ReportsService {
   }
 
   async adminAttention(): Promise<AdminAttention> {
-    const [pendingVendors, productsInReview, openReturns, lowStock, ordersAwaitingSellers] =
-      await Promise.all([
+    const [
+      pendingVendors,
+      productsInReview,
+      openReturns,
+      lowStock,
+      ordersAwaitingSellers,
+      newInquiries,
+    ] = await Promise.all([
         this.prisma.vendor.count({ where: { status: 'PENDING' } }),
         this.prisma.product.count({ where: { status: 'PENDING_REVIEW', deletedAt: null } }),
         this.prisma.returnRequest.count({ where: { status: { in: [...OPEN_RETURN_STATUSES] } } }),
         this.lowStockCount(),
         this.prisma.vendorOrder.count({ where: { status: { in: ['PAID', 'COD_CONFIRMED'] } } }),
+        this.prisma.ticket.count({ where: { status: 'OPEN' } }),
       ]);
-    return { pendingVendors, productsInReview, openReturns, lowStock, ordersAwaitingSellers };
+    return {
+      pendingVendors,
+      productsInReview,
+      openReturns,
+      lowStock,
+      ordersAwaitingSellers,
+      newInquiries,
+    };
   }
 
   // ================================================================ vendor

@@ -50,7 +50,7 @@ export function CourierManager() {
         <div>
           <CardTitle>Couriers</CardTitle>
           <p className="text-sm text-gray-500">
-            Sellers pick one when marking an order shipped; customers get the tracking link.
+            Pick one when marking an order shipped; customers get the tracking link if it has one.
           </p>
         </div>
         <Button variant="outline" onClick={() => setEditing('new')}>
@@ -170,7 +170,7 @@ function CourierModal({ courier, onClose }: { courier?: CourierDto; onClose: () 
           {...register('trackingUrlTemplate')}
           error={errors.trackingUrlTemplate?.message}
         />
-        <Checkbox label="Active (sellers can choose it)" {...register('isActive')} />
+        <Checkbox label="Active" {...register('isActive')} />
       </form>
     </Modal>
   );

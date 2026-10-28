@@ -73,18 +73,9 @@ export function AdminDashboard() {
       />
 
       {attention.error ? <Alert tone="error">{attention.error.message}</Alert> : null}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <AttentionCard label="Seller applications" count={a?.pendingVendors} href="/vendors" />
-        <AttentionCard
-          label="Products to review"
-          count={a?.productsInReview}
-          href="/catalog/products"
-        />
-        <AttentionCard
-          label="Orders waiting for sellers"
-          count={a?.ordersAwaitingSellers}
-          href="/orders"
-        />
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <AttentionCard label="New orders to confirm" count={a?.ordersAwaitingSellers} href="/orders" />
+        <AttentionCard label="New inquiries" count={a?.newInquiries} href="/inquiries" />
         <AttentionCard label="Open returns" count={a?.openReturns} href="/returns" />
         <AttentionCard label="Low-stock items" count={a?.lowStock} href="/inventory" />
       </div>
@@ -95,7 +86,7 @@ export function AdminDashboard() {
         <>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <StatTile
-              label="Gross sales"
+              label="Sales"
               value={money(r.kpis.grossSales)}
               change={percentChange(r.kpis.grossSales, r.previous.grossSales)}
               changeLabel={vs}
@@ -113,9 +104,9 @@ export function AdminDashboard() {
               changeLabel={vs}
             />
             <StatTile
-              label="Commission earned"
-              value={money(r.kpis.commission)}
-              change={percentChange(r.kpis.commission, r.previous.commission)}
+              label="Items sold"
+              value={r.kpis.itemsSold}
+              change={percentChange(r.kpis.itemsSold, r.previous.itemsSold)}
               changeLabel={vs}
             />
           </div>

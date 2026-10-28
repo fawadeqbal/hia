@@ -31,7 +31,7 @@ export function SidebarShell({ children }: { children: ReactNode }) {
 
   return (
     <AppShell
-      brand="Admin"
+      brand="HIA Furniture"
       nav={filterNav(navigation, access)}
       activePath={pathname}
       renderLink={(item, className) => (

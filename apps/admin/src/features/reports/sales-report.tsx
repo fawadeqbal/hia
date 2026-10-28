@@ -36,7 +36,6 @@ function exportCsv(r: AdminSalesReport) {
     ['Items sold', k.itemsSold, r.previous.itemsSold],
     ['Discounts', k.discounts, r.previous.discounts],
     ['Shipping charged', k.shipping, r.previous.shipping],
-    ['Commission earned', k.commission, r.previous.commission],
     ['Refunds', k.refunds, r.previous.refunds],
     ['New customers', k.newCustomers, r.previous.newCustomers],
     ['Cancelled orders', k.cancelledOrders, r.previous.cancelledOrders],
@@ -47,8 +46,6 @@ function exportCsv(r: AdminSalesReport) {
     ['Top products', 'Quantity', 'Revenue'],
     ...r.topProducts.map((p) => [p.name, p.quantity, p.revenue]),
     [],
-    ['Top sellers', 'Orders', 'Sales', 'Commission'],
-    ...r.topVendors.map((v) => [v.name, v.orders, v.sales, v.commission]),
     [],
     ['Top categories', 'Quantity', 'Revenue'],
     ...r.topCategories.map((c) => [c.name, c.quantity, c.revenue]),
@@ -81,7 +78,7 @@ export function SalesReport() {
     <div className="mx-auto max-w-7xl p-6">
       <PageHeader
         title="Reports"
-        description="Sales across all sellers. Cancelled and unpaid online orders are not counted as sales."
+        description="Shop sales. Cancelled orders are not counted as sales."
         actions={
           <Button variant="outline" disabled={!r} onClick={() => r && exportCsv(r)}>
             Export CSV
@@ -133,12 +130,6 @@ export function SalesReport() {
               changeLabel={vs}
             />
             <StatTile
-              label="Commission earned"
-              value={money(r.kpis.commission)}
-              change={percentChange(r.kpis.commission, r.previous.commission)}
-              changeLabel={vs}
-            />
-            <StatTile
               label="Refunds"
               value={money(r.kpis.refunds)}
               change={percentChange(r.kpis.refunds, r.previous.refunds)}
@@ -179,7 +170,7 @@ export function SalesReport() {
             </Card>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardTitle className="mb-4">Top products</CardTitle>
               <BarList
@@ -188,17 +179,6 @@ export function SalesReport() {
                   label: p.name,
                   value: p.revenue,
                   display: `${money(p.revenue)} · ${p.quantity} sold`,
-                }))}
-              />
-            </Card>
-            <Card>
-              <CardTitle className="mb-4">Top sellers</CardTitle>
-              <BarList
-                items={r.topVendors.map((v) => ({
-                  key: v.vendorId,
-                  label: v.name,
-                  value: v.sales,
-                  display: `${money(v.sales)} · ${v.orders} orders`,
                 }))}
               />
             </Card>

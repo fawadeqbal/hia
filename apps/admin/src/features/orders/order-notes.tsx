@@ -58,7 +58,7 @@ export function OrderNotes({
               <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                 <span className="font-medium text-gray-700">{n.author.name}</span>
                 <Badge tone={n.author.kind === 'SELLER' ? 'blue' : 'gray'}>
-                  {n.author.kind === 'SELLER' ? 'Seller' : 'Staff'}
+                  {n.author.kind === 'SELLER' ? 'Shop' : 'Staff'}
                 </Badge>
                 {n.vendorName ? <span>· {n.vendorName}</span> : null}
                 <span>· {formatDateTime(n.createdAt)}</span>
@@ -108,7 +108,7 @@ export function OrderNotes({
       ) : null}
       <Checkbox
         label="Show to the customer"
-        description="Off = only staff and the seller see it."
+        description="Off = only staff see it."
         checked={visible}
         onChange={(e) => setVisible(e.target.checked)}
       />

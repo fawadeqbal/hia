@@ -63,7 +63,6 @@ export function ReturnList() {
           </Link>
           <p className="text-xs text-gray-500">
             Order {r.orderNumber}
-            {r.vendorName ? ` · ${r.vendorName}` : ''}
           </p>
         </div>
       ),
@@ -89,7 +88,7 @@ export function ReturnList() {
     <div className="mx-auto max-w-6xl p-6">
       <PageHeader
         title="Returns"
-        description="Every return across sellers. Sellers handle their own; you can step in at any stage."
+        description="Return requests from customers. Approve, receive the item, then refund."
       />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Tabs

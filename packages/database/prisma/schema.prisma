@@ -1478,7 +1478,12 @@ model Ticket {
   id         String          @id @default(cuid())
   number     String          @unique
   customerId String?
+  /// Contact details from the website inquiry form (Contact page). Email may be empty.
+  name       String?
+  phone      String?
   email      String
+  /// REPAIR | QUOTE | GENERAL — InquiryTopic in packages/types/src/support/inquiry.ts
+  topic      String          @default("GENERAL")
   subject    String
   status     TicketStatus    @default(OPEN)
   priority   TicketPriority  @default(MEDIUM)
@@ -1491,6 +1496,7 @@ model Ticket {
   messages   TicketMessage[]
 
   @@index([status, priority])
+  @@index([createdAt])
 }
 
 model TicketMessage {

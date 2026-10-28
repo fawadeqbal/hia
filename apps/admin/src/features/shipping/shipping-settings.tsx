@@ -91,7 +91,7 @@ export function ShippingSettings() {
           empty={
             <EmptyState
               title="No shipping zones yet"
-              description="All orders use the default flat rate per seller until you add a zone."
+              description="All orders use the default delivery charge (Settings) until you add a zone."
             />
           }
         />

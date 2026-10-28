@@ -12,28 +12,27 @@ import {
   PageHeader,
   Pagination,
   Tabs,
+  buttonStyles,
   formatDate,
   formatMoney,
   type DataTableColumn,
 } from '@ecommerce/ui';
 import { productsApi, queryKeys } from '@/lib/api-client';
+import { ProductCsvTools } from './product-csv-tools';
 import { ProductStatusBadge } from './product-status-badge';
 import { ProductThumb } from './product-thumb';
-import { ProductsExportButton } from './products-export-button';
 
 type Filter = ProductStatus | 'ALL';
 
 const TABS: { value: Filter; label: string }[] = [
   { value: 'ALL', label: 'All' },
   { value: 'DRAFT', label: 'Drafts' },
-  { value: 'PENDING_REVIEW', label: 'In review' },
   { value: 'PUBLISHED', label: 'Published' },
-  { value: 'REJECTED', label: 'Rejected' },
   { value: 'ARCHIVED', label: 'Archived' },
 ];
 
-export function AdminProductList() {
-  const [filter, setFilter] = useState<Filter>('PENDING_REVIEW');
+export function ProductList() {
+  const [filter, setFilter] = useState<Filter>('ALL');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const deferredSearch = useDeferredValue(search.trim());
@@ -44,8 +43,8 @@ export function AdminProductList() {
     page,
   };
   const { data, isLoading, isFetching, error } = useQuery({
-    queryKey: queryKeys.products.adminList(params),
-    queryFn: () => productsApi.adminList({ ...params, limit: 20 }),
+    queryKey: queryKeys.products.vendorList(params),
+    queryFn: () => productsApi.vendorList({ ...params, limit: 20 }),
     placeholderData: keepPreviousData,
   });
 
@@ -65,18 +64,31 @@ export function AdminProductList() {
             </Link>
             <p className="text-xs text-gray-500">
               {p.categoryName}
-              {p.brandName ? ` · ${p.brandName}` : ''} · <code>{p.sku}</code>
+              {p.brandName ? ` · ${p.brandName}` : ''}
             </p>
           </div>
         </div>
       ),
     },
-    { key: 'vendor', header: 'Vendor', cell: (p) => p.vendor.name },
+    {
+      key: 'sku',
+      header: 'SKU',
+      cell: (p) => <code className="text-xs text-gray-600">{p.sku}</code>,
+    },
     {
       key: 'price',
       header: 'Price',
       align: 'right',
-      cell: (p) => formatMoney(p.basePrice, p.currency),
+      cell: (p) => (
+        <div>
+          <span className="font-medium">{formatMoney(p.basePrice, p.currency)}</span>
+          {p.compareAtPrice ? (
+            <span className="block text-xs text-gray-400 line-through">
+              {formatMoney(p.compareAtPrice, p.currency)}
+            </span>
+          ) : null}
+        </div>
+      ),
     },
     { key: 'status', header: 'Status', cell: (p) => <ProductStatusBadge status={p.status} /> },
     { key: 'updated', header: 'Updated', cell: (p) => formatDate(p.updatedAt) },
@@ -86,8 +98,15 @@ export function AdminProductList() {
     <div className="mx-auto max-w-6xl p-6">
       <PageHeader
         title="Products"
-        description="All products across vendors. Review queue: “In review”."
-        actions={<ProductsExportButton />}
+        description="Create products, then submit them for review to publish them in the store."
+        actions={
+          <>
+            <ProductCsvTools />
+            <Link href="/catalog/products/new" className={buttonStyles()}>
+              Add product
+            </Link>
+          </>
+        }
       />
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -125,7 +144,21 @@ export function AdminProductList() {
           rowKey={(p) => p.id}
           loading={isLoading}
           empty={
-            <EmptyState title="No products found" description="Try another filter or search." />
+            <EmptyState
+              title={filter === 'ALL' && !deferredSearch ? 'No products yet' : 'No products found'}
+              description={
+                filter === 'ALL' && !deferredSearch
+                  ? 'Add your first product to start selling.'
+                  : 'Try another filter or search.'
+              }
+              action={
+                filter === 'ALL' && !deferredSearch ? (
+                  <Link href="/catalog/products/new" className={buttonStyles()}>
+                    Add product
+                  </Link>
+                ) : undefined
+              }
+            />
           }
         />
       </div>

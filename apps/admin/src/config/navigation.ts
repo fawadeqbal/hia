@@ -1,196 +1,53 @@
 import type { NavGroup } from '@ecommerce/ui';
 
+/**
+ * HIA Furniture Solutions — shop owner menu. Kept short on purpose.
+ * Marketplace screens (sellers, payouts, commissions, loyalty, gift cards, campaigns, blog, taxes,
+ * languages, roles…) still exist in the code base but are not linked from the menu.
+ */
 export const navigation: NavGroup[] = [
   {
     title: 'Overview',
     items: [
-      {
-        label: 'Dashboard',
-        href: '/',
-      },
-      {
-        label: 'Reports',
-        href: '/reports',
-      },
+      { label: 'Dashboard', href: '/' },
+      { label: 'Reports', href: '/reports' },
     ],
   },
   {
     title: 'Sales',
     items: [
-      {
-        label: 'Orders',
-        href: '/orders',
-      },
-      {
-        label: 'Returns',
-        href: '/returns',
-      },
-      {
-        label: 'Customers',
-        href: '/customers',
-      },
+      { label: 'Orders', href: '/orders' },
+      { label: 'Inquiries', href: '/inquiries' },
+      { label: 'Customers', href: '/customers' },
+      { label: 'Returns', href: '/returns' },
     ],
   },
   {
-    title: 'Catalog',
+    title: 'Products',
     items: [
-      {
-        label: 'Products',
-        href: '/catalog/products',
-      },
-      {
-        label: 'Categories',
-        href: '/catalog/categories',
-      },
-      {
-        label: 'Brands',
-        href: '/catalog/brands',
-      },
-      {
-        label: 'Attributes',
-        href: '/catalog/attributes',
-      },
-      {
-        label: 'Inventory',
-        href: '/inventory',
-      },
+      { label: 'Products', href: '/catalog/products' },
+      { label: 'Categories', href: '/catalog/categories' },
+      { label: 'Stock', href: '/inventory' },
+      { label: 'Options (size, colour)', href: '/catalog/attributes' },
+      { label: 'Coupons', href: '/promotions/coupons' },
     ],
   },
   {
-    title: 'Marketplace',
+    title: 'Website',
     items: [
-      {
-        label: 'Vendors',
-        href: '/vendors',
-      },
-      {
-        label: 'Payouts',
-        href: '/vendors/payouts',
-      },
-      {
-        label: 'Commissions',
-        href: '/vendors/commissions',
-      },
-      {
-        label: 'Disputes',
-        href: '/vendors/disputes',
-      },
-    ],
-  },
-  {
-    title: 'Marketing',
-    items: [
-      {
-        label: 'Coupons',
-        href: '/promotions/coupons',
-      },
-      {
-        label: 'Discounts',
-        href: '/promotions/discounts',
-      },
-      {
-        label: 'Gift cards',
-        href: '/promotions/gift-cards',
-      },
-      {
-        label: 'Loyalty',
-        href: '/loyalty',
-      },
-      {
-        label: 'Rewards activity',
-        href: '/loyalty/activity',
-      },
-      {
-        label: 'Campaigns',
-        href: '/marketing/campaigns',
-      },
-      {
-        label: 'Subscribers',
-        href: '/marketing/subscribers',
-      },
-    ],
-  },
-  {
-    title: 'Content',
-    items: [
-      {
-        label: 'Pages',
-        href: '/cms/pages',
-      },
-      {
-        label: 'Banners',
-        href: '/cms/banners',
-      },
-      {
-        label: 'Menus',
-        href: '/cms/menus',
-      },
-      {
-        label: 'Blog',
-        href: '/cms/blog',
-      },
-      {
-        label: 'FAQs',
-        href: '/cms/faqs',
-      },
-      {
-        label: 'SEO',
-        href: '/seo',
-      },
-    ],
-  },
-  {
-    title: 'Support',
-    items: [
-      {
-        label: 'Tickets',
-        href: '/support/tickets',
-      },
-      {
-        label: 'Reviews & Q&A',
-        href: '/support/reviews',
-      },
+      { label: 'Home page banners', href: '/cms/banners' },
+      { label: 'Pages', href: '/cms/pages' },
+      { label: 'Menus', href: '/cms/menus' },
+      { label: 'FAQs', href: '/cms/faqs' },
+      { label: 'Reviews & questions', href: '/support/reviews' },
     ],
   },
   {
     title: 'Settings',
     items: [
-      {
-        label: 'Store',
-        href: '/settings',
-      },
-      {
-        label: 'Shipping',
-        href: '/settings/shipping',
-      },
-      {
-        label: 'Payments',
-        href: '/settings/payments',
-      },
-      {
-        label: 'Taxes',
-        href: '/settings/taxes',
-      },
-      {
-        label: 'Localization',
-        href: '/settings/localization',
-      },
-      {
-        label: 'Email templates',
-        href: '/settings/email-templates',
-      },
-      {
-        label: 'Roles',
-        href: '/settings/roles',
-      },
-      {
-        label: 'Admin users',
-        href: '/settings/users',
-      },
-      {
-        label: 'Audit logs',
-        href: '/settings/audit-logs',
-      },
+      { label: 'Shop settings', href: '/settings' },
+      { label: 'Delivery zones', href: '/settings/shipping' },
+      { label: 'Payments', href: '/settings/payments' },
     ],
   },
 ];

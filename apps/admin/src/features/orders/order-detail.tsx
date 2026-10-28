@@ -28,7 +28,7 @@ import {
 } from '@ecommerce/ui';
 import { ordersApi, queryKeys } from '@/lib/api-client';
 import { documentsApi } from '@/lib/api-client';
-import { OrderRewards } from './order-rewards';
+import { OrderStatusActions } from './order-status-actions';
 import { OrderStatusBadge } from './order-status-badge';
 import { OrderNotes } from './order-notes';
 
@@ -90,6 +90,9 @@ export function AdminOrderDetail({ id }: { id: string }) {
             >
               Packing slip
             </a>
+            {o.vendorOrders.length === 1 ? (
+              <OrderStatusActions vendorOrderId={o.vendorOrders[0]!.id} adminOrderId={o.id} />
+            ) : null}
             {o.canCancel ? (
               <Button
                 variant="danger"
@@ -117,12 +120,9 @@ export function AdminOrderDetail({ id }: { id: string }) {
           {o.vendorOrders.map((vo) => (
             <Card key={vo.id} className="p-0">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-5 py-3 text-sm">
-                <Link
-                  href={`/vendors/${vo.vendor.id}`}
-                  className="font-semibold text-gray-900 hover:text-brand-700"
-                >
-                  {vo.vendor.name}
-                </Link>
+                <span className="font-semibold text-gray-900">
+                  Items{vo.shippingMethod ? ` · ${vo.shippingMethod}` : ''}
+                </span>
                 <div className="flex items-center gap-3">
                   {vo.shipment?.trackingNumber ? (
                     <span className="text-xs text-gray-500">
@@ -173,7 +173,7 @@ export function AdminOrderDetail({ id }: { id: string }) {
             <Timeline
               items={o.history.map((h, i) => ({
                 id: `${h.createdAt}-${i}`,
-                title: `${ORDER_STATUS_LABELS[h.status]}${h.vendorName ? ` · ${h.vendorName}` : ''}`,
+                title: ORDER_STATUS_LABELS[h.status],
                 meta: formatDateTime(h.createdAt),
                 description: h.note,
               }))}
@@ -218,12 +218,7 @@ export function AdminOrderDetail({ id }: { id: string }) {
             />
           </Card>
 
-          <OrderRewards orderId={o.id} />
-
-          <OrderNotes
-            id={o.id}
-            sellers={o.vendorOrders.map((v) => ({ id: v.id, name: v.vendor.name }))}
-          />
+          <OrderNotes id={o.id} />
 
           {o.payments.length > 0 && o.paymentMethod !== 'COD' ? (
             <Card>
@@ -253,7 +248,7 @@ export function AdminOrderDetail({ id }: { id: string }) {
       <ReasonDialog
         open={cancelling}
         title="Cancel the whole order?"
-        description="All sub-orders that have not shipped are cancelled, stock is released and the customer is emailed."
+        description="Reserved stock is released and the customer is emailed."
         label="Reason (shown to the customer)"
         minLength={ORDER_REASON_MIN}
         confirmLabel="Cancel order"

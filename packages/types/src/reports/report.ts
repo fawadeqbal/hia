@@ -96,6 +96,8 @@ export interface AdminAttention {
   openReturns: number;
   lowStock: number;
   ordersAwaitingSellers: number;
+  /** Website inquiries (repair, quote, questions) still marked New. */
+  newInquiries: number;
 }
 
 // ---------------------------------------------------------------- vendor
