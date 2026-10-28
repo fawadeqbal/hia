@@ -141,11 +141,7 @@ export function CartView() {
                       className="aspect-square w-[clamp(80px,10vw,104px)] flex-none overflow-hidden rounded-2xl bg-[#efebe4]"
                     >
                       {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt=""
-                          className="h-full w-full object-contain p-1.5 mix-blend-multiply"
-                        />
+                        <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
                       ) : null}
                     </Link>
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -263,11 +259,7 @@ export function CartView() {
                     >
                       <div className="h-16 w-16 flex-none overflow-hidden rounded-[8px] bg-[#efebe4]">
                         {s.imageUrl ? (
-                          <img
-                            src={s.imageUrl}
-                            alt=""
-                            className="h-full w-full object-contain p-1 mix-blend-multiply"
-                          />
+                          <img src={s.imageUrl} alt="" className="h-full w-full object-cover" />
                         ) : null}
                       </div>
                       <div className="flex min-w-0 flex-1 flex-col gap-0.5">

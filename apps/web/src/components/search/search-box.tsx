@@ -307,11 +307,7 @@ export function SearchBox() {
                       >
                         <span className="aspect-square overflow-hidden rounded-lg bg-gray-50">
                           {p.imageUrl ? (
-                            <img
-                              src={p.imageUrl}
-                              alt=""
-                              className="h-full w-full object-contain p-1.5 mix-blend-multiply"
-                            />
+                            <img src={p.imageUrl} alt="" className="h-full w-full object-cover" />
                           ) : null}
                         </span>
                         <span className="line-clamp-2 text-xs">{p.name}</span>
@@ -345,11 +341,7 @@ export function SearchBox() {
                 >
                   <span className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-50">
                     {p.imageUrl ? (
-                      <img
-                        src={p.imageUrl}
-                        alt=""
-                        className="h-full w-full object-contain p-0.5 mix-blend-multiply"
-                      />
+                      <img src={p.imageUrl} alt="" className="h-full w-full object-cover" />
                     ) : null}
                   </span>
                   <span className="flex-1 truncate">{p.name}</span>

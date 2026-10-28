@@ -131,11 +131,7 @@ export function ProductGallery({
                   ),
             )}
           >
-            <img
-              src={img.url}
-              alt=""
-              className={cn('h-full w-full object-contain', !dark && 'mix-blend-multiply')}
-            />
+            <img src={img.url} alt="" className="h-full w-full object-cover" />
           </button>
         ))}
       </div>
@@ -163,7 +159,7 @@ export function ProductGallery({
             key={cur.url}
             src={cur.url}
             alt={cur.altText ?? name}
-            className="gal-in h-full w-full object-contain p-[6%] mix-blend-multiply transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform"
+            className="gal-in h-full w-full object-contain transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform"
             style={{
               ['--gal-dx' as string]: `${dir * 28}px`,
               transform: zoom ? 'scale(2.2)' : 'scale(1)',
@@ -272,7 +268,7 @@ export function ProductGallery({
                   src={cur.url}
                   alt={cur.altText ?? name}
                   className={cn(
-                    'gal-in max-h-[calc(100dvh-200px)] max-w-full object-contain p-4 mix-blend-multiply transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)]',
+                    'gal-in max-h-[calc(100dvh-200px)] max-w-full rounded-md object-contain transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)]',
                     lbZoom ? 'cursor-zoom-out' : 'cursor-zoom-in',
                   )}
                   style={{

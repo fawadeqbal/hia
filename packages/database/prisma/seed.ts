@@ -2,7 +2,7 @@
  * HIA Furniture Solutions — seed for the single-shop build.
  *
  * Creates: roles, ONE super admin (who also owns the shop), the shop itself (a single built-in store),
- * HIA categories, a few sample products with placeholder drawings, stock, PKR shipping, COD-only
+ * HIA categories, sample products with photos, stock, PKR shipping, COD-only
  * payments, website pages, menus and FAQs. Safe to run again (upserts; existing rows are not overwritten).
  *
  * Change SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD in .env BEFORE the first seed.
@@ -19,9 +19,12 @@ const SHOP = {
 };
 const CURRENCY = 'PKR';
 const WAREHOUSE_CODE = 'HIA-MAIN';
-/** Placeholder product drawings are served by the storefront (apps/web/public/demo). */
+/**
+ * Sample product photos are served by the storefront (apps/web/public/catalog, free Unsplash / Pexels
+ * photos — see CREDITS.md there). Replace them with your own photos in Admin → Products.
+ */
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
-const demoImage = (file: string) => `${SITE_URL}/demo/${file}`;
+const catalogImage = (file: string) => `${SITE_URL}/catalog/${file}`;
 
 const slugify = (s: string) =>
   s
@@ -213,10 +216,11 @@ async function seedShipping() {
 
 // ---------------------------------------------------------------- catalog
 
-const CATEGORY_TREE: { name: string; description: string; children: string[] }[] = [
+const CATEGORY_TREE: { name: string; description: string; image: string; children: string[] }[] = [
   {
     name: 'Chair Parts',
     description: 'Spare parts and accessories to repair or upgrade any office chair.',
+    image: 'cat-chair-parts.jpg',
     children: [
       'Gas Lifts',
       'Wheels & Castors',
@@ -229,16 +233,19 @@ const CATEGORY_TREE: { name: string; description: string; children: string[] }[]
   {
     name: 'Office Chairs',
     description: 'Complete office chairs for executives, staff and visitors.',
+    image: 'cat-office-chairs.jpg',
     children: ['Executive Chairs', 'Staff & Mesh Chairs', 'Visitor Chairs'],
   },
   {
     name: 'Office Furniture',
     description: 'Tables and furniture for offices and institutions.',
+    image: 'cat-office-furniture.jpg',
     children: ['Office Tables'],
   },
   {
     name: 'General Order Supplies',
     description: 'General order supplies for offices, businesses and institutions.',
+    image: 'cat-general-supplies.jpg',
     children: [],
   },
 ];
@@ -252,9 +259,16 @@ async function seedCategories() {
         name: root.name,
         slug: slugify(root.name),
         description: root.description,
+        imageUrl: catalogImage(root.image),
         position,
       },
     });
+    // Categories seeded before photos existed get the photo (an image chosen in the admin is kept).
+    if (!saved.imageUrl)
+      await prisma.category.update({
+        where: { id: saved.id },
+        data: { imageUrl: catalogImage(root.image) },
+      });
     for (const [i, child] of root.children.entries()) {
       await prisma.category.upsert({
         where: { slug: slugify(child) },
@@ -331,7 +345,8 @@ type SeedProduct = {
   slug: string;
   name: string;
   category: string;
-  image: string;
+  /** Photos in apps/web/public/catalog (first = main photo, second = hover photo). */
+  images: string[];
   short: string;
   description: string;
   specs: { label: string; value: string }[];
@@ -345,7 +360,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'heavy-duty-gas-lift-cylinder',
     name: 'Office Chair Gas Lift Cylinder',
     category: 'gas-lifts',
-    image: 'gas-lift.svg',
+    images: ['gas-lift-2.jpg', 'gas-lift-1.jpg'],
     short:
       'Replacement gas lift that fits most office chairs. Fixes a chair that sinks or will not stay up.',
     description:
@@ -372,7 +387,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'chair-castor-wheels-set-of-5',
     name: 'Chair Castor Wheels (Set of 5)',
     category: 'wheels-castors',
-    image: 'castor-wheel.svg',
+    images: ['castor-1.jpg', 'castor-2.jpg', 'castor-3.jpg'],
     short: 'Smooth-rolling twin wheels with a standard 11 mm stem. Sold as a set of five.',
     description:
       'Twin-wheel nylon castors for office chairs. Standard 11 × 22 mm grip-ring stem fits most chair bases. Choose 60 mm for a smoother roll on carpet.',
@@ -392,7 +407,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'pu-soft-floor-safe-castors',
     name: 'PU Soft Castor Wheels — Floor Safe (Set of 5)',
     category: 'wheels-castors',
-    image: 'castor-wheel.svg',
+    images: ['pu-castor-1.jpg', 'pu-castor-2.jpg'],
     short: 'Soft polyurethane wheels that protect tiles, wood and marble floors.',
     description:
       'Quiet, soft-tread polyurethane castors that will not scratch hard floors. Standard 11 mm stem.',
@@ -408,7 +423,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'nylon-five-star-chair-base',
     name: 'Nylon 5-Star Chair Base',
     category: 'chair-bases',
-    image: 'chair-base.svg',
+    images: ['nylon-base-2.jpg', 'nylon-base-1.jpg'],
     short: 'Strong reinforced nylon base for office chairs. Takes standard wheels and gas lifts.',
     description:
       'Five-star base in glass-reinforced nylon. Standard 50 mm centre hole for the gas lift and 11 mm wheel holes. 350 mm suits full-size chairs, 320 mm suits compact chairs.',
@@ -428,7 +443,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'chrome-metal-chair-base-350',
     name: 'Chrome Metal Chair Base 350 mm',
     category: 'chair-bases',
-    image: 'chair-base.svg',
+    images: ['chrome-base-3.jpg', 'chrome-base-2.jpg', 'chrome-base-1.jpg'],
     short: 'Polished chrome steel base for executive chairs.',
     description:
       'Heavy-gauge chrome-plated steel five-star base for executive chairs. 350 mm radius.',
@@ -443,7 +458,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'adjustable-chair-armrests-pair',
     name: 'Adjustable Chair Armrests (Pair)',
     category: 'armrests',
-    image: 'armrest.svg',
+    images: ['arm-adjustable-1.jpg', 'arm-adjustable-2.jpg'],
     short: 'Height-adjustable armrests with soft PU pads. Sold as a pair.',
     description:
       'Replacement height-adjustable armrests with soft PU pads. Fits most chairs with a standard two-bolt arm plate.',
@@ -460,7 +475,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'fixed-chair-armrests-pair',
     name: 'Fixed Chair Armrests (Pair)',
     category: 'armrests',
-    image: 'armrest.svg',
+    images: ['arm-fixed-1.jpg', 'arm-fixed-2.jpg'],
     short: 'Simple, sturdy fixed armrests. Sold as a pair.',
     description: 'Fixed nylon armrests for staff and computer chairs.',
     specs: [{ label: 'Pack', value: 'Left + right' }],
@@ -471,7 +486,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'synchro-tilt-mechanism',
     name: 'Synchro Tilt Mechanism',
     category: 'tilt-mechanisms',
-    image: 'tilt-mechanism.svg',
+    images: ['tilt-synchro-1.jpg', 'tilt-synchro-2.jpg'],
     short: 'Seat and back recline together for ergonomic chairs. Multi-position lock.',
     description:
       'Synchro tilt mechanism for executive and ergonomic chairs. Seat and back move together, with tension knob and multi-position lock.',
@@ -486,7 +501,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'butterfly-tilt-mechanism',
     name: 'Butterfly Tilt Mechanism',
     category: 'tilt-mechanisms',
-    image: 'tilt-mechanism.svg',
+    images: ['tilt-butterfly-1.jpg'],
     short: 'Basic tilt mechanism for staff and computer chairs.',
     description: 'Butterfly (single-lever) mechanism for height adjustment and basic tilt.',
     specs: [{ label: 'Controls', value: 'Single height lever' }],
@@ -497,7 +512,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'gas-lift-dust-cover',
     name: 'Gas Lift Dust Cover',
     category: 'chair-accessories',
-    image: 'gas-lift.svg',
+    images: ['dust-cover-2.jpg', 'dust-cover-1.jpg'],
     short: 'Telescopic plastic cover for the gas lift. Neat look, keeps dust out.',
     description: 'Three-section telescopic cover for standard gas lifts.',
     specs: [{ label: 'Colour', value: 'Black' }],
@@ -508,7 +523,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'executive-high-back-office-chair',
     name: 'Executive High-Back Office Chair',
     category: 'executive-chairs',
-    image: 'executive-chair.svg',
+    images: ['executive-1.jpg', 'executive-2.jpg', 'executive-3.jpg'],
     short: 'High-back executive chair with padded headrest, synchro tilt and chrome base.',
     description:
       'Comfortable high-back executive chair with thick padding, headrest, padded armrests, synchro tilt mechanism, heavy-duty gas lift and chrome base.',
@@ -541,7 +556,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'ergonomic-mesh-office-chair',
     name: 'Ergonomic Mesh Office Chair',
     category: 'staff-mesh-chairs',
-    image: 'mesh-chair.svg',
+    images: ['mesh-1.jpg', 'mesh-2.jpg', 'mesh-3.jpg', 'mesh-4.jpg'],
     short: 'Breathable mesh back with lumbar support. Ideal for long work hours.',
     description:
       'Mid-back ergonomic chair with breathable mesh, adjustable lumbar support, adjustable armrests and nylon base.',
@@ -561,7 +576,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'visitor-chair-chrome-frame',
     name: 'Visitor Chair — Chrome Frame',
     category: 'visitor-chairs',
-    image: 'visitor-chair.svg',
+    images: ['visitor-1.jpg', 'visitor-2.jpg', 'visitor-3.jpg', 'visitor-4.jpg'],
     short: 'Sturdy cantilever visitor chair for reception and meeting rooms.',
     description: 'Cantilever chrome frame with padded seat and back. Stackable up to 4.',
     specs: [
@@ -575,7 +590,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'office-table-4ft',
     name: 'Office Table 4 ft',
     category: 'office-tables',
-    image: 'office-table.svg',
+    images: ['table-1.jpg', 'table-2.jpg'],
     short: 'Compact office table with side drawer unit. 4 × 2 ft.',
     description: '4 × 2 ft office table with a lockable three-drawer side unit and cable hole.',
     specs: [
@@ -589,7 +604,7 @@ const PRODUCTS: SeedProduct[] = [
     slug: 'chair-floor-mat-clear',
     name: 'Chair Floor Mat — Clear',
     category: 'general-order-supplies',
-    image: 'floor-mat.svg',
+    images: ['floor-mat-1.jpg', 'floor-mat-2.jpg'],
     short: 'Clear floor protector for office chairs. Protects carpet and tiles.',
     description: 'Tough clear PVC mat, 90 × 120 cm, for rolling chairs on carpet or hard floors.',
     specs: [{ label: 'Size', value: '90 × 120 cm' }],
@@ -608,8 +623,28 @@ async function seedProducts(shopId: string) {
     ).id;
 
   let created = 0;
+  let upgraded = 0;
   for (const p of PRODUCTS) {
-    if (await prisma.product.findUnique({ where: { slug: p.slug } })) continue; // never overwrite an edited product
+    const existing = await prisma.product.findUnique({
+      where: { slug: p.slug },
+      include: { images: true },
+    });
+    if (existing) {
+      // Sample products seeded with the old placeholder drawings get the photos; anything else is kept.
+      if (existing.images.length && existing.images.every((i) => i.url.includes('/demo/'))) {
+        await prisma.productImage.deleteMany({ where: { productId: existing.id } });
+        await prisma.productImage.createMany({
+          data: p.images.map((file, position) => ({
+            productId: existing.id,
+            url: catalogImage(file),
+            altText: p.name,
+            position,
+          })),
+        });
+        upgraded++;
+      }
+      continue; // never overwrite an edited product
+    }
     const category = await prisma.category.findUniqueOrThrow({ where: { slug: p.category } });
     const first = p.variants[0]!;
     const product = await prisma.product.create({
@@ -628,7 +663,13 @@ async function seedProducts(shopId: string) {
         isFeatured: p.featured ?? false,
         status: 'PUBLISHED',
         publishedAt: new Date(),
-        images: { create: { url: demoImage(p.image), altText: p.name, position: 0 } },
+        images: {
+          create: p.images.map((file, position) => ({
+            url: catalogImage(file),
+            altText: p.name,
+            position,
+          })),
+        },
       },
     });
     for (const [i, v] of p.variants.entries()) {
@@ -666,7 +707,9 @@ async function seedProducts(shopId: string) {
     }
     created++;
   }
-  console.log(`  ✓ sample products (${created} new, ${PRODUCTS.length - created} already there)`);
+  console.log(
+    `  ✓ sample products (${created} new, ${PRODUCTS.length - created} already there, ${upgraded} got photos)`,
+  );
 }
 
 // ---------------------------------------------------------------- website content

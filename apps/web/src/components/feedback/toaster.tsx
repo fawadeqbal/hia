@@ -35,11 +35,7 @@ export function Toaster() {
           >
             {t.image ? (
               <span className="relative h-12 w-12 flex-none overflow-hidden rounded-xl bg-gray-50">
-                <img
-                  src={t.image}
-                  alt=""
-                  className="h-full w-full object-contain p-1 mix-blend-multiply"
-                />
+                <img src={t.image} alt="" className="h-full w-full object-cover" />
                 <span
                   aria-hidden
                   className={cn(

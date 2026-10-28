@@ -138,11 +138,7 @@ export function AdminOrderDetail({ id }: { id: string }) {
                   <li key={item.id} className="flex gap-4 px-5 py-3 text-sm">
                     <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md border border-gray-200 bg-white">
                       {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt=""
-                          className="h-full w-full object-contain p-0.5"
-                        />
+                        <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
                       ) : null}
                     </div>
                     <div className="flex-1">

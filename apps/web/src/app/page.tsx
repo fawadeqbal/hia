@@ -47,6 +47,7 @@ const SLIDES: HeroSlide[] = [
     cta: 'Request a repair',
     href: '/contact?topic=repair',
     bg: 'bg-gray-900',
+    image: { url: '/catalog/cat-repair.jpg', alt: 'Chair repair tools' },
   },
   {
     tag: 'Wholesale',
@@ -116,7 +117,7 @@ async function categoryImages(
         { category: c.slug, sort: 'popular', limit: 1 },
         { next: { revalidate: 600 } },
       );
-      return [c.id, { url: first?.imageUrl ?? null, photo: false }] as const;
+      return [c.id, { url: first?.imageUrl ?? null, photo: true }] as const;
     }),
   );
   return Object.fromEntries(pairs);
@@ -241,12 +242,7 @@ export default async function HomePage() {
                           src={img.url}
                           alt=""
                           loading="lazy"
-                          className={cn(
-                            'absolute inset-0 h-full w-full transition-transform duration-700 ease-out group-hover/tile:scale-[1.05]',
-                            img.photo
-                              ? 'object-cover'
-                              : 'object-contain p-[14%] pb-[22%] mix-blend-multiply group-hover/tile:-rotate-3',
-                          )}
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover/tile:scale-[1.05]"
                         />
                       ) : null}
                       {img?.photo ? (
@@ -342,7 +338,7 @@ export default async function HomePage() {
                     src={c.product!.imageUrl!}
                     alt=""
                     loading="lazy"
-                    className="absolute bottom-[5%] right-[4%] h-[46%] w-[46%] -rotate-6 object-contain mix-blend-multiply transition-transform duration-700 ease-out group-hover/camp:-translate-y-3 group-hover/camp:-rotate-[9deg]"
+                    className="absolute bottom-[6%] right-[5%] h-[44%] w-[36%] -rotate-6 rounded-md object-cover shadow-[0_24px_40px_rgba(0,0,0,.25)] ring-4 ring-white transition-transform duration-700 ease-out group-hover/camp:-translate-y-3 group-hover/camp:-rotate-[9deg]"
                   />
                   <span className="relative z-10 inline-flex items-center gap-2 self-start text-[12.5px] font-bold uppercase tracking-[0.1em]">
                     <span className="link-grow">{c.cta}</span>

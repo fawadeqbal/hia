@@ -84,11 +84,7 @@ export function MyOrders() {
         >
           <span className="h-[52px] w-[52px] flex-none overflow-hidden rounded-[8px] bg-gray-50">
             {o.imageUrl ? (
-              <img
-                src={o.imageUrl}
-                alt=""
-                className="h-full w-full object-contain p-1 mix-blend-multiply"
-              />
+              <img src={o.imageUrl} alt="" className="h-full w-full object-cover" />
             ) : null}
           </span>
           <span className="min-w-0 flex-[1_1_180px]">

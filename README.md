@@ -47,8 +47,9 @@ categories, new & featured products, offers, motto), category and product pages,
 FAQ, and a **Contact page** whose form sends repair and quote requests into Admin → Inquiries.
 When a WhatsApp number is set in Shop settings, a "Chat on WhatsApp" button appears on every page.
 
-The 15 sample products use simple placeholder drawings (`apps/web/public/demo`). Replace them with real
-photos in Admin → Products.
+The 15 sample products come with real photos (free Unsplash / Pexels photos in `apps/web/public/catalog`,
+sources in `CREDITS.md` there; spare-part photos are close-ups cropped from complete chairs). Replace them
+with photos of your own products in Admin → Products.
 
 ## Run it on your computer
 

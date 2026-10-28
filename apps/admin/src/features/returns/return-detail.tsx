@@ -123,7 +123,7 @@ export function ReturnDetail({ id }: { id: string }) {
               <li key={i.id} className="flex items-center gap-3 py-2">
                 <div className="h-12 w-12 shrink-0 overflow-hidden rounded border border-gray-200 bg-white">
                   {i.imageUrl ? (
-                    <img src={i.imageUrl} alt="" className="h-full w-full object-contain" />
+                    <img src={i.imageUrl} alt="" className="h-full w-full object-cover" />
                   ) : null}
                 </div>
                 <div className="flex-1">

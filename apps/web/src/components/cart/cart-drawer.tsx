@@ -287,11 +287,7 @@ function DrawerLine({
         className="relative block h-28 w-24 flex-none overflow-hidden rounded-md bg-canvas"
       >
         {item.imageUrl ? (
-          <img
-            src={item.imageUrl}
-            alt=""
-            className="h-full w-full object-contain p-2 mix-blend-multiply"
-          />
+          <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
         ) : null}
       </Link>
       <div className="relative flex min-w-0 flex-1 flex-col">

@@ -91,11 +91,7 @@ export function OrderDetails({ order, actions }: { order: OrderDto; actions?: Re
                   <li key={item.id} className="flex items-center gap-4 px-5 py-4 text-sm">
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#efebe4]">
                       {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt=""
-                          className="h-full w-full object-contain p-1.5 mix-blend-multiply"
-                        />
+                        <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
                       ) : null}
                     </div>
                     <div className="flex-1">

@@ -78,7 +78,7 @@ export function WishlistView() {
                     <img
                       src={i.imageUrl}
                       alt=""
-                      className="h-full w-full object-contain p-3 mix-blend-multiply transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                      className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
                     />
                   ) : null}
                 </Link>

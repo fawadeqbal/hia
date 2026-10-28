@@ -96,11 +96,7 @@ export function OrderPlaced() {
                   <li key={i.id} className="flex items-center gap-3 p-3">
                     <span className="h-12 w-12 flex-none overflow-hidden rounded-xl bg-gray-50">
                       {i.imageUrl ? (
-                        <img
-                          src={i.imageUrl}
-                          alt=""
-                          className="h-full w-full object-contain p-1 mix-blend-multiply"
-                        />
+                        <img src={i.imageUrl} alt="" className="h-full w-full object-cover" />
                       ) : null}
                     </span>
                     <span className="min-w-0 flex-1">

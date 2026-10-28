@@ -406,7 +406,7 @@ export function ProductPurchase({ product }: { product: StorefrontProductDetail 
             <img
               src={product.images[0].url}
               alt=""
-              className="hidden h-12 w-12 flex-none rounded bg-canvas object-contain p-1 mix-blend-multiply sm:block"
+              className="hidden h-12 w-12 flex-none rounded bg-canvas object-cover sm:block"
             />
           ) : null}
           <div className="hidden min-w-0 flex-1 sm:block">

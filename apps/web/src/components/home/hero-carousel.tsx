@@ -23,8 +23,10 @@ export interface HeroSlide {
   bg: string;
   /** Text colour on that background. */
   tone?: 'light' | 'dark';
-  /** Live products: the first is the hero shoe, the next ones are small thumbnails. */
+  /** Live products: the first is the big photo, the next ones are small thumbnails. */
   products?: HeroProduct[];
+  /** A fixed big photo instead of the first product (e.g. tools for the repair slide). */
+  image?: { url: string; alt: string };
 }
 
 const INTERVAL = 6500;
@@ -34,8 +36,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
  * Full-bleed campaign hero.
  * - CMS banners (Admin → Content → Banners, "home.hero") show as full images; without them the
  *   built-in slides are used, each starring a live product photo.
- * - Slide change: background cross-fades, the headline rises line by line, the shoe glides in
- *   from the right with a slight tilt. On pointer devices the shoe follows the cursor a little.
+ * - Slide change: background cross-fades, the headline rises line by line, the photo glides in
+ *   from the right with a slight tilt. On pointer devices the photo follows the cursor a little.
  * - Numbered progress bars (01 02 03) fill over INTERVAL; hover or focus pauses; swipe on phones;
  *   ←/→ arrow buttons.
  */
@@ -132,8 +134,12 @@ export function HeroCarousel({
             const on = i === active;
             const dark = s.tone === 'dark';
             const items = (s.products ?? []).filter((p) => p.imageUrl);
-            const star = items[0];
-            const thumbs = items.slice(1, 4);
+            const star = s.image
+              ? { slug: '', name: s.image.alt, imageUrl: s.image.url, href: s.href }
+              : items[0]
+                ? { ...items[0], href: `/products/${items[0].slug}` }
+                : undefined;
+            const thumbs = items.slice(s.image ? 0 : 1, s.image ? 3 : 4);
             return (
               <div
                 key={s.title}
@@ -241,7 +247,7 @@ export function HeroCarousel({
                               <img
                                 src={p.imageUrl!}
                                 alt={p.name}
-                                className="h-full w-full object-contain p-1 mix-blend-multiply"
+                                className="h-full w-full object-cover"
                               />
                             </Link>
                           ))}
@@ -250,10 +256,10 @@ export function HeroCarousel({
                     </div>
                   </div>
 
-                  {/* Hero shoe */}
+                  {/* Big photo */}
                   {star ? (
                     <Link
-                      href={`/products/${star.slug}`}
+                      href={star.href}
                       tabIndex={on ? 0 : -1}
                       aria-label={star.name}
                       className={cn(
@@ -274,9 +280,9 @@ export function HeroCarousel({
                         src={star.imageUrl!}
                         alt=""
                         loading={i === 0 ? 'eager' : 'lazy'}
-                        className="relative max-h-full w-[min(92%,560px)] object-contain drop-shadow-[0_40px_40px_rgba(0,0,0,.35)] transition-transform duration-300 ease-out"
+                        className="relative aspect-[4/5] max-h-full w-auto max-w-[min(58%,420px)] rounded-lg md:max-w-[min(78%,420px)] object-cover shadow-[0_40px_60px_rgba(0,0,0,.4)] ring-[6px] ring-white/90 transition-transform duration-300 ease-out"
                         style={{
-                          transform: `translate(${tilt.x * 22}px, ${tilt.y * 14}px) rotate(${-14 + tilt.x * 4}deg)`,
+                          transform: `translate(${tilt.x * 22}px, ${tilt.y * 14}px) rotate(${-6 + tilt.x * 3}deg)`,
                         }}
                       />
                     </Link>

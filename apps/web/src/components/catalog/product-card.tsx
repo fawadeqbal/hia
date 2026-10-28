@@ -59,7 +59,7 @@ export function ProductCard({
                 alt=""
                 loading={priority ? 'eager' : 'lazy'}
                 className={cn(
-                  'absolute inset-0 h-full w-full object-contain p-[9%] mix-blend-multiply',
+                  'absolute inset-0 h-full w-full object-cover',
                   'transition-[opacity,transform] duration-500 ease-out',
                   swap
                     ? '[@media(hover:hover)]:group-hover/card:opacity-0'
@@ -72,7 +72,7 @@ export function ProductCard({
                   src={p.hoverImageUrl!}
                   alt=""
                   loading="lazy"
-                  className="absolute inset-0 h-full w-full scale-[1.03] object-contain p-[9%] opacity-0 mix-blend-multiply transition-[opacity,transform] duration-500 ease-out [@media(hover:hover)]:group-hover/card:scale-100 [@media(hover:hover)]:group-hover/card:opacity-100"
+                  className="absolute inset-0 h-full w-full scale-[1.03] object-cover opacity-0 transition-[opacity,transform] duration-500 ease-out [@media(hover:hover)]:group-hover/card:scale-100 [@media(hover:hover)]:group-hover/card:opacity-100"
                 />
               ) : null}
             </>

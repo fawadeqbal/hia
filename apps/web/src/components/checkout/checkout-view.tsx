@@ -792,7 +792,7 @@ export function CheckoutView() {
                               <img
                                 src={item.imageUrl}
                                 alt=""
-                                className="h-full w-full object-contain p-1 mix-blend-multiply"
+                                className="h-full w-full object-cover"
                               />
                             ) : null}
                             <span className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-gray-900 px-1 text-[11px] font-bold text-white">

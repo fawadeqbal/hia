@@ -4,7 +4,7 @@ export function ProductThumb({ url, size = 40 }: { url: string | null; size?: nu
     <img
       src={url}
       alt=""
-      className="rounded-md border border-gray-200 bg-white object-contain"
+      className="rounded-md border border-gray-200 bg-white object-cover"
       style={{ width: size, height: size }}
     />
   ) : (

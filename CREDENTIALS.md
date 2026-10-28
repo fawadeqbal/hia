@@ -30,7 +30,8 @@ overwrites an existing user.
   Chair Accessories), **Office Chairs** (Executive, Staff & Mesh, Visitor), **Office Furniture**
   (Office Tables), **General Order Supplies**.
 - Options: Colour (Black, Grey, Brown, Blue, Chrome) and Size (50 mm, 60 mm, 320 mm, 350 mm, Standard, Heavy-duty).
-- 15 sample products with stock, prices in **PKR**, placeholder drawings.
+- 15 sample products with stock, prices in **PKR**, and 1–4 photos each (free stock photos — replace them with your own).
+- Photos for the 4 main categories (shown on the home page).
 - Delivery: zone "Pakistan" — Standard delivery Rs 500 (free above Rs 25,000), Pick up from shop (free).
   Couriers: Own delivery, TCS, Leopards Courier (no tracking links; add them in Delivery zones → Couriers).
 - Payments: **Cash on delivery only** (no fee, no limit). The test card gateway exists but is off.
