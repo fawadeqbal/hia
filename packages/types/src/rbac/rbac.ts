@@ -273,115 +273,56 @@ export interface SettingDefinition {
 }
 
 export const SETTING_GROUP_LABELS: Record<string, string> = {
-  general: 'Store',
+  general: 'Shop details',
   checkout: 'Checkout',
-  tax: 'Taxes',
-  marketing: 'Marketing emails',
-  shipping: 'Shipping',
-  payments: 'Payments',
-  vendors: 'Sellers & payouts',
+  shipping: 'Delivery',
   returns: 'Returns & reviews',
-  loyalty: 'Loyalty',
-  customers: 'Customer segments',
 };
 
-/** Settings editable in Admin → Settings. Unknown keys are ignored by the API. */
+/**
+ * Settings editable in Admin → Settings. Unknown keys are ignored by the API.
+ * Single-shop build: only what a shop owner needs. Marketplace / loyalty / tax / marketing settings
+ * still exist in the database with safe values (see the seed) but are not shown.
+ */
 export const SETTING_DEFINITIONS: SettingDefinition[] = [
-  { key: 'store.name', group: 'general', label: 'Store name', type: 'string' },
+  { key: 'store.name', group: 'general', label: 'Shop name', type: 'string' },
+  {
+    key: 'store.tagline',
+    group: 'general',
+    label: 'Motto / tagline',
+    type: 'string',
+    hint: 'Shown on the website, e.g. Quality Products | Competitive Prices | Reliable Service.',
+  },
   {
     key: 'store.logoUrl',
     group: 'general',
     label: 'Logo URL',
     type: 'url',
-    hint: 'Used in emails and the storefront header.',
+    hint: 'Optional. Used in emails and the website header (the shop name is shown when empty).',
   },
-  { key: 'store.supportEmail', group: 'general', label: 'Support email', type: 'email' },
   { key: 'store.phone', group: 'general', label: 'Phone', type: 'string' },
-  { key: 'store.address', group: 'general', label: 'Address', type: 'text' },
   {
-    key: 'store.timezone',
+    key: 'store.whatsapp',
     group: 'general',
-    label: 'Time zone',
+    label: 'WhatsApp number',
     type: 'string',
-    hint: 'IANA name, e.g. Asia/Karachi. Used by reports.',
+    hint: 'With country code, e.g. 923001234567. Shows a WhatsApp chat button on the website.',
   },
+  { key: 'store.supportEmail', group: 'general', label: 'Email', type: 'email' },
+  { key: 'store.address', group: 'general', label: 'Shop address', type: 'text' },
   {
     key: 'store.maintenanceMode',
     group: 'general',
-    label: 'Maintenance mode',
+    label: 'Close the website for maintenance',
     type: 'boolean',
-    hint: 'Storefront shows a maintenance page and checkout is closed.',
+    hint: 'Visitors see a maintenance message and cannot order.',
   },
   { key: 'store.maintenanceMessage', group: 'general', label: 'Maintenance message', type: 'text' },
   {
     key: 'checkout.guestCheckout',
     group: 'checkout',
-    label: 'Allow guest checkout',
+    label: 'Allow ordering without an account',
     type: 'boolean',
-  },
-  {
-    key: 'checkout.reservationMinutes',
-    group: 'checkout',
-    label: 'Unpaid order hold (minutes)',
-    type: 'number',
-    min: 5,
-    max: 1440,
-  },
-  {
-    key: 'marketing.abandonedCartEnabled',
-    group: 'marketing',
-    label: 'Abandoned cart emails',
-    type: 'boolean',
-    hint: 'Signed-in customers with items left in their cart.',
-  },
-  {
-    key: 'marketing.abandonedCartDelays',
-    group: 'marketing',
-    label: 'Abandoned cart delays (hours)',
-    type: 'string',
-    hint: 'One email per number, counted from the last cart change, e.g. 1,24,72.',
-  },
-  {
-    key: 'marketing.abandonedCartCoupon',
-    group: 'marketing',
-    label: 'Coupon in the last abandoned cart email',
-    type: 'string',
-    hint: 'Optional coupon code (create it in Marketing → Coupons).',
-  },
-  {
-    key: 'marketing.winBackEnabled',
-    group: 'marketing',
-    label: 'Win-back emails',
-    type: 'boolean',
-    hint: 'Once per inactive period, to customers who stopped ordering.',
-  },
-  {
-    key: 'marketing.winBackDays',
-    group: 'marketing',
-    label: 'Win-back after (days without an order)',
-    type: 'number',
-    min: 14,
-    max: 730,
-  },
-  {
-    key: 'marketing.winBackCoupon',
-    group: 'marketing',
-    label: 'Coupon in the win-back email',
-    type: 'string',
-  },
-  {
-    key: 'tax.enabled',
-    group: 'tax',
-    label: 'Charge tax',
-    type: 'boolean',
-    hint: 'Off = no tax at checkout (rates are kept).',
-  },
-  {
-    key: 'tax.defaultCountry',
-    group: 'tax',
-    label: 'Tax country before an address is entered',
-    type: 'string',
-    hint: 'Two-letter code, e.g. PK. Used for the estimate on the checkout page.',
   },
   {
     key: 'checkout.codFee',
@@ -389,6 +330,7 @@ export const SETTING_DEFINITIONS: SettingDefinition[] = [
     label: 'Cash on delivery fee',
     type: 'number',
     min: 0,
+    hint: 'Extra charge added to cash on delivery orders. 0 = no fee.',
   },
   {
     key: 'checkout.codMaxOrderTotal',
@@ -396,56 +338,23 @@ export const SETTING_DEFINITIONS: SettingDefinition[] = [
     label: 'Cash on delivery max order',
     type: 'number',
     min: 0,
+    hint: '0 = no limit.',
   },
   {
     key: 'shipping.flatRatePerVendor',
     group: 'shipping',
-    label: 'Fallback flat rate per seller',
+    label: 'Default delivery charge',
     type: 'number',
     min: 0,
+    hint: 'Used only when no delivery zone matches the address (zones: Settings → Delivery zones).',
   },
   {
     key: 'shipping.freeShippingAbove',
     group: 'shipping',
-    label: 'Free shipping above (per seller)',
+    label: 'Free delivery above',
     type: 'number',
     min: 0,
-  },
-  {
-    key: 'payments.codEnabled',
-    group: 'payments',
-    label: 'Cash on delivery',
-    type: 'boolean',
-    hint: 'Per delivery option: Settings → Shipping. Online gateways: Settings → Payments.',
-  },
-  {
-    key: 'marketplace.productApprovalRequired',
-    group: 'vendors',
-    label: 'Review new products before publishing',
-    type: 'boolean',
-  },
-  {
-    key: 'marketplace.defaultCommissionRate',
-    group: 'vendors',
-    label: 'Default commission (%)',
-    type: 'number',
-    min: 0,
-    max: 100,
-  },
-  {
-    key: 'payouts.holdDays',
-    group: 'vendors',
-    label: 'Payout hold after delivery (days)',
-    type: 'number',
-    min: 0,
-    max: 90,
-  },
-  {
-    key: 'payouts.minimumAmount',
-    group: 'vendors',
-    label: 'Minimum payout',
-    type: 'number',
-    min: 0,
+    hint: 'For the default delivery charge. 0 = never free.',
   },
   {
     key: 'returns.windowDays',
@@ -466,84 +375,6 @@ export const SETTING_DEFINITIONS: SettingDefinition[] = [
     group: 'returns',
     label: 'Approve questions before publishing',
     type: 'boolean',
-  },
-  {
-    key: 'loyalty.pointsPerCurrencyUnit',
-    group: 'loyalty',
-    label: 'Points per currency unit spent',
-    type: 'number',
-    min: 0,
-  },
-  {
-    key: 'loyalty.pointValue',
-    group: 'loyalty',
-    label: 'Value of one point',
-    type: 'number',
-    min: 0,
-  },
-  {
-    key: 'loyalty.maxRedeemPercent',
-    group: 'loyalty',
-    label: 'Max share of order paid with points (%)',
-    type: 'number',
-    min: 0,
-    max: 100,
-  },
-  {
-    key: 'loyalty.signupBonus',
-    group: 'loyalty',
-    label: 'Sign-up bonus points',
-    type: 'number',
-    min: 0,
-  },
-  {
-    key: 'loyalty.reviewPoints',
-    group: 'loyalty',
-    label: 'Points per review',
-    type: 'number',
-    min: 0,
-  },
-  {
-    key: 'loyalty.referralPoints',
-    group: 'loyalty',
-    label: 'Referral points',
-    type: 'number',
-    min: 0,
-  },
-  {
-    key: 'loyalty.expiryDays',
-    group: 'loyalty',
-    label: 'Points expire after (days)',
-    type: 'number',
-    min: 0,
-  },
-  {
-    key: 'customers.newDays',
-    group: 'customers',
-    label: '"New" = joined within (days)',
-    type: 'number',
-    min: 1,
-  },
-  {
-    key: 'customers.repeatOrders',
-    group: 'customers',
-    label: '"Repeat" = at least (orders)',
-    type: 'number',
-    min: 2,
-  },
-  {
-    key: 'customers.highValueSpend',
-    group: 'customers',
-    label: '"High value" = spent at least',
-    type: 'number',
-    min: 0,
-  },
-  {
-    key: 'customers.inactiveDays',
-    group: 'customers',
-    label: '"Inactive" = no order for (days)',
-    type: 'number',
-    min: 1,
   },
 ];
 
@@ -584,7 +415,11 @@ export interface SettingsDto {
 
 export interface PublicStoreSettings {
   name: string;
+  /** Motto shown on the website (store.tagline). */
+  tagline: string | null;
   logoUrl: string | null;
+  /** WhatsApp number with country code, digits only (store.whatsapp). */
+  whatsapp: string | null;
   supportEmail: string | null;
   phone: string | null;
   address: string | null;

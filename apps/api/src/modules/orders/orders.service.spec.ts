@@ -112,11 +112,12 @@ describe('OrdersService — vendor status flow', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('requires a tracking number to ship', async () => {
-    const { service } = setup('PACKED');
-    await expect(
-      service.vendorUpdateStatus('u1', 'vo1', { status: 'SHIPPED' }),
-    ).rejects.toBeInstanceOf(BadRequestException);
+  it('ships without a tracking number (own delivery)', async () => {
+    const { tx, service } = setup('PACKED');
+    await service.vendorUpdateStatus('u1', 'vo1', { status: 'SHIPPED' });
+    expect(tx.shipment.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ trackingNumber: undefined, status: 'IN_TRANSIT' }),
+    });
   });
 
   it('shipping commits the reserved stock as a sale and creates the shipment', async () => {

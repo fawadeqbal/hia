@@ -188,8 +188,7 @@ export class OrdersService {
         `An order that is "${ORDER_STATUS_LABELS[from]}" cannot be marked "${ORDER_STATUS_LABELS[dto.status]}"`,
       );
     }
-    if (dto.status === 'SHIPPED' && !dto.trackingNumber)
-      throw new BadRequestException('Enter the tracking number to mark as shipped');
+    // Tracking number is optional: the shop often delivers itself (no courier tracking).
     if (dto.status === 'CANCELLED' && (dto.note?.length ?? 0) < ORDER_REASON_MIN) {
       throw new BadRequestException('Tell the customer why the order is cancelled');
     }

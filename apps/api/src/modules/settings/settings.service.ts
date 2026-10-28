@@ -77,7 +77,9 @@ export class SettingsService {
       typeof values[k] === 'string' && values[k] !== '' ? (values[k] as string) : null;
     return {
       name: text('store.name') ?? 'Store',
+      tagline: text('store.tagline'),
       logoUrl: text('store.logoUrl'),
+      whatsapp: text('store.whatsapp')?.replace(/\D/g, '') || null,
       supportEmail: text('store.supportEmail'),
       phone: text('store.phone'),
       address: text('store.address'),
