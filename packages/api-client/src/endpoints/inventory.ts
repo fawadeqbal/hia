@@ -1,8 +1,10 @@
 import type {
+  ImportResult,
   LowStockRow,
   MovementQuery,
   Paginated,
   StockAdjustInput,
+  StockImportInput,
   StockMovementDto,
   StockQuery,
   StockRow,
@@ -23,7 +25,7 @@ function toQuery(params: object): string {
 const VENDOR = '/vendor/inventory';
 
 export const inventoryApi = {
-  // ---- seller ----
+  // ---- the shop ----
   /** Creates the store's main warehouse on first call. */
   warehouses: () => api<WarehouseDto[]>(`${VENDOR}/warehouses`),
   createWarehouse: (body: WarehouseInput) =>
@@ -33,6 +35,9 @@ export const inventoryApi = {
   stock: (params: StockQuery) => api<Paginated<StockRow>>(`${VENDOR}/stock${toQuery(params)}`),
   adjust: (body: StockAdjustInput) =>
     api<StockRow>(`${VENDOR}/stock/adjust`, { method: 'POST', body }),
+  /** Excel upload (dryRun = preview). */
+  importStock: (body: StockImportInput) =>
+    api<ImportResult>(`${VENDOR}/stock/import`, { method: 'POST', body }),
   movements: (params: MovementQuery) =>
     api<Paginated<StockMovementDto>>(`${VENDOR}/movements${toQuery(params)}`),
 

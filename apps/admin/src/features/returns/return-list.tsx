@@ -24,6 +24,9 @@ import {
   type DataTableColumn,
 } from '@ecommerce/ui';
 import { queryKeys, returnsApi } from '@/lib/api-client';
+import { ExcelDownloadButton } from '@/components/excel/excel-download-button';
+import { fetchAllPages } from '@/lib/excel';
+import { returnColumns } from '@/lib/excel-columns';
 
 type Filter = ReturnStatus | 'ALL';
 const TABS: { value: Filter; label: string }[] = [
@@ -87,6 +90,15 @@ export function ReturnList() {
       <PageHeader
         title="Returns"
         description="Return requests from customers. Approve, receive the item, then refund."
+        actions={
+          <ExcelDownloadButton
+            name="returns"
+            columns={returnColumns}
+            load={() =>
+              fetchAllPages((page, limit) => returnsApi.admin.list({ ...params, page, limit }))
+            }
+          />
+        }
       />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Tabs

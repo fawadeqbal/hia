@@ -23,6 +23,7 @@ export * from './payments/gateway';
 export * from './seo/seo';
 export * from './orders/documents';
 export * from './orders/tools';
+export * from './imports/imports';
 export * from './support/inquiry';
 export * from './schemas/inquiry.schema';
 export * from './schemas/common';

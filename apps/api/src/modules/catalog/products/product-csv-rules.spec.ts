@@ -1,30 +1,55 @@
 import { parseCsv } from '@ecommerce/types';
-import { createProblems, mapHeader, readRow } from './product-csv-rules';
+import { changedFields, createProblems, readRow } from './product-csv-rules';
 
-describe('product CSV', () => {
-  it('parses quotes, commas and new lines inside quotes', () => {
+const now = {
+  name: 'Gas Lift',
+  category: 'gas-lifts',
+  price: 2200,
+  compareAtPrice: null,
+  shortDescription: null,
+  description: 'Class 4',
+  weightGrams: null,
+};
+
+describe('product upload rows', () => {
+  it('parses CSV quotes, commas and new lines inside quotes', () => {
     expect(parseCsv('a,b\r\n"x, y","say ""hi""\nthere"\n\n')).toEqual([
       ['a', 'b'],
       ['x, y', 'say "hi"\nthere'],
     ]);
   });
 
-  it('maps headers loosely and requires sku', () => {
-    expect(mapHeader(['SKU', 'Compare at price']).index.get('compare_at_price')).toBe(1);
-    expect(mapHeader(['name']).missing).toEqual(['sku']);
-  });
-
   it('reads a valid row and treats empty cells as unchanged', () => {
-    const { index } = mapHeader(['sku', 'name', 'price', 'compare_at_price', 'weight_grams']);
-    const { row, problems } = readRow(['HIA-GL-1', 'Gas Lift', '2,200', '', ''], index);
+    const { row, problems } = readRow({
+      sku: 'HIA-GL-1',
+      name: 'Gas Lift',
+      price: '2,200',
+      compare_at_price: '',
+    });
     expect(problems).toEqual([]);
     expect(row).toEqual({ sku: 'HIA-GL-1', name: 'Gas Lift', price: 2200 });
     expect(createProblems(row)).toEqual(['new product needs category']);
   });
 
   it('reports bad values', () => {
-    const { index } = mapHeader(['sku', 'price', 'compare_at_price', 'weight_grams']);
-    const { problems } = readRow(['bad sku!', '-5', '1', '2.5'], index);
+    const { problems } = readRow({
+      sku: 'bad sku!',
+      price: '-5',
+      compare_at_price: '1',
+      weight_grams: '2.5',
+    });
     expect(problems).toHaveLength(3);
+  });
+
+  it('lists only the fields that really change', () => {
+    expect(changedFields(readRow({ sku: 'A', name: 'Gas Lift', price: '2200' }).row, now)).toEqual(
+      [],
+    );
+    expect(
+      changedFields(
+        readRow({ sku: 'A', price: '2500', description: 'Class 4', weight_grams: '900' }).row,
+        now,
+      ),
+    ).toEqual(['price', 'weight']);
   });
 });

@@ -5,7 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { Prisma } from '@ecommerce/database';
-import { normalizeCouponCode, type CouponDto } from '@ecommerce/types';
+import {
+  normalizeCouponCode,
+  type CouponDto,
+  type ImportResult,
+  type SheetRow,
+} from '@ecommerce/types';
+import { sheetRowsAsText } from '../../common/dto/import.dto';
+import { assertSheetSize } from '../../common/utils/sheet-cells';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import {
@@ -15,6 +22,7 @@ import {
   type EngineLine,
   type EngineResult,
 } from './discount-engine';
+import { couponProblems, planCouponImport } from './coupon-import-rules';
 import type { CouponDtoIn } from './dto/promotion.dto';
 import { toCouponDto } from './promotion.mapper';
 
@@ -170,6 +178,32 @@ export class PromotionsService {
     });
   }
 
+  /**
+   * Excel upload: coupons matched by code are updated, new codes created. Checks everything first;
+   * saves only when every row is valid, through createCoupon() / updateCoupon() (same rules, audit log).
+   */
+  async importCoupons(
+    rawRows: SheetRow[],
+    dryRun: boolean,
+    actorId: string,
+  ): Promise<ImportResult> {
+    const rows = sheetRowsAsText(rawRows);
+    assertSheetSize(rows, 'coupon');
+    const existing = (await this.prisma.coupon.findMany()).map((c) => {
+      const { usedCount: _used, createdAt: _created, ...input } = toCouponDto(c);
+      return input;
+    });
+    const { result, changes } = planCouponImport(rows, existing, dryRun);
+    if (dryRun) return result;
+    if (result.errors > 0)
+      throw new BadRequestException('Some rows have problems. Fix them and check the file again.');
+    for (const c of changes) {
+      if (c.kind === 'create') await this.createCoupon(c.input as CouponDtoIn, actorId);
+      else await this.updateCoupon(c.id, c.input as CouponDtoIn, actorId);
+    }
+    return result;
+  }
+
   private async find(id: string) {
     const c = await this.prisma.coupon.findUnique({ where: { id } });
     if (!c) throw new NotFoundException('Coupon not found');
@@ -196,10 +230,6 @@ function couponData(dto: CouponDtoIn) {
 }
 
 function assertCoupon(dto: CouponDtoIn) {
-  if (dto.discountType === 'PERCENTAGE' && (dto.value <= 0 || dto.value > 100))
-    throw new BadRequestException('Percentage must be between 1 and 100');
-  if (dto.discountType === 'FIXED_AMOUNT' && dto.value <= 0)
-    throw new BadRequestException('Enter an amount');
-  if (dto.startsAt && dto.endsAt && new Date(dto.endsAt) <= new Date(dto.startsAt))
-    throw new BadRequestException('The end must be after the start');
+  const problem = couponProblems(dto)[0];
+  if (problem) throw new BadRequestException(problem);
 }

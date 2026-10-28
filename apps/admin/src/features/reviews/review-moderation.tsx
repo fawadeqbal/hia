@@ -16,6 +16,9 @@ import {
   formatDate,
 } from '@ecommerce/ui';
 import { queryKeys, reviewsApi } from '@/lib/api-client';
+import { ExcelDownloadButton } from '@/components/excel/excel-download-button';
+import { fetchAllPages } from '@/lib/excel';
+import { reviewColumns } from '@/lib/excel-columns';
 import { QuestionList } from './question-list';
 
 type Section = 'reviews' | 'questions';
@@ -33,7 +36,7 @@ export function ReviewModeration() {
     <div className="mx-auto max-w-5xl space-y-4 p-6">
       <PageHeader
         title="Reviews & Q&A"
-        description="Publish or hide customer reviews and questions. Settings: reviews.requireApproval, questions.requireApproval."
+        description="Publish or hide customer reviews and questions. Whether they need your approval first is set in Shop settings."
       />
       <Tabs
         items={[
@@ -66,14 +69,23 @@ function Reviews() {
 
   return (
     <div className="space-y-4">
-      <Tabs
-        items={STATUS_TABS}
-        value={filter}
-        onChange={(v) => {
-          setFilter(v);
-          setPage(1);
-        }}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Tabs
+          items={STATUS_TABS}
+          value={filter}
+          onChange={(v) => {
+            setFilter(v);
+            setPage(1);
+          }}
+        />
+        <ExcelDownloadButton
+          name="reviews"
+          columns={reviewColumns}
+          load={() =>
+            fetchAllPages((page, limit) => reviewsApi.adminReviews({ ...params, page, limit }))
+          }
+        />
+      </div>
       {error ? <Alert tone="error">{error.message}</Alert> : null}
       {moderate.error ? <Alert tone="error">{moderate.error.message}</Alert> : null}
       {isLoading ? <Spinner /> : null}

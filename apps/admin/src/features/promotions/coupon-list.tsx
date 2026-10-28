@@ -14,13 +14,14 @@ import {
   type DataTableColumn,
 } from '@ecommerce/ui';
 import { promotionsApi, queryKeys } from '@/lib/api-client';
+import { CouponExcelTools } from './coupon-excel';
 
 const describe = (c: CouponDto) =>
   c.discountType === 'PERCENTAGE'
     ? `${c.value}% off${c.maxDiscount !== null ? ` (max ${c.maxDiscount})` : ''}`
     : c.discountType === 'FIXED_AMOUNT'
       ? `${c.value} off`
-      : 'Free shipping';
+      : 'Free delivery';
 
 export function CouponList() {
   const { data, error, isLoading } = useQuery({
@@ -77,9 +78,12 @@ export function CouponList() {
         title="Coupons"
         description="Discount codes customers enter at checkout."
         actions={
-          <Link href="/promotions/coupons/new" className={buttonStyles()}>
-            New coupon
-          </Link>
+          <>
+            <CouponExcelTools />
+            <Link href="/promotions/coupons/new" className={buttonStyles()}>
+              New coupon
+            </Link>
+          </>
         }
       />
       {error ? (

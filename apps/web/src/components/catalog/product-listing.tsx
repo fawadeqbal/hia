@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import type { ReactNode } from 'react';
 import {
   STOREFRONT_SORTS,
   STOREFRONT_SORT_LABELS,

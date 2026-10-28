@@ -1,6 +1,7 @@
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
@@ -9,8 +10,10 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true }); // rawBody: payment webhook signatures
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true }); // rawBody: payment webhook signatures
   const config = app.get(ConfigService);
+  // Excel uploads send up to IMPORT_MAX_ROWS rows as JSON.
+  app.useBodyParser('json', { limit: '5mb' });
 
   app.use(helmet());
   app.use(cookieParser());
@@ -34,8 +37,8 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   const swagger = new DocumentBuilder()
-    .setTitle('E-Commerce API')
-    .setDescription('Multi-vendor e-commerce platform REST API')
+    .setTitle('HIA Furniture Solutions API')
+    .setDescription('Online shop REST API')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

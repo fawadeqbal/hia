@@ -20,21 +20,22 @@ manages everything from the admin panel.
 
 ## What the shop owner can do (admin panel)
 
-| Menu                   | Use it to…                                                                                                                                                 |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Dashboard / Reports    | See new orders to confirm, new inquiries, low stock, sales                                                                                                 |
-| **Orders**             | Open an order → **Confirm → Packed → Shipped → Delivered** (tracking number optional), invoice PDF, packing slip, cancel                                   |
-| **Inquiries**          | Repair requests, wholesale / institutional quotes and questions from the website Contact page. Call / WhatsApp / email the customer, keep notes, mark done |
-| Customers / Returns    | Customer list and history; approve and refund returns                                                                                                      |
-| **Products**           | Add / edit products: photos, price, options (size, colour), specifications, publish, show on home page                                                     |
-| Categories             | Product groups shown in the website menu                                                                                                                   |
-| **Stock**              | Add or remove stock quantities, see the history                                                                                                            |
-| Options (size, colour) | The option values products can use (e.g. 50 mm / 60 mm, Black / Grey)                                                                                      |
-| Coupons                | Discount codes                                                                                                                                             |
-| Website                | Home page banners, pages (About, Services, policies), menus, FAQs, reviews & questions                                                                     |
-| **Shop settings**      | Shop name, motto, logo, **phone, WhatsApp number**, email, address, COD fee/limit, delivery charge, return window                                          |
-| Delivery zones         | Delivery prices and the "pick up from shop" option                                                                                                         |
-| Payments               | **Cash on delivery** is on. Online card payments can be switched on later here                                                                             |
+| Menu                   | Use it to…                                                                                                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Dashboard / Reports    | See new orders to confirm, new inquiries, low stock, sales                                                                                                               |
+| **Orders**             | Open an order → **Confirm → Packed → Shipped → Delivered** (tracking number optional), invoice PDF, packing slip, cancel                                                 |
+| **Inquiries**          | Repair requests, wholesale / institutional quotes and questions from the website Contact page. Call / WhatsApp / email the customer, keep notes, mark done               |
+| Customers / Returns    | Customer list and history; approve and refund returns                                                                                                                    |
+| **Products**           | Add / edit products: photos, price, options (size, colour), specifications, publish, show on home page                                                                   |
+| Categories             | Product groups shown in the website menu                                                                                                                                 |
+| **Stock**              | Add or remove stock quantities, see the history                                                                                                                          |
+| Options (size, colour) | The option values products can use (e.g. 50 mm / 60 mm, Black / Grey)                                                                                                    |
+| Coupons                | Discount codes                                                                                                                                                           |
+| **Excel**              | **Download Excel** on every list; **Upload Excel** on Stock (replace counted stock or add new arrivals), Products, Categories and Coupons — with a preview before saving |
+| Website                | Home page banners, pages (About, Services, policies), menus, FAQs, reviews & questions                                                                                   |
+| **Shop settings**      | Shop name, motto, logo, **phone, WhatsApp number**, email, address, COD fee/limit, delivery charge, return window                                                        |
+| Delivery zones         | Delivery prices and the "pick up from shop" option                                                                                                                       |
+| Payments               | **Cash on delivery** is on. Online card payments can be switched on later here                                                                                           |
 
 New inquiries and new orders are also emailed to the admin.
 

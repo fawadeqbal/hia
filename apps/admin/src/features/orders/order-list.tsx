@@ -23,6 +23,9 @@ import {
   type DataTableColumn,
 } from '@ecommerce/ui';
 import { ordersApi, queryKeys } from '@/lib/api-client';
+import { ExcelDownloadButton } from '@/components/excel/excel-download-button';
+import { fetchAllPages } from '@/lib/excel';
+import { orderColumns } from '@/lib/excel-columns';
 import { OrderStatusBadge } from './order-status-badge';
 
 type Filter = OrderStatus | 'ALL';
@@ -112,9 +115,18 @@ export function AdminOrderList() {
         title="Orders"
         description="Every order placed on the website or added by you."
         actions={
-          <Link href="/orders/new" className={buttonStyles()}>
-            Manual order
-          </Link>
+          <>
+            <ExcelDownloadButton
+              name="orders"
+              columns={orderColumns}
+              load={() =>
+                fetchAllPages((page, limit) => ordersApi.adminList({ ...params, page, limit }))
+              }
+            />
+            <Link href="/orders/new" className={buttonStyles()}>
+              Manual order
+            </Link>
+          </>
         }
       />
 

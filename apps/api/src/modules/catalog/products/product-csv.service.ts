@@ -1,17 +1,19 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import {
   PRODUCT_CSV_COLUMNS,
-  PRODUCT_IMPORT_MAX_ROWS,
-  parseCsv,
+  emptyImportResult,
+  pushImportRow,
   type CsvExportDto,
   type ProductImportResult,
-  type ProductImportRow,
+  type SheetRow,
 } from '@ecommerce/types';
+import { sheetRowsAsText } from '../../../common/dto/import.dto';
+import { assertSheetSize, isEmptyRow } from '../../../common/utils/sheet-cells';
 import { ownedOrStaffed } from '../../../common/utils/vendor-scope';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { AuditService } from '../../audit/audit.service';
 import type { CreateProductDto, UpdateProductDto } from './dto/product.dto';
-import { createProblems, mapHeader, readRow } from './product-csv-rules';
+import { changedFields, createProblems, readRow, type CsvRow } from './product-csv-rules';
 import { ProductsService } from './products.service';
 
 const exportSelect = {
@@ -27,9 +29,10 @@ const exportSelect = {
 } as const;
 
 /**
- * Product CSV: export the shop's products, import to create (as drafts) or update by SKU — through ProductsService,
- * so every product rule (category, prices, unique SKU) applies.
- * Only simple products (no options) are updated by import; variants stay in the product editor.
+ * Product Excel: export the shop's products; upload to create (as drafts) or update by SKU — through
+ * ProductsService, so every product rule (category, prices, unique SKU) applies. Checks every row first
+ * and saves only when the whole file is valid. Rows that change nothing are fine for products with
+ * options; changing such a product is done in the product page.
  */
 @Injectable()
 export class ProductCsvService {
@@ -52,15 +55,15 @@ export class ProductCsvService {
     };
   }
 
-  async vendorImport(userId: string, csv: string, dryRun: boolean): Promise<ProductImportResult> {
+  async vendorImport(
+    userId: string,
+    rawRows: SheetRow[],
+    dryRun: boolean,
+  ): Promise<ProductImportResult> {
+    const rows = sheetRowsAsText(rawRows);
+    assertSheetSize(rows, 'product');
+    if (!rows.some((r) => 'sku' in r)) throw new BadRequestException('Missing column: sku');
     const vendor = await this.vendorOf(userId);
-    const table = parseCsv(csv);
-    if (table.length < 2)
-      throw new BadRequestException('The file needs a header row and at least one product');
-    if (table.length - 1 > PRODUCT_IMPORT_MAX_ROWS)
-      throw new BadRequestException(`At most ${PRODUCT_IMPORT_MAX_ROWS} products per file`);
-    const { index, missing } = mapHeader(table[0]!);
-    if (missing.length) throw new BadRequestException(`Missing column: ${missing.join(', ')}`);
 
     const [categories, mine, taken] = await Promise.all([
       this.prisma.category.findMany({ select: { id: true, slug: true } }),
@@ -69,7 +72,19 @@ export class ProductCsvService {
         select: {
           sku: true,
           isDefault: true,
-          product: { select: { id: true, _count: { select: { variants: true } } } },
+          product: {
+            select: {
+              id: true,
+              name: true,
+              basePrice: true,
+              compareAtPrice: true,
+              shortDescription: true,
+              description: true,
+              weightGrams: true,
+              category: { select: { slug: true } },
+              _count: { select: { variants: true } },
+            },
+          },
         },
       }),
       this.prisma.productVariant.findMany({
@@ -82,75 +97,93 @@ export class ProductCsvService {
     const otherSku = new Set(taken.map((t) => t.sku.toLowerCase()));
     const seen = new Set<string>();
 
-    const result: ProductImportResult = { dryRun, created: 0, updated: 0, errors: 0, rows: [] };
-    for (const [i, cells] of table.slice(1).entries()) {
+    const result: ProductImportResult = emptyImportResult(dryRun);
+    const saves: { row: CsvRow; productId: string | null }[] = [];
+    for (const [i, sheetRow] of rows.entries()) {
+      if (isEmptyRow(sheetRow)) continue;
       const line = i + 2;
-      const { row, problems } = readRow(cells, index);
+      const { row, problems } = readRow(sheetRow);
       const key = row.sku.toLowerCase();
-      if (seen.has(key)) problems.push('sku appears twice in the file');
+      if (seen.has(key)) problems.push('this SKU is in the file twice');
       seen.add(key);
       if (row.category && !catId.has(row.category))
-        problems.push(`unknown category "${row.category}"`);
+        problems.push(`no category with the slug "${row.category}"`);
       const existing = ownSku.get(key);
-      if (!existing && otherSku.has(key)) problems.push('sku is already used');
-      if (existing && !existing.isDefault)
-        problems.push('sku belongs to a product option; edit it in the product editor');
-      if (existing && existing.product._count.variants > 1)
-        problems.push('product has options; edit it in the product editor');
+      if (!existing && otherSku.has(key)) problems.push('this SKU is already used');
       if (!existing) problems.push(...createProblems(row));
-      const out: ProductImportRow = {
-        line,
-        sku: row.sku,
-        action: existing ? 'update' : 'create',
-        message: null,
-      };
+
+      const p = existing?.product;
+      const changes = p
+        ? changedFields(row, {
+            name: p.name,
+            category: p.category.slug,
+            price: Number(p.basePrice),
+            compareAtPrice: p.compareAtPrice === null ? null : Number(p.compareAtPrice),
+            shortDescription: p.shortDescription,
+            description: p.description,
+            weightGrams: p.weightGrams,
+          })
+        : [];
+      if (existing && changes.length && !existing.isDefault)
+        problems.push('this SKU is a product option; edit it in the product page');
+      else if (existing && changes.length && existing.product._count.variants > 1)
+        problems.push('this product has options (sizes, colours); edit it in the product page');
+
       if (problems.length) {
-        Object.assign(out, { action: 'error', message: problems.join('; ') });
-        result.errors++;
-        result.rows.push(out);
-        continue;
+        pushImportRow(result, {
+          line,
+          key: row.sku,
+          action: 'error',
+          message: problems.join('; '),
+        });
+      } else if (!existing) {
+        saves.push({ row, productId: null });
+        pushImportRow(result, {
+          line,
+          key: row.sku,
+          action: 'create',
+          message: `New draft: ${row.name}`,
+        });
+      } else if (!changes.length) {
+        pushImportRow(result, { line, key: row.sku, action: 'unchanged', message: null });
+      } else {
+        saves.push({ row, productId: existing.product.id });
+        pushImportRow(result, {
+          line,
+          key: row.sku,
+          action: 'update',
+          message: `Change ${changes.join(', ')}`,
+        });
       }
-      if (!dryRun) {
-        const fields = {
-          name: row.name,
-          categoryId: row.category ? catId.get(row.category) : undefined,
-          basePrice: row.price,
-          compareAtPrice: row.compareAtPrice,
-          shortDescription: row.shortDescription,
-          description: row.description,
-          weightGrams: row.weightGrams,
-        };
-        try {
-          if (existing) {
-            await this.products.update(userId, existing.product.id, {
-              ...strip(fields),
-              sku: row.sku,
-            } as UpdateProductDto);
-          } else {
-            await this.products.create(userId, {
-              ...strip(fields),
-              sku: row.sku,
-            } as CreateProductDto);
-          }
-        } catch (error) {
-          Object.assign(out, { action: 'error', message: (error as Error).message });
-          result.errors++;
-          result.rows.push(out);
-          continue;
-        }
-      }
-      if (out.action === 'create') result.created++;
-      else result.updated++;
-      result.rows.push(out);
     }
-    if (!dryRun)
-      await this.audit.log({
-        actorId: userId,
-        action: 'catalog.product.import',
-        entityType: 'Vendor',
-        entityId: vendor.id,
-        after: { created: result.created, updated: result.updated, errors: result.errors },
+    if (dryRun) return result;
+    if (result.errors > 0)
+      throw new BadRequestException('Some rows have problems. Fix them and check the file again.');
+
+    for (const { row, productId } of saves) {
+      const fields = strip({
+        name: row.name,
+        categoryId: row.category ? catId.get(row.category) : undefined,
+        basePrice: row.price,
+        compareAtPrice: row.compareAtPrice,
+        shortDescription: row.shortDescription,
+        description: row.description,
+        weightGrams: row.weightGrams,
       });
+      if (productId)
+        await this.products.update(userId, productId, {
+          ...fields,
+          sku: row.sku,
+        } as UpdateProductDto);
+      else await this.products.create(userId, { ...fields, sku: row.sku } as CreateProductDto);
+    }
+    await this.audit.log({
+      actorId: userId,
+      action: 'catalog.product.import',
+      entityType: 'Vendor',
+      entityId: vendor.id,
+      after: { created: result.created, updated: result.updated },
+    });
     return result;
   }
 

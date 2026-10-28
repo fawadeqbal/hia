@@ -17,6 +17,7 @@ import {
   type DataTableColumn,
 } from '@ecommerce/ui';
 import { categoriesApi, queryKeys } from '@/lib/api-client';
+import { CategoryExcelTools } from './category-excel';
 
 export function CategoryList() {
   const queryClient = useQueryClient();
@@ -112,9 +113,12 @@ export function CategoryList() {
         title="Categories"
         description="Product groups shown in the website menu and filters."
         actions={
-          <Link href="/catalog/categories/new" className={buttonStyles()}>
-            New category
-          </Link>
+          <>
+            <CategoryExcelTools rows={data} />
+            <Link href="/catalog/categories/new" className={buttonStyles()}>
+              New category
+            </Link>
+          </>
         }
       />
 

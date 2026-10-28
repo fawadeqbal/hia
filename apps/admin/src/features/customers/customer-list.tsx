@@ -26,6 +26,9 @@ import {
   type DataTableColumn,
 } from '@ecommerce/ui';
 import { customersApi, queryKeys } from '@/lib/api-client';
+import { ExcelDownloadButton } from '@/components/excel/excel-download-button';
+import { fetchAllPages } from '@/lib/excel';
+import { customerColumns } from '@/lib/excel-columns';
 import { CustomerStatusBadge, SegmentBadges } from './customer-badges';
 
 type Filter = CustomerSegment | 'all';
@@ -95,7 +98,16 @@ export function CustomerList() {
     <div className="mx-auto max-w-7xl p-6">
       <PageHeader
         title="Customers"
-        description="Segments: new (joined recently), repeat (2+ orders), high value (big spenders), inactive (no orders lately). Thresholds live in Settings."
+        description="Segments: new (joined recently), repeat (2+ orders), high value (big spenders), inactive (no orders lately)."
+        actions={
+          <ExcelDownloadButton
+            name="customers"
+            columns={customerColumns}
+            load={() =>
+              fetchAllPages((page, limit) => customersApi.list({ ...params, page, limit }))
+            }
+          />
+        }
       />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Tabs

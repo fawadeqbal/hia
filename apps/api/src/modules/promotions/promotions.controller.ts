@@ -10,7 +10,8 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Role, type CouponDto } from '@ecommerce/types';
+import { Role, type CouponDto, type ImportResult } from '@ecommerce/types';
+import { ImportRowsDto } from '../../common/dto/import.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CouponDtoIn } from './dto/promotion.dto';
@@ -28,6 +29,15 @@ export class AdminPromotionsController {
   }
   @Get(':id') get(@Param('id') id: string): Promise<CouponDto> {
     return this.promotions.getCoupon(id);
+  }
+  /** Excel upload: dryRun = check only; otherwise saves when every row is valid. */
+  @Post('import')
+  @HttpCode(HttpStatus.OK)
+  importRows(
+    @Body() dto: ImportRowsDto,
+    @CurrentUser('sub') actorId: string,
+  ): Promise<ImportResult> {
+    return this.promotions.importCoupons(dto.rows, dto.dryRun, actorId);
   }
   @Post() create(
     @Body() dto: CouponDtoIn,

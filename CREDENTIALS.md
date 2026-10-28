@@ -50,7 +50,10 @@ overwrites an existing user.
    _In progress_), then **Mark done**.
 6. **Admin → Products → Add product** → name, price, category → **Save as draft** → add photos and
    options → **Publish on the website** → tick **Show on the home page** → **Stock** → add quantity.
-7. **Admin → Shop settings** → set the WhatsApp number → the website shows a _Chat on WhatsApp_ button.
+7. **Admin → Stock → Upload Excel** → choose **Add** → **Download template** → type how many arrived for
+   one or two products → choose the file → check the preview → **Confirm and save**. The stock and its
+   history update. (**Download Excel** on any list gives you the list as an Excel file.)
+8. **Admin → Shop settings** → set the WhatsApp number → the website shows a _Chat on WhatsApp_ button.
 
 ## Useful commands
 

@@ -17,13 +17,17 @@ import {
   MANUAL_MOVEMENT_TYPES,
   STOCK_ADJUST_MODES,
   STOCK_FILTERS,
+  STOCK_IMPORT_MODES,
   type ManualMovementType,
   type StockAdjustInput,
   type StockAdjustMode,
   type StockFilter,
+  type StockImportInput,
+  type StockImportMode,
   type WarehouseAddress,
   type WarehouseInput,
 } from '@ecommerce/types';
+import { ImportRowsDto } from '../../../common/dto/import.dto';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto';
 
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
@@ -95,4 +99,17 @@ export class MovementQueryDto extends PaginationQueryDto {
 
 export class LowStockQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional() @IsOptional() @Transform(trim) @IsString() @MaxLength(100) search?: string;
+}
+
+export class StockImportDto extends ImportRowsDto implements StockImportInput {
+  @ApiProperty({
+    enum: STOCK_IMPORT_MODES,
+    description: 'replace = new count · add = units arrived',
+  })
+  @IsIn(STOCK_IMPORT_MODES)
+  mode: StockImportMode;
+  @ApiPropertyOptional({ description: 'Defaults to the main warehouse' })
+  @IsOptional()
+  @IsString()
+  warehouseId?: string;
 }

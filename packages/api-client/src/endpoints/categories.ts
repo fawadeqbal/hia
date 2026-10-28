@@ -3,6 +3,8 @@ import type {
   CategoryInput,
   CategoryListItem,
   CategoryTreeNode,
+  ImportResult,
+  ImportRowsInput,
 } from '@ecommerce/types';
 import { api } from '../http';
 
@@ -19,4 +21,7 @@ export const categoriesApi = {
   update: (id: string, body: Partial<CategoryInput>) =>
     api<CategoryDto>(`${ADMIN}/${id}`, { method: 'PATCH', body }),
   remove: (id: string) => api<void>(`${ADMIN}/${id}`, { method: 'DELETE' }),
+  /** Excel upload (dryRun = preview). */
+  importRows: (body: ImportRowsInput) =>
+    api<ImportResult>(`${ADMIN}/import`, { method: 'POST', body }),
 };

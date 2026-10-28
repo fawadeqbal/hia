@@ -180,24 +180,25 @@ For entity **X** (e.g. `Category`), module **M** (e.g. `catalog`):
 
 ## 4. Reference implementations (copy the closest one)
 
-| Pattern                                                               | Copy from                                                                                                           |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Tree / parent-child, cycle prevention                                 | **Category** — `modules/catalog/categories/*`, `admin/features/categories/*`                                        |
-| Parent with editable child list (`useFieldArray`, transactional sync) | **Attribute** — `modules/catalog/attributes/*`, `features/attributes/attribute-form.tsx`                            |
-| File upload                                                           | **Media** — `modules/media/*`, `ImageUploadField`                                                                   |
-| Shop entity with publish workflow, variant builder                    | **Product** — `modules/catalog/products/*` (shop + admin controllers, mapper), `admin/features/products/*`          |
-| Quantities with a movement log                                        | **Inventory** — `modules/inventory/*` (`applyChange`), `admin/features/inventory/*`                                 |
-| Guest + signed-in state via cookie, merge at sign-in                  | **Cart** — `modules/cart/*` (`CART_COOKIE`), `web/hooks/use-cart.ts`, `web/components/cart/cart-view.tsx`           |
-| Big transactional write, idempotency key, settings-driven totals      | **Checkout** — `modules/checkout/checkout.service.ts`                                                               |
-| State machine with history, emails, stock side effects                | **Orders** — `modules/orders/*` (`order-rules.ts`, `order-stock.ts`), `admin/features/orders/order-detail.tsx`      |
-| Customer self-service CRUD in a modal                                 | **Addresses** — `users.service.ts` (address methods), `web/components/account/addresses-view.tsx`                   |
-| Public SEO page + client island                                       | **Product page** — `web/app/products/[slug]/page.tsx` + `components/catalog/product-purchase.tsx`                   |
-| Public form → admin inbox with status + notes                         | **Inquiries** — `modules/support/inquiries/*`, `web/app/contact`, `admin/features/inquiries/*`                      |
-| Auth / cookies                                                        | `modules/auth/*`, `apps/admin/src/app/login/*`, `web/components/auth/*`                                             |
-| External gateway adapter, signed idempotent webhooks, timed expiry    | **Payments** — `modules/payments/*` (`providers/`, `payments.service.ts`)                                           |
-| Pure calculator + settings fallback, nested child rows                | **Shipping** — `modules/shipping/*` (`shipping-rules.ts`, `shipping-zones.service.ts`), `admin/features/shipping/*` |
-| Customer + admin controllers on one service                           | **Returns** — `modules/returns/*` (`return-rules.ts`, `returns.controller.ts`, `admin-returns.controller.ts`)       |
-| Sending email                                                         | `NotificationsService.sendEmail({ template: EmailTemplateKey.X, to, data })` — never send directly                  |
+| Pattern                                                               | Copy from                                                                                                                                                |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tree / parent-child, cycle prevention                                 | **Category** — `modules/catalog/categories/*`, `admin/features/categories/*`                                                                             |
+| Parent with editable child list (`useFieldArray`, transactional sync) | **Attribute** — `modules/catalog/attributes/*`, `features/attributes/attribute-form.tsx`                                                                 |
+| File upload                                                           | **Media** — `modules/media/*`, `ImageUploadField`                                                                                                        |
+| Shop entity with publish workflow, variant builder                    | **Product** — `modules/catalog/products/*` (shop + admin controllers, mapper), `admin/features/products/*`                                               |
+| Quantities with a movement log                                        | **Inventory** — `modules/inventory/*` (`applyChange`), `admin/features/inventory/*`                                                                      |
+| Guest + signed-in state via cookie, merge at sign-in                  | **Cart** — `modules/cart/*` (`CART_COOKIE`), `web/hooks/use-cart.ts`, `web/components/cart/cart-view.tsx`                                                |
+| Big transactional write, idempotency key, settings-driven totals      | **Checkout** — `modules/checkout/checkout.service.ts`                                                                                                    |
+| State machine with history, emails, stock side effects                | **Orders** — `modules/orders/*` (`order-rules.ts`, `order-stock.ts`), `admin/features/orders/order-detail.tsx`                                           |
+| Customer self-service CRUD in a modal                                 | **Addresses** — `users.service.ts` (address methods), `web/components/account/addresses-view.tsx`                                                        |
+| Public SEO page + client island                                       | **Product page** — `web/app/products/[slug]/page.tsx` + `components/catalog/product-purchase.tsx`                                                        |
+| Public form → admin inbox with status + notes                         | **Inquiries** — `modules/support/inquiries/*`, `web/app/contact`, `admin/features/inquiries/*`                                                           |
+| Auth / cookies                                                        | `modules/auth/*`, `apps/admin/src/app/login/*`, `web/components/auth/*`                                                                                  |
+| External gateway adapter, signed idempotent webhooks, timed expiry    | **Payments** — `modules/payments/*` (`providers/`, `payments.service.ts`)                                                                                |
+| Pure calculator + settings fallback, nested child rows                | **Shipping** — `modules/shipping/*` (`shipping-rules.ts`, `shipping-zones.service.ts`), `admin/features/shipping/*`                                      |
+| Customer + admin controllers on one service                           | **Returns** — `modules/returns/*` (`return-rules.ts`, `returns.controller.ts`, `admin-returns.controller.ts`)                                            |
+| Excel download / upload (preview, then save)                          | **Stock upload** — `inventory/stock-import-rules.ts`, `common/dto/import.dto.ts`, `admin/components/excel/*`, `admin/features/inventory/stock-excel.tsx` |
+| Sending email                                                         | `NotificationsService.sendEmail({ template: EmailTemplateKey.X, to, data })` — never send directly                                                       |
 
 ---
 

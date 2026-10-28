@@ -13,6 +13,7 @@ import {
   EmailTemplateKey,
   slugify,
   stockStatus,
+  type ImportResult,
   type LowStockRow,
   type Paginated,
   type StockMovementDto,
@@ -21,7 +22,9 @@ import {
   type WarehouseAddress,
   type WarehouseDto,
 } from '@ecommerce/types';
+import { sheetRowsAsText } from '../../common/dto/import.dto';
 import { paginate } from '../../common/dto/pagination.dto';
+import { assertSheetSize } from '../../common/utils/sheet-cells';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -30,9 +33,11 @@ import type {
   LowStockQueryDto,
   MovementQueryDto,
   StockAdjustDto,
+  StockImportDto,
   StockQueryDto,
   UpdateWarehouseDto,
 } from './dto/inventory.dto';
+import { planStockImport, type StockNow } from './stock-import-rules';
 
 type StockFilters = Pick<StockQueryDto, 'page' | 'limit' | 'warehouseId' | 'search' | 'filter'>;
 
@@ -270,6 +275,76 @@ export class InventoryService {
       });
     }
     return this.stockRow(dto.variantId, dto.warehouseId);
+  }
+
+  /**
+   * Excel upload: many SKUs at once. Checks every row first (dryRun = preview); saves only when the
+   * whole file is valid. Each change goes through applyChange, so it is in the stock history and
+   * fires the low-stock / back-in-stock emails like a manual adjustment.
+   */
+  async importStock(userId: string, dto: StockImportDto): Promise<ImportResult> {
+    const rows = sheetRowsAsText(dto.rows);
+    assertSheetSize(rows, 'product');
+    const vendor = await this.vendorOf(userId);
+    const warehouse = dto.warehouseId
+      ? await this.ownWarehouse(vendor.id, dto.warehouseId)
+      : await this.ensureMainWarehouse(vendor);
+    if (!warehouse.isActive) throw new BadRequestException('This warehouse is inactive');
+
+    const variants = await this.prisma.productVariant.findMany({
+      where: { product: { vendorId: vendor.id, deletedAt: null } },
+      select: { id: true, sku: true, stockLevels: { where: { warehouseId: warehouse.id } } },
+    });
+    const bySku = new Map<string, StockNow>(
+      variants.map((v) => [
+        v.sku.toLowerCase(),
+        {
+          variantId: v.id,
+          quantity: v.stockLevels[0]?.quantity ?? 0,
+          reserved: v.stockLevels[0]?.reserved ?? 0,
+          lowStockThreshold: v.stockLevels[0]?.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD,
+        },
+      ]),
+    );
+    const { result, changes } = planStockImport(rows, bySku, dto.mode, dto.dryRun);
+    if (dto.dryRun) return result;
+    if (result.errors > 0)
+      throw new BadRequestException('Some rows have problems. Fix them and check the file again.');
+
+    const note =
+      dto.mode === 'replace' ? 'Excel upload (stock count)' : 'Excel upload (stock arrived)';
+    for (const c of changes) {
+      if (c.lowStockThreshold !== undefined) {
+        await this.prisma.stockLevel.upsert({
+          where: { variantId_warehouseId: { variantId: c.variantId, warehouseId: warehouse.id } },
+          update: { lowStockThreshold: c.lowStockThreshold },
+          create: {
+            variantId: c.variantId,
+            warehouseId: warehouse.id,
+            lowStockThreshold: c.lowStockThreshold,
+          },
+        });
+      }
+      if (c.delta !== 0) {
+        await this.applyChange({
+          variantId: c.variantId,
+          warehouseId: warehouse.id,
+          delta: c.delta,
+          type: dto.mode === 'replace' ? 'ADJUSTMENT' : 'PURCHASE',
+          note,
+          reference: 'excel-upload',
+          actorId: userId,
+        });
+      }
+    }
+    await this.audit.log({
+      actorId: userId,
+      action: 'inventory.stock.import',
+      entityType: 'Warehouse',
+      entityId: warehouse.id,
+      after: { mode: dto.mode, updated: result.updated, unchanged: result.unchanged },
+    });
+    return result;
   }
 
   /**

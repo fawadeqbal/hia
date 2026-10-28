@@ -202,7 +202,18 @@ the CMS is empty.
   for customers (own orders) and the admin. **Packing slip**: no prices.
 - **Order notes**: written by the admin; internal or visible to the customer ("Messages about your order").
 - **Manual orders** (Admin → Orders → Manual order): a temporary cart + the normal checkout, COD.
-- **Product CSV**: export / import (check first, then import; new SKUs → draft products).
+- **Excel download / upload** (admin):
+  - **Download Excel** on every list (stock, products, categories, coupons, orders, customers, inquiries,
+    returns, reviews, questions) writes what is on screen, with the current filters, to an `.xlsx` file
+    (`apps/admin/src/lib/excel.ts`, columns in `excel-columns.ts` or the feature's `*-excel.tsx`).
+  - **Upload Excel** on stock, products, categories and coupons: the browser reads the file (`.xlsx` or `.csv`)
+    into rows keyed by the normalised header (`normalizeSheetHeader`), the API checks every row
+    (`dryRun: true` → preview: new / changed / no change / problem per row) and saves only when the whole file
+    is valid (`POST …/import`, shared `ImportResult`). Empty cells keep the current value.
+  - Rules are pure, unit-tested functions: `stock-import-rules.ts` (Replace = counted stock, Add = units arrived;
+    never below reserved; saved through `applyChange`, so it is in the stock history), `category-import-rules.ts`
+    (match by slug, parent by slug or name, loops refused), `coupon-import-rules.ts` (match by code, same rules
+    as the coupon form), `product-csv-rules.ts` (match by SKU, new SKUs → draft products).
 
 ### Checkout totals
 

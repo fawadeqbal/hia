@@ -1,4 +1,4 @@
-import { PRODUCT_CSV_COLUMNS, SKU_REGEX } from '@ecommerce/types';
+import { SKU_REGEX, type ProductCsvColumn, type SheetRow } from '@ecommerce/types';
 
 export interface CsvRow {
   sku: string;
@@ -11,37 +11,17 @@ export interface CsvRow {
   weightGrams?: number | null;
 }
 
-/** Header → column index (case-insensitive, spaces / dashes = underscores). Missing required columns are listed. */
-export function mapHeader(header: string[]): { index: Map<string, number>; missing: string[] } {
-  const index = new Map<string, number>();
-  header.forEach((h, i) =>
-    index.set(
-      h
-        .trim()
-        .toLowerCase()
-        .replace(/[\s-]+/g, '_'),
-      i,
-    ),
-  );
-  const missing = ['sku'].filter((c) => !index.has(c));
-  return { index, missing };
-}
-
 const num = (v: string): number | null => {
   const t = v.replace(/,/g, '').trim();
   return t === '' ? null : Number(t);
 };
 
 /**
- * One CSV line → typed row, or problems. Empty cells mean "leave unchanged" on update
+ * One uploaded row → typed row, or problems. Empty cells mean "leave unchanged" on update
  * (create needs sku, name, category, price).
  */
-export function readRow(
-  cells: string[],
-  index: Map<string, number>,
-): { row: CsvRow; problems: string[] } {
-  const get = (c: (typeof PRODUCT_CSV_COLUMNS)[number]) =>
-    index.has(c) ? (cells[index.get(c)!] ?? '').trim() : '';
+export function readRow(sheet: SheetRow): { row: CsvRow; problems: string[] } {
+  const get = (c: ProductCsvColumn) => (sheet[c] ?? '').trim();
   const problems: string[] = [];
   const row: CsvRow = { sku: get('sku') };
   if (!row.sku) problems.push('sku is empty');
@@ -80,4 +60,31 @@ export function readRow(
 export function createProblems(row: CsvRow): string[] {
   const missing = (['name', 'category', 'price'] as const).filter((k) => row[k] === undefined);
   return missing.length ? [`new product needs ${missing.join(', ')}`] : [];
+}
+
+/** What the product has now (for "no change" detection). */
+export interface ProductNow {
+  name: string;
+  category: string;
+  price: number;
+  compareAtPrice: number | null;
+  shortDescription: string | null;
+  description: string | null;
+  weightGrams: number | null;
+}
+
+/** Labels of the fields the row would change (empty cells are not changes). */
+export function changedFields(row: CsvRow, now: ProductNow): string[] {
+  const out: string[] = [];
+  if (row.name !== undefined && row.name !== now.name) out.push('name');
+  if (row.category !== undefined && row.category !== now.category) out.push('category');
+  if (row.price !== undefined && row.price !== now.price) out.push('price');
+  if (row.compareAtPrice !== undefined && row.compareAtPrice !== now.compareAtPrice)
+    out.push('compare at price');
+  if (row.shortDescription !== undefined && row.shortDescription !== (now.shortDescription ?? ''))
+    out.push('short description');
+  if (row.description !== undefined && row.description !== (now.description ?? ''))
+    out.push('description');
+  if (row.weightGrams !== undefined && row.weightGrams !== now.weightGrams) out.push('weight');
+  return out;
 }

@@ -22,6 +22,7 @@ import { ProductThumb } from '@/features/products/product-thumb';
 import { inventoryApi, queryKeys } from '@/lib/api-client';
 import { AdjustDialog } from './adjust-dialog';
 import { HistoryDialog } from './history-dialog';
+import { StockExcelTools } from './stock-excel';
 import { StockStatusBadge } from './stock-status-badge';
 
 const FILTERS: { value: StockFilter; label: string }[] = [
@@ -114,12 +115,21 @@ export function InventoryPage() {
   return (
     <div className="mx-auto max-w-6xl p-6">
       <PageHeader
-        title="Inventory"
-        description="Stock per variant. Every change is recorded with a reason."
+        title="Stock"
+        description="Stock for every product and option. Every change is saved in the history."
         actions={
-          <Link href="/catalog/products/new" className={buttonStyles({ variant: 'outline' })}>
-            Add product
-          </Link>
+          <>
+            {warehouseId ? (
+              <StockExcelTools
+                warehouseId={warehouseId}
+                filter={filter}
+                search={deferredSearch || undefined}
+              />
+            ) : null}
+            <Link href="/catalog/products/new" className={buttonStyles({ variant: 'outline' })}>
+              Add product
+            </Link>
+          </>
         }
       />
 

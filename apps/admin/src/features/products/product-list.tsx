@@ -18,7 +18,7 @@ import {
   type DataTableColumn,
 } from '@ecommerce/ui';
 import { productsApi, queryKeys } from '@/lib/api-client';
-import { ProductCsvTools } from './product-csv-tools';
+import { ProductExcelTools } from './product-excel';
 import { ProductStatusBadge } from './product-status-badge';
 import { ProductThumb } from './product-thumb';
 
@@ -95,10 +95,10 @@ export function ProductList() {
     <div className="mx-auto max-w-6xl p-6">
       <PageHeader
         title="Products"
-        description="Create products, then submit them for review to publish them in the store."
+        description="Add products, then publish them on the website."
         actions={
           <>
-            <ProductCsvTools />
+            <ProductExcelTools />
             <Link href="/catalog/products/new" className={buttonStyles()}>
               Add product
             </Link>

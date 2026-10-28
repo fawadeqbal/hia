@@ -12,6 +12,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   Role,
+  type ImportResult,
   type Paginated,
   type StockMovementDto,
   type StockRow,
@@ -23,6 +24,7 @@ import {
   CreateWarehouseDto,
   MovementQueryDto,
   StockAdjustDto,
+  StockImportDto,
   StockQueryDto,
   UpdateWarehouseDto,
 } from './dto/inventory.dto';
@@ -69,6 +71,16 @@ export class VendorInventoryController {
   @HttpCode(HttpStatus.OK)
   adjust(@CurrentUser('sub') userId: string, @Body() dto: StockAdjustDto): Promise<StockRow> {
     return this.inventory.adjust(userId, dto);
+  }
+
+  /** Excel upload: dryRun = check only; otherwise saves when every row is valid. */
+  @Post('stock/import')
+  @HttpCode(HttpStatus.OK)
+  importStock(
+    @CurrentUser('sub') userId: string,
+    @Body() dto: StockImportDto,
+  ): Promise<ImportResult> {
+    return this.inventory.importStock(userId, dto);
   }
 
   @Get('movements')

@@ -19,7 +19,6 @@ import { Alert, Button, Checkbox, Input, Spinner, Textarea, cn, formatMoney } fr
 import { AddressInputs } from '@/components/account/address-inputs';
 import { useCart, useMe } from '@/hooks/use-cart';
 import { addressesApi, checkoutApi, queryKeys } from '@/lib/api-client';
-import { useLocale } from '@/components/locale/locale-provider';
 import { container } from '@/components/layout/container';
 import { PlacingOverlay } from './placing-overlay';
 import { Panel, RadioDot, SummaryRow, codeInput, darkButton, optionCard } from './ui';
@@ -30,7 +29,6 @@ function newIdempotencyKey(): string {
 }
 
 export function CheckoutView() {
-  const { t } = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: cart, isLoading: cartLoading, error: cartError } = useCart();

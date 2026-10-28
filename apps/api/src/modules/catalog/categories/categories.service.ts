@@ -5,10 +5,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { Category } from '@ecommerce/database';
-import type { CategoryDto, CategoryListItem } from '@ecommerce/types';
+import type { CategoryDto, CategoryListItem, ImportResult, SheetRow } from '@ecommerce/types';
+import { sheetRowsAsText } from '../../../common/dto/import.dto';
+import { assertSheetSize } from '../../../common/utils/sheet-cells';
 import { uniqueSlug } from '../../../common/utils/unique-slug';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { AuditService } from '../../audit/audit.service';
+import { planCategoryImport } from './category-import-rules';
 import type { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 
 type CategoryWithCounts = Category & { _count: { products: number; children: number } };
@@ -154,6 +157,48 @@ export class CategoriesService {
       entityId: id,
       before: category,
     });
+  }
+
+  /**
+   * Excel upload: new categories are created, existing ones (matched by slug) updated, in file order so a
+   * row can use a parent created above it. Checks everything first; saves only when every row is valid,
+   * through create() / update() so the normal rules and audit log apply.
+   */
+  async importRows(rawRows: SheetRow[], dryRun: boolean, actorId: string): Promise<ImportResult> {
+    const rows = sheetRowsAsText(rawRows);
+    assertSheetSize(rows, 'category');
+    const existing = await this.prisma.category.findMany({
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        parentId: true,
+        description: true,
+        position: true,
+        isActive: true,
+      },
+    });
+    const { result, changes } = planCategoryImport(rows, existing, dryRun);
+    if (dryRun) return result;
+    if (result.errors > 0)
+      throw new BadRequestException('Some rows have problems. Fix them and check the file again.');
+
+    const idBySlug = new Map(existing.map((c) => [c.slug, c.id]));
+    const parentId = (slug: string | null | undefined) =>
+      slug === undefined ? undefined : slug === null ? null : idBySlug.get(slug);
+    for (const c of changes) {
+      const { parentSlug, ...fields } = c.fields;
+      if (c.kind === 'create') {
+        const created = await this.create(
+          { ...fields, name: c.fields.name, slug: c.slug, parentId: parentId(parentSlug) ?? null },
+          actorId,
+        );
+        idBySlug.set(created.slug, created.id);
+      } else {
+        await this.update(c.id, { ...fields, parentId: parentId(parentSlug) }, actorId);
+      }
+    }
+    return result;
   }
 
   // ---------------------------------------------------------------- helpers

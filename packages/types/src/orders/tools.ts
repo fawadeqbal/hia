@@ -1,3 +1,4 @@
+import type { ImportResult, ImportRowResult, ImportRowsInput } from '../imports/imports';
 import type { ShippingAddress } from '../users/address';
 
 // ------------------------------------------------------------------ product CSV (seller import / export, admin export)
@@ -14,28 +15,13 @@ export const PRODUCT_CSV_COLUMNS = [
   'status',
 ] as const;
 export type ProductCsvColumn = (typeof PRODUCT_CSV_COLUMNS)[number];
-export const PRODUCT_IMPORT_MAX_ROWS = 1000;
 
-export interface ProductImportInput {
-  csv: string;
-  /** Check every row without saving. */
-  dryRun: boolean;
-}
+/** Product upload body: the file's rows, like every other Excel upload. */
+export type ProductImportInput = ImportRowsInput;
 
-export interface ProductImportRow {
-  line: number;
-  sku: string;
-  action: 'create' | 'update' | 'error';
-  message: string | null;
-}
-
-export interface ProductImportResult {
-  dryRun: boolean;
-  created: number;
-  updated: number;
-  errors: number;
-  rows: ProductImportRow[];
-}
+/** Product upload results use the shared import result (key = SKU). */
+export type ProductImportRow = ImportRowResult;
+export type ProductImportResult = ImportResult;
 
 /** Header + rows, ready for a CSV download. */
 export interface CsvExportDto {

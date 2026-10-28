@@ -10,7 +10,8 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Role, type CategoryDto, type CategoryListItem } from '@ecommerce/types';
+import { Role, type CategoryDto, type CategoryListItem, type ImportResult } from '@ecommerce/types';
+import { ImportRowsDto } from '../../../common/dto/import.dto';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { CategoriesService } from './categories.service';
@@ -26,6 +27,16 @@ export class AdminCategoriesController {
   @Get()
   list(): Promise<CategoryListItem[]> {
     return this.categoriesService.list();
+  }
+
+  /** Excel upload: dryRun = check only; otherwise saves when every row is valid. */
+  @Post('import')
+  @HttpCode(HttpStatus.OK)
+  importRows(
+    @Body() dto: ImportRowsDto,
+    @CurrentUser('sub') actorId: string,
+  ): Promise<ImportResult> {
+    return this.categoriesService.importRows(dto.rows, dto.dryRun, actorId);
   }
 
   @Get(':id')

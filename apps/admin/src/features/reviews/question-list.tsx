@@ -17,6 +17,9 @@ import {
   formatDate,
 } from '@ecommerce/ui';
 import { queryKeys, reviewsApi } from '@/lib/api-client';
+import { ExcelDownloadButton } from '@/components/excel/excel-download-button';
+import { fetchAllPages } from '@/lib/excel';
+import { questionColumns } from '@/lib/excel-columns';
 
 type Filter = 'UNANSWERED' | 'ALL';
 const TABS: { value: Filter; label: string }[] = [
@@ -53,14 +56,23 @@ export function QuestionList() {
 
   return (
     <div className="space-y-4">
-      <Tabs
-        items={TABS}
-        value={filter}
-        onChange={(v) => {
-          setFilter(v);
-          setPage(1);
-        }}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Tabs
+          items={TABS}
+          value={filter}
+          onChange={(v) => {
+            setFilter(v);
+            setPage(1);
+          }}
+        />
+        <ExcelDownloadButton
+          name="questions"
+          columns={questionColumns}
+          load={() =>
+            fetchAllPages((page, limit) => reviewsApi.adminQuestions({ ...params, page, limit }))
+          }
+        />
+      </div>
       {error ? <Alert tone="error">{error.message}</Alert> : null}
       {moderate.error ? <Alert tone="error">{moderate.error.message}</Alert> : null}
       {isLoading ? <Spinner /> : null}

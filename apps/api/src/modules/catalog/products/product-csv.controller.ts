@@ -1,22 +1,12 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
-import { IsBoolean, IsString, MaxLength } from 'class-validator';
-import {
-  Role,
-  type CsvExportDto,
-  type ProductImportInput,
-  type ProductImportResult,
-} from '@ecommerce/types';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Role, type CsvExportDto, type ProductImportResult } from '@ecommerce/types';
+import { ImportRowsDto } from '../../../common/dto/import.dto';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { ProductCsvService } from './product-csv.service';
 
-export class ProductImportDto implements ProductImportInput {
-  @ApiProperty() @IsString() @MaxLength(5_000_000) csv: string;
-  @ApiProperty() @IsBoolean() dryRun: boolean;
-}
-
-@ApiTags('Vendor · Product CSV')
+@ApiTags('Shop · Product Excel')
 @ApiBearerAuth()
 @Roles(Role.VENDOR)
 @Controller('vendor/products-csv')
@@ -32,8 +22,8 @@ export class VendorProductCsvController {
   @HttpCode(HttpStatus.OK)
   import(
     @CurrentUser('sub') userId: string,
-    @Body() dto: ProductImportDto,
+    @Body() dto: ImportRowsDto,
   ): Promise<ProductImportResult> {
-    return this.csv.vendorImport(userId, dto.csv, dto.dryRun);
+    return this.csv.vendorImport(userId, dto.rows, dto.dryRun);
   }
 }

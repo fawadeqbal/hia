@@ -26,6 +26,9 @@ import {
   type DataTableColumn,
 } from '@ecommerce/ui';
 import { inquiriesApi, queryKeys } from '@/lib/api-client';
+import { ExcelDownloadButton } from '@/components/excel/excel-download-button';
+import { fetchAllPages } from '@/lib/excel';
+import { inquiryColumns } from '@/lib/excel-columns';
 
 type Filter = InquiryStatus | 'ALL';
 const TABS: { value: Filter; label: string }[] = [
@@ -112,6 +115,15 @@ export function InquiryList() {
       <PageHeader
         title="Inquiries"
         description="Repair requests, wholesale and institutional quotes, and questions sent from the website Contact page."
+        actions={
+          <ExcelDownloadButton
+            name="inquiries"
+            columns={inquiryColumns}
+            load={() =>
+              fetchAllPages((page, limit) => inquiriesApi.adminList({ ...params, page, limit }))
+            }
+          />
+        }
       />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Tabs
