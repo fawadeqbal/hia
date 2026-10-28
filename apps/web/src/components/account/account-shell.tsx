@@ -15,7 +15,6 @@ import {
   LogoutIcon,
   PinIcon,
   SettingsIcon,
-  StarIcon,
   UserIcon,
 } from '@/components/icons';
 import { authApi, loyaltyApi, queryKeys } from '@/lib/api-client';
@@ -24,7 +23,6 @@ const NAV = [
   { href: '/account/orders', label: 'Orders', icon: BoxIcon },
   { href: '/account/returns', label: 'Returns', icon: ArrowUpLeftIcon },
   { href: '/account/wishlist', label: 'Wishlist', icon: HeartIcon, count: 'wishlist' as const },
-  { href: '/account/loyalty', label: 'Points & rewards', icon: StarIcon, count: 'points' as const },
   { href: '/account/addresses', label: 'Addresses', icon: PinIcon },
   { href: '/account/profile', label: 'Profile', icon: UserIcon },
   { href: '/account/preferences', label: 'Preferences', icon: SettingsIcon },
@@ -58,8 +56,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
         <div className="flex flex-col items-center gap-3 rounded-3xl bg-white p-8 text-center">
           <h1 className="text-2xl font-extrabold tracking-heading">Sign in to your account</h1>
           <p className="text-gray-500">
-            See your orders, points and saved addresses. Checked out as a guest? Track your order
-            instead.
+            See your orders and saved addresses. Checked out as a guest? Track your order instead.
           </p>
           <div className="mt-2 flex flex-wrap justify-center gap-2.5">
             <Link
@@ -103,11 +100,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
             <p className="truncate text-[17px] font-extrabold">
               {me.firstName} {me.lastName}
             </p>
-            <p className="text-[13px] text-brand-100">
-              {loyalty.data
-                ? `${loyalty.data.tier ? `${loyalty.data.tier.name} member · ` : ''}${loyalty.data.points.toLocaleString()} pts`
-                : me.email}
-            </p>
+            <p className="text-[13px] text-brand-100">{me.email}</p>
           </div>
         </div>
         <nav

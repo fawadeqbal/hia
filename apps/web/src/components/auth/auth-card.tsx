@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { cn } from '@ecommerce/ui';
 import { getStoreSettings, storeName } from '@/lib/store-settings';
-import { KadamMark } from '@/components/layout/store-logo';
+import { BrandMark } from '@/components/layout/store-logo';
 
 /**
  * Split sign-in layout: violet brand panel + form column. `mode` shows the
@@ -23,9 +23,15 @@ export async function AuthCard({
 }) {
   const name = storeName(await getStoreSettings());
   const perks = [
-    ['Cash on delivery everywhere', 'M3 7h18v10H3zM12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z'],
+    [
+      'Cash on delivery across Pakistan',
+      'M3 7h18v10H3zM12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z',
+    ],
     ['Easy 7-day returns', 'M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4'],
-    ['Only verified sellers', 'M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3ZM9 12l2 2 4-4'],
+    [
+      'Quality parts, chairs & repair',
+      'M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3ZM9 12l2 2 4-4',
+    ],
   ] as const;
   return (
     <div className="relative flex min-h-dvh items-stretch justify-center overflow-hidden bg-white sm:items-center sm:bg-gray-50 sm:px-4 sm:py-[clamp(16px,4vw,48px)]">
@@ -64,7 +70,7 @@ export async function AuthCard({
             aria-label={`${name} home`}
             className="relative flex items-center gap-2.5 self-start text-[26px] font-extrabold leading-none tracking-[-0.8px] text-white hover:text-white"
           >
-            <KadamMark className="h-10 w-10 flex-none" />
+            <BrandMark className="h-10 w-10 flex-none" />
             <span>
               {name}
               <span className="text-accent">.</span>
@@ -72,14 +78,14 @@ export async function AuthCard({
           </Link>
 
           <p className="relative text-[22px] font-extrabold leading-tight tracking-heading md:hidden">
-            Welcome! <span className="text-white/75">Shop from sellers you can trust.</span>
+            Welcome! <span className="text-white/75">Quality products, reliable service.</span>
           </p>
           <div className="relative hidden flex-col gap-4 md:flex">
             <span className="-rotate-2 self-start rounded-full bg-accent px-3 py-1.5 text-[13px] font-bold text-gray-900">
-              Earn points on every order
+              Track every order in one place
             </span>
             <p className="text-balance text-[clamp(30px,3.4vw,44px)] font-extrabold leading-[1.02] tracking-display">
-              Everything you need, from sellers you can trust.
+              Office chair parts, chairs and repair — all in one place.
             </p>
             <ul className="mt-2 flex flex-col gap-2.5">
               {perks.map(([label, d]) => (

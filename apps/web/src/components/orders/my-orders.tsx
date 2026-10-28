@@ -95,7 +95,6 @@ export function MyOrders() {
             <span className="block font-bold">#{o.orderNumber}</span>
             <span className="block text-[13px] text-gray-500">
               {formatDate(o.placedAt)} · {o.itemCount} {o.itemCount === 1 ? 'item' : 'items'}
-              {o.vendorCount > 1 ? ` · ${o.vendorCount} sellers` : ''}
             </span>
           </span>
           <span

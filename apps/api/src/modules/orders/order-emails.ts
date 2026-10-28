@@ -41,7 +41,8 @@ export async function sendOrderPlacedEmails(deps: OrderEmailDeps, orderId: strin
       where: { id: orderId },
       include: { ...orderInclude, user: { select: { firstName: true } } },
     });
-    const vendorApp = deps.config.get<string>('NEXT_PUBLIC_VENDOR_URL', 'http://localhost:3002');
+    // Single shop: the shop owner manages orders in the admin panel.
+    const vendorApp = deps.config.get<string>('NEXT_PUBLIC_ADMIN_URL', 'http://localhost:3001');
     const money = (v: Prisma.Decimal | number) => formatMoney(Number(v), order.currency);
     const address = order.shippingAddress as unknown as ShippingAddress;
     const method = PAYMENT_METHOD_LABELS[order.paymentMethod as PaymentMethod];
@@ -85,7 +86,7 @@ export async function sendOrderPlacedEmails(deps: OrderEmailDeps, orderId: strin
           heading: `New order ${order.orderNumber}`,
           body: `${vo.items.reduce((n, i) => n + i.quantity, 0)} item(s) worth ${money(vo.subtotal)} to prepare. Payment: ${payment}.`,
           ctaLabel: 'Open order',
-          ctaUrl: `${vendorApp}/orders/${vo.id}`,
+          ctaUrl: `${vendorApp}/orders/${order.id}`,
         },
       });
     }

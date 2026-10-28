@@ -1,6 +1,6 @@
-# KADAM — storefront design system
+# Storefront design system
 
-KADAM (Urdu for "step") is the storefront's footwear identity. Everything below lives in
+The storefront design (originally "KADAM") reused for HIA Furniture Solutions; the logo mark is an office chair (`BrandMark`). Everything below lives in
 `apps/web/tailwind.config.ts` and `apps/web/src/app/globals.css`; components only use these tokens.
 Admin and vendor apps keep the base preset.
 

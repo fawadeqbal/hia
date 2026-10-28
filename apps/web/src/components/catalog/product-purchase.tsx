@@ -10,8 +10,8 @@ import {
   type StorefrontOption,
   type StorefrontProductDetail,
 } from '@ecommerce/types';
-import { Alert, Modal, cn } from '@ecommerce/ui';
-import { BagIcon, MinusIcon, PlusIcon, RulerIcon } from '@/components/icons';
+import { Alert, cn } from '@ecommerce/ui';
+import { BagIcon, MinusIcon, PlusIcon } from '@/components/icons';
 import { useCart, useSetCart } from '@/hooks/use-cart';
 import { NotifyMe } from '@/components/wishlist/notify-me';
 import { WishlistButton } from '@/components/wishlist/wishlist-button';
@@ -52,7 +52,6 @@ export function ProductPurchase({ product }: { product: StorefrontProductDetail 
   const [quantity, setQuantity] = useState(1);
   const [needSize, setNeedSize] = useState(false);
   const [shake, setShake] = useState(0);
-  const [guide, setGuide] = useState(false);
   const { data: cart } = useCart();
   const sizeRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -177,32 +176,23 @@ export function ProductPurchase({ product }: { product: StorefrontProductDetail 
           >
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-[13px] font-bold uppercase tracking-[0.08em]">
-                {isSize ? 'Select size' : option.name}
+                {isSize ? `Select ${option.name.toLowerCase()}` : option.name}
                 {current ? (
                   <span className="ml-2 font-medium normal-case tracking-normal text-gray-600">
                     {current.label}
                   </span>
                 ) : null}
               </p>
-              {isSize ? (
-                <button
-                  type="button"
-                  onClick={() => setGuide(true)}
-                  className="flex items-center gap-1.5 text-[13px] font-semibold text-gray-900 underline underline-offset-4 hover:text-brand-600"
-                >
-                  <RulerIcon size={15} /> Size guide
-                </button>
-              ) : null}
             </div>
 
             {isSize ? (
               <div
                 key={shake}
                 role="radiogroup"
-                aria-label="Size"
+                aria-label={option.name}
                 aria-invalid={needSize}
                 className={cn(
-                  'grid grid-cols-[repeat(auto-fill,minmax(60px,1fr))] gap-2',
+                  'flex flex-wrap gap-2',
                   shake > 0 && 'animate-[shake_.42s_cubic-bezier(.36,.07,.19,.97)_both]',
                 )}
               >
@@ -218,7 +208,7 @@ export function ProductPurchase({ product }: { product: StorefrontProductDetail 
                       aria-label={inStock ? value.label : `${value.label}, sold out`}
                       onClick={() => pick(option.attributeId, value.id)}
                       className={cn(
-                        'relative flex h-12 items-center justify-center overflow-hidden rounded-md border text-[14px] font-semibold transition-colors duration-150',
+                        'relative flex h-12 min-w-[64px] items-center justify-center overflow-hidden whitespace-nowrap rounded-md border px-4 text-[14px] font-semibold transition-colors duration-150',
                         on
                           ? 'border-gray-900 bg-gray-900 text-white'
                           : needSize
@@ -293,7 +283,7 @@ export function ProductPurchase({ product }: { product: StorefrontProductDetail 
 
             {isSize && needSize ? (
               <p role="alert" className="animate-fade-in text-[13px] font-semibold text-sale">
-                Please select a size to continue.
+                Please select {option.name.toLowerCase()} to continue.
               </p>
             ) : null}
           </div>
@@ -313,9 +303,9 @@ export function ProductPurchase({ product }: { product: StorefrontProductDetail 
           {!variant
             ? 'This combination is not available'
             : available <= 0
-              ? `Sold out${sizeLabel ? ` in size ${sizeLabel}` : ''}`
+              ? `Sold out${sizeLabel ? ` — ${sizeLabel}` : ''}`
               : available <= 5
-                ? `Only ${available} left${sizeLabel ? ` in size ${sizeLabel}` : ''}`
+                ? `Only ${available} left${sizeLabel ? ` — ${sizeLabel}` : ''}`
                 : 'In stock — ready to ship'}
         </p>
       ) : null}
@@ -353,7 +343,7 @@ export function ProductPurchase({ product }: { product: StorefrontProductDetail 
             className="flex-1"
             soldOut={soldOut}
             pending={add.isPending}
-            label={inCart > 0 ? 'Add another' : 'Add to bag'}
+            label={inCart > 0 ? 'Add another' : 'Add to cart'}
             onClick={onAdd}
           />
           <WishlistButton
@@ -391,10 +381,10 @@ export function ProductPurchase({ product }: { product: StorefrontProductDetail 
               ✓
             </span>
             <span>
-              <b>{inCart}</b> in your bag
+              <b>{inCart}</b> in your cart
             </span>
           </span>
-          <span className="text-[13px] font-semibold underline underline-offset-4">View bag</span>
+          <span className="text-[13px] font-semibold underline underline-offset-4">View cart</span>
         </button>
       ) : null}
 
@@ -423,21 +413,24 @@ export function ProductPurchase({ product }: { product: StorefrontProductDetail 
             <p className="truncate text-[14px] font-semibold">{product.name}</p>
             <p className="text-[13px] text-gray-500">
               <Money amount={price} currency={product.currency} />
-              {sizeLabel ? ` · Size ${sizeLabel}` : ''}
+              {sizeLabel ? ` · ${sizeLabel}` : ''}
             </p>
           </div>
           <AddButton
             className="w-full sm:w-64"
             soldOut={soldOut}
             pending={add.isPending}
-            label={sizeMissing ? 'Select a size' : 'Add to bag'}
+            label={
+              sizeMissing
+                ? `Select ${sizeOption?.name.toLowerCase() ?? 'an option'}`
+                : 'Add to cart'
+            }
             onClick={onAdd}
             tabIndex={ctaHidden ? 0 : -1}
           />
         </div>
       </div>
 
-      <SizeGuide open={guide} onClose={() => setGuide(false)} />
       <style>
         {
           '@keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}'
@@ -483,64 +476,5 @@ function AddButton({
       )}
       {soldOut ? 'Sold out' : label}
     </button>
-  );
-}
-
-/** Generic adult footwear conversion chart (foot length → EU / UK / US). */
-const SIZE_ROWS: [string, string, string, string][] = [
-  ['23.5', '37', '4', '5'],
-  ['24.0', '38', '5', '6'],
-  ['24.5', '39', '6', '7'],
-  ['25.5', '40', '6.5', '7.5'],
-  ['26.0', '41', '7', '8'],
-  ['26.5', '42', '8', '9'],
-  ['27.5', '43', '9', '10'],
-  ['28.0', '44', '9.5', '10.5'],
-  ['28.5', '45', '10.5', '11.5'],
-  ['29.5', '46', '11', '12'],
-];
-
-function SizeGuide({ open, onClose }: { open: boolean; onClose: () => void }) {
-  return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Size guide"
-      description="Measure your foot from heel to longest toe, standing, in the evening."
-      size="lg"
-      className="rounded-lg"
-    >
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-[14px]">
-          <thead>
-            <tr className="border-b border-gray-900 text-[12px] uppercase tracking-[0.08em]">
-              {['Foot (cm)', 'EU', 'UK', 'US'].map((h) => (
-                <th key={h} className="py-2.5 pr-4 font-bold">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {SIZE_ROWS.map((row) => (
-              <tr key={row[1]} className="border-b border-gray-200 hover:bg-gray-50">
-                {row.map((c, k) => (
-                  <td
-                    key={k}
-                    className={cn('py-2.5 pr-4 tabular-nums', k === 1 && 'font-semibold')}
-                  >
-                    {c}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="mt-4 text-[13px] text-gray-500">
-        Between sizes? Go half a size up for sneakers and boots. Each seller lists its own fit notes
-        in the description.
-      </p>
-    </Modal>
   );
 }

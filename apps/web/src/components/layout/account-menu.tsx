@@ -12,7 +12,6 @@ import {
   LogoutIcon,
   PinIcon,
   SettingsIcon,
-  StarIcon,
 } from '@/components/icons';
 import { authApi } from '@/lib/api-client';
 import { toast } from '@/lib/toast';
@@ -20,7 +19,6 @@ import { toast } from '@/lib/toast';
 const ITEMS = [
   { href: '/account/orders', label: 'My orders', icon: BoxIcon },
   { href: '/account/wishlist', label: 'Wishlist', icon: HeartIcon },
-  { href: '/account/loyalty', label: 'Points & rewards', icon: StarIcon },
   { href: '/account/addresses', label: 'Addresses', icon: PinIcon },
   { href: '/account/profile', label: 'Profile & settings', icon: SettingsIcon },
 ];

@@ -472,7 +472,7 @@ export class InventoryService {
         heading: available <= 0 ? 'Out of stock' : 'Low stock alert',
         body: `${label}, SKU ${info.sku}, has ${Math.max(available, 0)} units available in ${warehouse?.name ?? 'your warehouse'}.`,
         ctaLabel: 'Restock now',
-        ctaUrl: `${this.config.get<string>('NEXT_PUBLIC_VENDOR_URL', 'http://localhost:3002')}/inventory`,
+        ctaUrl: `${this.config.get<string>('NEXT_PUBLIC_ADMIN_URL', 'http://localhost:3001')}/inventory`,
       },
     });
   }

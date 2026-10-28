@@ -16,19 +16,18 @@ import { StoreLogo } from './store-logo';
 const fallbackNav = [
   { href: '/products', label: 'Shop all' },
   { href: '/products?sort=newest', label: 'New in' },
-  { href: '/products?sort=popular', label: 'Best sellers' },
-  { href: '/products?onSale=true', label: 'Sale', tone: 'sale' as const },
-  { href: '/blog', label: 'Journal' },
+  { href: '/products?onSale=true', label: 'On offer', tone: 'sale' as const },
+  { href: '/pages/services', label: 'Repair & services' },
 ];
 
 const ANNOUNCEMENTS = [
-  { text: 'Cash on delivery on every order, nationwide' },
-  { text: 'Wrong size? Free exchanges within 7 days', href: '/pages/return-policy' },
-  { text: 'New season drop is live — shop new in', href: '/products?sort=newest' },
+  { text: 'Cash on delivery across Pakistan' },
+  { text: 'Chair repair & maintenance — request a visit', href: '/contact?topic=repair' },
+  { text: 'Wholesale & institutional supply — get a quote', href: '/contact?topic=quote' },
 ];
 
 /**
- * KADAM header: announcement strip (scrolls away) + sticky white header that hides on
+ * Store header: announcement strip (scrolls away) + sticky white header that hides on
  * scroll down and returns on scroll up. Row 1 = logo, search, actions. Row 2 = categories
  * with hover mega-menus.
  */
@@ -66,7 +65,7 @@ export async function SiteHeader() {
         links={[
           { label: 'Track order', href: '/track-order' },
           { label: 'Help', href: '/faq' },
-          { label: 'Sell with us', href: process.env.NEXT_PUBLIC_VENDOR_URL || '#', strong: true },
+          { label: 'Contact us', href: '/contact', strong: true },
         ]}
       />
       <HeaderShell>

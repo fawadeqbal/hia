@@ -611,7 +611,7 @@ export async function ProductListing({
                   className="animate-rise-in"
                   style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}
                 >
-                  <ProductCard product={p} quickAdd showVendor wishlist priority={i < 4} />
+                  <ProductCard product={p} quickAdd wishlist priority={i < 4} />
                 </div>
               ))}
             </div>

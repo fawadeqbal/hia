@@ -1,5 +1,11 @@
 # Architecture
 
+> **Single-shop build.** Everything below still applies, with one store: every product, warehouse and
+> sub-order (`VendorOrder`) belongs to the seeded store `hia-furniture`, whose owner is the super admin. The
+> admin panel drives the "seller" flows (product publish, stock, ship/deliver). There is no `apps/vendor`.
+> Shop-owner emails (new order, low stock, return request) link to the admin panel. Website inquiries are
+> `Ticket` rows (`topic` REPAIR | QUOTE | GENERAL, `name`, `phone`); staff notes are internal `TicketMessage`s.
+
 ## Request flow
 
 ```

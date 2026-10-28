@@ -1,5 +1,11 @@
 # Build roadmap
 
+> **HIA single-shop build (current).** Converted from the multi-vendor platform: one store owned by the super
+> admin, seller app and AI support service removed, admin panel trimmed to the shop owner's menu, product /
+> stock / order-status screens moved into admin, **Inquiries** added (contact form → admin inbox, migration
+> `ticket_inquiry_fields`), COD only, PKR, HIA seed and storefront branding. The phases below describe how the
+> original platform was built; marketplace rows (vendors, commissions, payouts, loyalty…) are switched off here.
+
 We build one entity at a time through every layer:
 
 1. `packages/types`: interfaces + zod form schemas + helpers

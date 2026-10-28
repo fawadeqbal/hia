@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Starts every app of the platform in one container.
+# Starts every app of the shop in one container.
 # If any process dies, the others are stopped and the container exits (Docker's restart policy brings it back).
 #
 # Env:
 #   RUN_MIGRATIONS=true   apply Prisma migrations before starting (default true)
 #   RUN_SEED=false        run the idempotent seed (first deploy / demo servers)
-#   APPS="api worker web admin vendor"   subset to start (e.g. "api worker")
+#   APPS="api worker web admin"   subset to start (e.g. "api worker")
 set -uo pipefail
 cd /app
 
@@ -37,13 +37,12 @@ next_app() {
   run "$name" "apps/$name/.next/standalone/apps/$name" env PORT="$port" HOSTNAME=0.0.0.0 node server.js
 }
 
-for app in ${APPS:-api worker web admin vendor}; do
+for app in ${APPS:-api worker web admin}; do
   case "$app" in
     api)    run api apps/api node dist/main.js ;;
     worker) run worker apps/worker node dist/main.js ;;
     web)    next_app web 3000 ;;
     admin)  next_app admin 3001 ;;
-    vendor) next_app vendor 3002 ;;
     *) echo "[entrypoint] unknown app: $app"; exit 1 ;;
   esac
 done

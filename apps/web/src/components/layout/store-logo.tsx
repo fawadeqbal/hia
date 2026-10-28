@@ -3,8 +3,9 @@ import Link from 'next/link';
 import { cn } from '@ecommerce/ui';
 
 /**
- * Store wordmark (or the uploaded logo). `tone` = ink on light backgrounds (default)
- * or bone on dark ones (footer band, campaign tiles).
+ * Store wordmark (or the uploaded logo). The first word of the name is set large and the rest
+ * small underneath, so a long name like "HIA Furniture Solutions" fits the header.
+ * `tone` = ink on light backgrounds (default) or bone on dark ones (footer band).
  */
 export function StoreLogo({
   name,
@@ -19,18 +20,31 @@ export function StoreLogo({
   href?: string | null;
   className?: string;
 }) {
+  const [first, ...rest] = name.trim().split(/\s+/);
   const mark = logoUrl ? (
-    <img src={logoUrl} alt={name} className="h-8 w-auto" />
+    <img src={logoUrl} alt={name} className="h-9 w-auto" />
   ) : (
     <span
       className={cn(
-        'group/logo flex items-center gap-2 leading-none',
+        'group/logo flex items-center gap-2.5 leading-none',
         tone === 'light' ? 'text-gray-50' : 'text-gray-900',
         className,
       )}
     >
-      <KadamMark className="h-7 w-7 flex-none" />
-      <span className="type-display text-[30px] tracking-[0.02em]">{name}</span>
+      <BrandMark className="h-8 w-8 flex-none" />
+      <span className="flex flex-col">
+        <span className="type-display text-[30px] tracking-[0.02em]">{first}</span>
+        {rest.length > 0 ? (
+          <span
+            className={cn(
+              'mt-0.5 text-[9.5px] font-bold uppercase tracking-[0.16em]',
+              tone === 'light' ? 'text-white/60' : 'text-gray-500',
+            )}
+          >
+            {rest.join(' ')}
+          </span>
+        ) : null}
+      </span>
     </span>
   );
   return href ? (
@@ -43,11 +57,10 @@ export function StoreLogo({
 }
 
 /**
- * The KADAM mark: two forward-leaning strides inside a square. Uses currentColor for the
- * frame so it follows the text colour; the leading stride is always clay. On hover of the
- * wordmark the strides step forward a little.
+ * The shop mark: an office chair inside a square. Frame and chair follow the text colour;
+ * the seat is always clay. On hover of the wordmark the chair rises a little (gas lift).
  */
-export function KadamMark({ className }: { className?: string }) {
+export function BrandMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" aria-hidden className={className}>
       <rect
@@ -60,15 +73,17 @@ export function KadamMark({ className }: { className?: string }) {
         stroke="currentColor"
         strokeWidth="3"
       />
+      <g className="transition-transform duration-300 ease-out group-hover/logo:-translate-y-[1.5px]">
+        <rect x="11" y="6.5" width="10" height="9" rx="2" fill="currentColor" />
+        <rect x="9" y="16.5" width="14" height="3.2" rx="1.6" fill="#cf5a2a" />
+      </g>
+      <rect x="15" y="19.5" width="2" height="4.5" fill="currentColor" />
       <path
-        d="M9 23 13.5 9h4L13 23z"
-        fill="currentColor"
-        className="transition-transform duration-300 ease-out group-hover/logo:-translate-x-[1px]"
-      />
-      <path
-        d="M16 23 20.5 9h4L20 23z"
-        fill="#cf5a2a"
-        className="transition-transform duration-300 ease-out group-hover/logo:translate-x-[1.5px]"
+        d="M9 25.5h14"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        fill="none"
       />
     </svg>
   );

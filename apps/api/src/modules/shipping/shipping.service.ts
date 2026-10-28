@@ -51,6 +51,10 @@ export class ShippingService {
     const shapes = zones.map(toZoneLike);
     const zone = matchZone(shapes, destination);
     const codFees = new Map((zone?.rates ?? []).map((r) => [r.id, toCents(r.codFee)] as const));
+    // Default to a delivery option: "pick up from shop" is only chosen when the customer picks it.
+    const pickupIds = new Set(
+      (zone?.rates ?? []).filter((r) => r.type === 'PICKUP').map((r) => r.id),
+    );
 
     const result = new Map<string, ParcelQuote>();
     let codAvailable = true;
@@ -69,7 +73,10 @@ export class ShippingService {
             },
           ];
       const selected =
-        options.find((o) => o.rateId && o.rateId === chosen[p.vendorId]) ?? options[0] ?? null;
+        options.find((o) => o.rateId && o.rateId === chosen[p.vendorId]) ??
+        options.find((o) => !o.rateId || !pickupIds.has(o.rateId)) ??
+        options[0] ??
+        null;
       const fee = selected?.rateId ? (codFees.get(selected.rateId) ?? 0) : 0;
       if (selected && !selected.codAvailable) codAvailable = false;
       codFeeCents += fee;

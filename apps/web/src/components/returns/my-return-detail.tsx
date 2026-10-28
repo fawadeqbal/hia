@@ -18,11 +18,11 @@ import {
 import { queryKeys, returnsApi } from '@/lib/api-client';
 
 const NEXT_STEP: Record<string, string> = {
-  REQUESTED: 'The seller is reviewing your request.',
-  APPROVED: 'Approved. Send the items back to the seller; your refund follows once they arrive.',
-  ITEMS_RECEIVED: 'The seller received your items. Your refund is being processed.',
+  REQUESTED: 'We are reviewing your request.',
+  APPROVED: 'Approved. Send the items back to us; your refund follows once they arrive.',
+  ITEMS_RECEIVED: 'We received your items. Your refund is being processed.',
   REFUNDED: 'Refunded to your original payment method.',
-  REJECTED: 'The seller did not accept this return.',
+  REJECTED: 'We could not accept this return.',
   CLOSED: 'This return is closed.',
 };
 

@@ -19,6 +19,7 @@ import {
 } from '@ecommerce/types';
 import { paymentInclude, sessionMeta, toPaymentAttemptDto } from '../payments/payment.mapper';
 import { OPEN_RETURN_STATUSES, returnDeadline, returnableQuantity } from '../returns/return-rules';
+import { mergeDuplicateHistory } from './order-rules';
 
 const itemInclude = {
   variant: {
@@ -164,12 +165,14 @@ export function toOrderDto(o: OrderFull, returnWindowDays = 0): OrderDto {
         returnableUntil: deadline?.toISOString() ?? null,
       };
     }),
-    history: o.statusHistory.map((h): OrderHistoryEntry => ({
-      status: h.toStatus as OrderStatus,
-      note: h.note,
-      vendorName: h.vendorOrder?.vendor.name ?? null,
-      createdAt: h.createdAt.toISOString(),
-    })),
+    history: mergeDuplicateHistory(
+      o.statusHistory.map((h): OrderHistoryEntry => ({
+        status: h.toStatus as OrderStatus,
+        note: h.note,
+        vendorName: h.vendorOrder?.vendor.name ?? null,
+        createdAt: h.createdAt.toISOString(),
+      })),
+    ),
   };
 }
 

@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element -- store logos come from object storage */
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -21,16 +20,20 @@ const PERKS = [
     sub: 'Pay at your door',
     icon: 'M3 7h18v10H3zM12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z',
   },
-  { title: '7-day exchanges', sub: 'Wrong size? Swap it', icon: 'M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4' },
   {
-    title: 'Verified seller',
-    sub: 'Every store is reviewed',
+    title: '7-day returns',
+    sub: 'Unused, in original packing',
+    icon: 'M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4',
+  },
+  {
+    title: 'Not sure it fits?',
+    sub: 'Send us a photo — we’ll help',
     icon: 'M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3ZM9 12l2 2 4-4',
   },
   {
-    title: 'Secure payment',
-    sub: 'Card, wallet or cash',
-    icon: 'M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5zM12 15v2',
+    title: 'Repair service',
+    sub: 'We can fit it for you',
+    icon: 'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4 2.5-2.5Z',
   },
 ];
 
@@ -191,28 +194,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             ))}
           </ul>
 
-          <div className="flex flex-wrap items-center gap-3.5">
-            {product.vendor.logoUrl ? (
-              <img
-                src={product.vendor.logoUrl}
-                alt=""
-                className="h-[52px] w-[52px] flex-none rounded-full object-cover"
-              />
-            ) : (
-              <span className="flex h-[52px] w-[52px] flex-none items-center justify-center rounded-full bg-gray-900 text-[20px] font-bold text-white">
-                {product.vendor.name.charAt(0).toUpperCase()}
-              </span>
-            )}
-            <div className="min-w-[140px] flex-1">
-              <p className="text-xs text-gray-500">Sold by</p>
-              <p className="text-base font-bold">{product.vendor.name}</p>
-              <p className="text-[13px] text-gray-500">Verified seller</p>
+          <div className="flex flex-wrap items-center gap-3.5 rounded-md bg-gray-100 p-4">
+            <div className="min-w-[160px] flex-1">
+              <p className="text-base font-bold">Not sure this part fits?</p>
+              <p className="text-[13px] text-gray-600">
+                Send us a photo of your chair — we will confirm the right part, or fit it for you.
+              </p>
             </div>
             <Link
-              href={`/stores/${product.vendor.slug}`}
-              className="rounded-md border border-gray-300 px-4 py-2.5 text-[12px] font-bold uppercase tracking-[0.08em] text-gray-900 hover:border-gray-900 hover:text-gray-900"
+              href="/contact?topic=repair"
+              className="rounded-md border border-gray-300 bg-white px-4 py-2.5 text-[12px] font-bold uppercase tracking-[0.08em] text-gray-900 hover:border-gray-900 hover:text-gray-900"
             >
-              Visit store
+              Ask us
             </Link>
           </div>
         </div>

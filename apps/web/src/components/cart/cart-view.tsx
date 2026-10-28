@@ -75,7 +75,6 @@ export function CartView() {
   }
 
   const empty = !cart || cart.itemCount === 0;
-  const sellers = cart?.groups.length ?? 0;
   const checkoutHref = savedCode
     ? `/checkout?coupon=${encodeURIComponent(savedCode)}`
     : '/checkout';
@@ -88,9 +87,7 @@ export function CartView() {
         </h1>
         {!empty ? (
           <span className="text-sm text-gray-500">
-            {cart.itemCount} item{cart.itemCount === 1 ? '' : 's'} from {sellers} seller
-            {sellers === 1 ? '' : 's'}
-            {sellers > 1 ? ' · each seller ships separately' : ''}
+            {cart.itemCount} item{cart.itemCount === 1 ? '' : 's'}
           </span>
         ) : null}
       </div>
@@ -129,12 +126,10 @@ export function CartView() {
                       {group.vendor.name.charAt(0).toUpperCase()}
                     </span>
                     <span className="text-sm">
-                      Sold by <b>{group.vendor.name}</b>
+                      <b>{group.vendor.name}</b>
                     </span>
                   </div>
-                  <span className="text-[13px] text-gray-500">
-                    {sellers > 1 ? 'Ships separately' : 'Delivery options at checkout'}
-                  </span>
+                  <span className="text-[13px] text-gray-500">Delivery options at checkout</span>
                 </div>
                 {group.items.map((item) => (
                   <div
@@ -334,7 +329,7 @@ export function CartView() {
                   value={<Money amount={cart.subtotal} currency={cart.currency} />}
                 />
                 <SummaryRow
-                  label={`Shipping (${sellers} seller${sellers === 1 ? '' : 's'})`}
+                  label="Delivery"
                   value={<span className="font-normal text-gray-500">At checkout</span>}
                 />
               </dl>

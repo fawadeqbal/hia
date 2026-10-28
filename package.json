@@ -1,5 +1,5 @@
 {
-  "name": "ecommerce-platform",
+  "name": "hia-furniture",
   "private": true,
   "packageManager": "pnpm@9.15.4",
   "engines": {
@@ -10,7 +10,6 @@
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter=@ecommerce/web...",
     "dev:admin": "turbo run dev --filter=@ecommerce/admin...",
-    "dev:vendor": "turbo run dev --filter=@ecommerce/vendor...",
     "dev:api": "turbo run dev --filter=@ecommerce/api... --filter=@ecommerce/worker...",
     "build": "turbo run build",
     "lint": "turbo run lint",

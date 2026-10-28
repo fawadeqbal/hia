@@ -4,10 +4,10 @@ import { blogApi, seoApi } from '@/lib/api-client';
 
 export const revalidate = 3600;
 
-/** Static routes, CMS pages, blog posts, products, categories, brands and seller stores. */
+/** Static routes, CMS pages, blog posts, products, categories and brands (single shop: no store pages). */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const fixed: MetadataRoute.Sitemap = ['', '/products', '/blog', '/faq', '/track-order'].map(
+  const fixed: MetadataRoute.Sitemap = ['', '/products', '/contact', '/faq', '/track-order'].map(
     (path) => ({
       url: `${site}${path}`,
       changeFrequency: 'daily',
@@ -40,7 +40,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...entries(catalog.categories, '/categories', 'daily', 0.8),
     ...entries(catalog.products, '/products', 'daily', 0.8),
     ...entries(catalog.brands, '/brands', 'weekly', 0.5),
-    ...entries(catalog.stores, '/stores', 'weekly', 0.5),
     ...cms.pages.map((p) => ({
       url: `${site}/pages/${p.slug}`,
       lastModified: p.updatedAt,

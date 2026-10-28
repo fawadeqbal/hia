@@ -6,4 +6,7 @@ export async function getStoreSettings(): Promise<PublicStoreSettings | null> {
   return settingsApi.public({ next: { revalidate: 60 } }).catch(() => null);
 }
 
-export const storeName = (s: PublicStoreSettings | null) => s?.name || 'KADAM';
+export const storeName = (s: PublicStoreSettings | null) => s?.name || 'HIA Furniture Solutions';
+
+export const DEFAULT_TAGLINE = 'Quality Products | Competitive Prices | Reliable Service';
+export const storeTagline = (s: PublicStoreSettings | null) => s?.tagline || DEFAULT_TAGLINE;

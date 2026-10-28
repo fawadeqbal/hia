@@ -89,7 +89,6 @@ export function CheckoutView() {
   const [couponInput, setCouponInput] = useState('');
   const [couponCode, setCouponCode] = useState<string | null>(null);
   const [redeemPoints, setRedeemPoints] = useState(false);
-  const [giftInput, setGiftInput] = useState('');
   // Checkout is a 4-step flow: address → delivery → payment → review (savings, note).
   const [step, setStep] = useState(0);
   // Steps the customer tried to leave (or submit) while incomplete: shown in red.
@@ -105,7 +104,8 @@ export function CheckoutView() {
       setCouponCode(fromCart);
     }
   }, []);
-  const [giftCardCode, setGiftCardCode] = useState<string | null>(null);
+  // Gift cards are not used in the single-shop build (the API still accepts a code).
+  const giftCardCode: string | null = null;
   const guestEmail = useDeferredValue(watch('email'));
   // Where the parcel goes decides the shipping zone: saved address, or the typed one (debounced).
   const [countryCode, state, city] = watch(['countryCode', 'state', 'city']);
@@ -435,7 +435,7 @@ export function CheckoutView() {
                         <Link href="/login?next=/checkout" className="font-semibold text-brand-700">
                           Sign in
                         </Link>{' '}
-                        to use saved addresses and earn points.
+                        to use saved addresses and track your orders.
                       </p>
                     </>
                   )}
@@ -501,7 +501,7 @@ export function CheckoutView() {
 
             {step === 1 ? (
               <>
-                <Panel id="step-delivery" title="2. Delivery, per seller">
+                <Panel id="step-delivery" title="2. Delivery">
                   {!q ? (
                     quote.error ? (
                       <Alert tone="error">{quote.error.message}</Alert>
@@ -516,8 +516,7 @@ export function CheckoutView() {
                       >
                         <div className="flex flex-wrap justify-between gap-2 text-sm">
                           <span className="min-w-0 break-words">
-                            Sold by <b>{g.vendor.name}</b> · {g.items.length} item
-                            {g.items.length === 1 ? '' : 's'}
+                            {g.items.length} item{g.items.length === 1 ? '' : 's'}
                           </span>
                           <span className="text-gray-500">
                             Subtotal {formatMoney(g.subtotal, q.currency)}
@@ -525,7 +524,8 @@ export function CheckoutView() {
                         </div>
                         {g.shippingOptions.length === 0 ? (
                           <p className="text-sm font-semibold text-red-600">
-                            This seller doesn’t deliver to this address.
+                            Sorry, we don’t deliver to this address yet. Contact us and we will
+                            arrange it.
                           </p>
                         ) : (
                           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-2">
@@ -575,8 +575,7 @@ export function CheckoutView() {
                   )}
                   {q && q.shippingZone === null && q.freeShippingAbove > 0 ? (
                     <p className="text-xs text-gray-500">
-                      Free delivery on orders over {formatMoney(q.freeShippingAbove, q.currency)}{' '}
-                      per seller.
+                      Free delivery on orders over {formatMoney(q.freeShippingAbove, q.currency)}.
                     </p>
                   ) : null}
                 </Panel>
@@ -768,53 +767,6 @@ export function CheckoutView() {
                         {q.coupon.applied
                           ? `${q.coupon.code} applied${q.coupon.message ? ` — ${q.coupon.message}` : ''}`
                           : q.coupon.message}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <div className="flex gap-2">
-                      <input
-                        aria-label="Gift card code"
-                        placeholder="Gift card code"
-                        value={giftInput}
-                        onChange={(e) => setGiftInput(e.target.value)}
-                        className={codeInput}
-                      />
-                      {giftCardCode ? (
-                        <button
-                          type="button"
-                          className={darkButton}
-                          onClick={() => {
-                            setGiftCardCode(null);
-                            setGiftInput('');
-                          }}
-                        >
-                          Remove
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className={darkButton}
-                          disabled={!giftInput.trim()}
-                          onClick={() => setGiftCardCode(giftInput.trim())}
-                        >
-                          Apply
-                        </button>
-                      )}
-                    </div>
-                    {q?.giftCard ? (
-                      <p
-                        className={cn(
-                          'rounded-xl px-3 py-2 text-[13px] font-semibold',
-                          q.giftCard.applied
-                            ? 'bg-tint-mint text-emerald-800'
-                            : 'bg-tint-rose text-red-700',
-                        )}
-                      >
-                        {q.giftCard.applied
-                          ? `${formatMoney(q.giftCard.amount, q.currency)} from ${q.giftCard.code} · ${formatMoney(q.giftCard.remainingBalance, q.currency)} left on the card`
-                          : q.giftCard.message}
                       </p>
                     ) : null}
                   </div>

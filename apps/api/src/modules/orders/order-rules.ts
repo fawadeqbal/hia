@@ -82,3 +82,27 @@ export function generateOrderNumber(now = new Date(), random = Math.random): str
   ).join('');
   return `ORD-${date}-${suffix}`;
 }
+
+/**
+ * The parent order writes its own history row whenever a sub-order changes its status, so with one
+ * shop every step shows twice. Merge back-to-back rows with the same status (within a minute),
+ * keeping the first row's note or the duplicate's when the first has none.
+ */
+export function mergeDuplicateHistory<
+  T extends { status: string; note: string | null; createdAt: string },
+>(rows: T[]): T[] {
+  const out: T[] = [];
+  for (const row of rows) {
+    const prev = out[out.length - 1];
+    if (
+      prev &&
+      prev.status === row.status &&
+      Math.abs(Date.parse(row.createdAt) - Date.parse(prev.createdAt)) < 60_000
+    ) {
+      if (!prev.note && row.note) out[out.length - 1] = { ...prev, note: row.note };
+      continue;
+    }
+    out.push(row);
+  }
+  return out;
+}

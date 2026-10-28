@@ -36,7 +36,7 @@ export function ProductQuestions({ productId, slug }: { productId: string; slug:
       setSent(
         q.status === 'APPROVED'
           ? 'Your question is published.'
-          : 'Thanks! Your question will appear once the seller answers it or it is approved.',
+          : 'Thanks! Your question will appear once we answer it.',
       );
       await queryClient.invalidateQueries({
         queryKey: queryKeys.reviews.questions(productId, {}).slice(0, 3),
@@ -63,7 +63,7 @@ export function ProductQuestions({ productId, slug }: { productId: string; slug:
                 {a.body}
                 <p className="mt-1 text-xs text-gray-500">
                   {a.author}
-                  {a.isVendor ? ' (seller)' : ''} · {formatDate(a.createdAt)}
+                  {a.isVendor ? ' (shop)' : ''} · {formatDate(a.createdAt)}
                 </p>
               </div>
             ))}
@@ -88,7 +88,7 @@ export function ProductQuestions({ productId, slug }: { productId: string; slug:
           {sent ? <Alert tone="success">{sent}</Alert> : null}
           {ask.error ? <Alert tone="error">{ask.error.message}</Alert> : null}
           <Textarea
-            label="Ask the seller a question"
+            label="Ask us a question"
             rows={3}
             placeholder="Does it come with a charger?"
             {...register('body')}

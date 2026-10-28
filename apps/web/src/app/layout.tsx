@@ -4,7 +4,7 @@ import { Suspense, type ReactNode } from 'react';
 import { Providers } from './providers';
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
-import { SupportWidget } from '@/components/support/support-widget';
+import { WhatsAppButton } from '@/components/support/whatsapp-button';
 import { OrganizationJsonLd } from '@/components/seo/organization-json-ld';
 import { MaintenanceGate } from '@/components/layout/maintenance-gate';
 import { MobileTabBar } from '@/components/layout/mobile-tab-bar';
@@ -23,8 +23,12 @@ const archivo = Archivo({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
-  title: { default: 'KADAM — Footwear for every step', template: '%s | KADAM' },
-  description: 'Sneakers, formal shoes, sandals and more — made for every step.',
+  title: {
+    default: 'HIA Furniture Solutions — Office chair parts, chairs & repair',
+    template: '%s | HIA Furniture Solutions',
+  },
+  description:
+    'Office chair spare parts (gas lifts, wheels, bases, armrests, tilt mechanisms), office chairs, furniture, general order supplies, and chair repair & maintenance. Quality Products | Competitive Prices | Reliable Service.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -44,7 +48,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <>
                   <MobileTabBar />
                   <CartDrawer />
-                  <SupportWidget />
+                  <WhatsAppButton />
                 </>
               }
             >

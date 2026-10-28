@@ -431,7 +431,7 @@ export class ReturnsService {
     dto: ReturnRequestDto,
   ) {
     try {
-      const vendorApp = this.config.get<string>('NEXT_PUBLIC_VENDOR_URL', 'http://localhost:3002');
+      const vendorApp = this.config.get<string>('NEXT_PUBLIC_ADMIN_URL', 'http://localhost:3001');
       await this.notifications.sendEmail({
         template: EmailTemplateKey.VENDOR_RETURN_REQUEST,
         to: vendor.email,

@@ -3,6 +3,7 @@ import {
   commissionFor,
   deriveOrderStatus,
   generateOrderNumber,
+  mergeDuplicateHistory,
   shippingFor,
 } from './order-rules';
 
@@ -48,5 +49,23 @@ describe('order rules', () => {
 
   it('generates readable order numbers', () => {
     expect(generateOrderNumber(new Date('2026-10-11T10:00:00Z'), () => 0)).toBe('ORD-261011-22222');
+  });
+});
+
+describe('mergeDuplicateHistory', () => {
+  const at = (s: number) => new Date(Date.UTC(2026, 9, 28, 10, 0, s)).toISOString();
+  it('merges back-to-back rows with the same status and keeps a note', () => {
+    const rows = [
+      { status: 'COD_CONFIRMED', note: 'Order placed', createdAt: at(0) },
+      { status: 'COD_CONFIRMED', note: 'Order placed', createdAt: at(0) },
+      { status: 'SHIPPED', note: null, createdAt: at(10) },
+      { status: 'SHIPPED', note: 'TRK-1', createdAt: at(10) },
+      { status: 'DELIVERED', note: null, createdAt: at(20) },
+    ];
+    expect(mergeDuplicateHistory(rows)).toEqual([
+      { status: 'COD_CONFIRMED', note: 'Order placed', createdAt: at(0) },
+      { status: 'SHIPPED', note: 'TRK-1', createdAt: at(10) },
+      { status: 'DELIVERED', note: null, createdAt: at(20) },
+    ]);
   });
 });

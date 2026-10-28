@@ -3,6 +3,14 @@
 Read this file fully before writing code. It is the contract for any AI agent or developer.
 It exists so you do **not** have to explore the whole repo or guess conventions.
 
+> **Single-shop build (HIA Furniture Solutions).** This repo is a one-shop copy of `ecommerce-platform`.
+> There is no seller app. The seed creates ONE store (`Vendor`, slug `hia-furniture`) owned by the super admin;
+> `SUPER_ADMIN` passes every `@Roles` check, so the **admin panel calls the store endpoints** (`/vendor/products`,
+> `/vendor/inventory`, `/vendor/orders/:id/status`) for products, stock and order status. Keep that design:
+> new shop features go in `apps/admin` + `apps/web`; do not reintroduce seller screens or seller wording.
+> Marketplace features (commission, payouts, loyalty, tax, online gateways, review before publish) are switched
+> off by seeded settings, not deleted. See README → "How the single shop works".
+
 ---
 
 ## 0. Golden rules (read first)
@@ -32,8 +40,7 @@ apps/
   api/        NestJS 11 REST API          http://localhost:4000/api/v1   (Swagger: /api/docs)
   worker/     NestJS BullMQ worker        (emails, cron jobs)
   web/        Next.js 15 storefront       http://localhost:3000
-  admin/      Next.js 15 admin panel      http://localhost:3001
-  vendor/     Next.js 15 seller center    http://localhost:3002
+  admin/      Next.js 15 admin panel      http://localhost:3001   (shop owner: products, stock, orders, inquiries)
 packages/
   types/            shared interfaces, const enums, zod form schemas, helpers  (compiled to dist, CJS)
   api-client/       typed fetch functions + TanStack query keys               (consumed as TS source)
@@ -249,8 +256,8 @@ pnpm typecheck && pnpm test && pnpm lint
 pnpm --filter @ecommerce/api test        # API unit tests only
 ```
 
-URLs, logins and walkthroughs: `CREDENTIALS.md`. Admin: `admin@example.com` / `Admin@12345`;
-seller: `vendor@example.com` / `Vendor@12345`; customers register at http://localhost:3000/register.
+URLs, logins and walkthroughs: `CREDENTIALS.md`. Super admin (shop owner): `admin@example.com` / `Admin@12345`;
+customers register at http://localhost:3000/register.
 
 ---
 

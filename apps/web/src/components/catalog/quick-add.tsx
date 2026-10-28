@@ -73,7 +73,7 @@ export function QuickAdd({
       <Tooltip content={label}>
         <button
           type="button"
-          aria-label={hasOptions ? `Choose a size for ${name}` : `Add ${name} to bag`}
+          aria-label={hasOptions ? `Choose options for ${name}` : `Add ${name} to cart`}
           disabled={!inStock || add.isPending}
           onClick={run}
           className={cn(

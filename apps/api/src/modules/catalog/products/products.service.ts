@@ -672,7 +672,7 @@ export class ProductsService {
         select: { email: true, ownerId: true },
       });
       if (!vendor) return;
-      const base = this.config.get<string>('NEXT_PUBLIC_VENDOR_URL', 'http://localhost:3002');
+      const base = this.config.get<string>('NEXT_PUBLIC_ADMIN_URL', 'http://localhost:3001');
       await this.notifications.sendEmail({
         template,
         to: vendor.email,
@@ -681,7 +681,7 @@ export class ProductsService {
           ...data,
           productName: product.name,
           ctaLabel: 'Open product',
-          ctaUrl: `${base}/products/${product.id}`,
+          ctaUrl: `${base}/catalog/products/${product.id}`,
         },
       });
     } catch (error) {

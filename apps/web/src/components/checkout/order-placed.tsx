@@ -87,7 +87,6 @@ export function OrderPlaced() {
                   <p className="text-xs text-gray-500">Items</p>
                   <p className="font-bold">
                     {itemCount} item{itemCount === 1 ? '' : 's'}
-                    {order.vendorOrders.length > 1 ? ` · ${order.vendorOrders.length} sellers` : ''}
                   </p>
                 </div>
               </div>

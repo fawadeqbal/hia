@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <linearGradient id="leather" x1="0" x2="1"><stop offset="0" stop-color="#171513"/><stop offset=".5" stop-color="#3a3531"/><stop offset="1" stop-color="#171513"/></linearGradient>
+    <linearGradient id="chrome" x1="0" x2="1"><stop offset="0" stop-color="#8f949b"/><stop offset=".45" stop-color="#eef0f2"/><stop offset="1" stop-color="#6d727a"/></linearGradient>
+  </defs>
+  <ellipse cx="400" cy="745" rx="250" ry="30" fill="#000" opacity=".08"/>
+  <path d="M290 60c0-25 20-40 50-40h120c30 0 50 15 50 40v40H290z" fill="url(#leather)"/>
+  <path d="M270 110c0-20 20-30 40-30h180c20 0 40 10 40 30l10 300H260z" fill="url(#leather)"/>
+  <g stroke="#000" stroke-opacity=".35" stroke-width="5" fill="none"><path d="M280 200h240M276 290h248M272 370h256"/></g>
+  <rect x="230" y="410" width="340" height="80" rx="40" fill="url(#leather)"/>
+  <rect x="245" y="430" width="310" height="12" rx="6" fill="#cf5a2a" opacity=".9"/>
+  <path d="M190 360h70v30h-40v80h-30z" fill="#2b2724"/>
+  <path d="M610 360h-70v30h40v80h30z" fill="#2b2724"/>
+  <rect x="383" y="490" width="34" height="120" fill="url(#chrome)"/>
+  <g fill="url(#chrome)"><path d="M390 610 170 660l8 22 222-40z"/><path d="M410 610l220 50-8 22-222-40z"/><path d="M392 615 290 712l20 14 100-95z"/><path d="M408 615l102 97-20 14-100-95z"/></g>
+  <g fill="#171513"><circle cx="175" cy="690" r="20"/><circle cx="625" cy="690" r="20"/><circle cx="298" cy="732" r="20"/><circle cx="502" cy="732" r="20"/></g>
+</svg>

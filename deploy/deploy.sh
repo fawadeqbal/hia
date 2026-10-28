@@ -58,8 +58,7 @@ run_container() {
   docker run -d --name "$CONTAINER" --network "$NETWORK" --restart unless-stopped \
     --env-file "$ENV_FILE" \
     -e RUN_SEED="${RUN_SEED:-false}" \
-    -p "$BIND_ADDR:3000:3000" -p "$BIND_ADDR:3001:3001" \
-    -p "$BIND_ADDR:3002:3002" -p "$BIND_ADDR:4000:4000" \
+    -p "$BIND_ADDR:3000:3000" -p "$BIND_ADDR:3001:3001" -p "$BIND_ADDR:4000:4000" \
     --log-opt max-size=20m --log-opt max-file=5 \
     "$image" >/dev/null
 }

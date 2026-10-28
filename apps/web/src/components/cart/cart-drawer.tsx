@@ -100,7 +100,7 @@ export function CartDrawer() {
         ref={panel}
         role="dialog"
         aria-modal="true"
-        aria-label="Your bag"
+        aria-label="Your cart"
         className={cn(
           'fixed inset-y-0 right-0 z-[81] flex w-full max-w-[440px] flex-col bg-white shadow-drawer',
           'transition-transform duration-[340ms] ease-out',
@@ -122,7 +122,7 @@ function DrawerBody({ justAdded }: { justAdded: string | null }) {
     <>
       <div className="flex h-16 flex-none items-center justify-between border-b border-gray-200 px-5">
         <h2 className="type-display text-[26px]">
-          Your bag{' '}
+          Your cart{' '}
           <span className="align-top text-[15px] font-semibold not-italic text-gray-500 [font-stretch:100%]">
             ({count})
           </span>
@@ -131,7 +131,7 @@ function DrawerBody({ justAdded }: { justAdded: string | null }) {
           type="button"
           data-autofocus
           onClick={closeCartDrawer}
-          aria-label="Close bag"
+          aria-label="Close cart"
           className="-mr-2 grid h-10 w-10 place-items-center rounded-full text-gray-900 hover:bg-gray-100"
         >
           <CloseIcon size={20} />
@@ -158,7 +158,7 @@ function DrawerBody({ justAdded }: { justAdded: string | null }) {
               <BagIcon size={26} />
             </span>
             <div>
-              <p className="type-display text-[28px]">Your bag is empty</p>
+              <p className="type-display text-[28px]">Your cart is empty</p>
               <p className="mt-1 text-sm text-gray-500">
                 Find a pair you love — it will wait for you here.
               </p>
@@ -215,7 +215,7 @@ function DrawerBody({ justAdded }: { justAdded: string | null }) {
               href="/cart"
               className="flex h-12 items-center justify-center rounded-md border border-gray-900 text-[13px] font-bold uppercase tracking-[0.1em] text-gray-900 hover:bg-gray-900 hover:text-white"
             >
-              View bag
+              View cart
             </Link>
           </div>
           {!cart.canCheckout ? (

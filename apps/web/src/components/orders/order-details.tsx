@@ -57,7 +57,7 @@ export function OrderDetails({ order, actions }: { order: OrderDto; actions?: Re
             <Card key={vo.id} className="p-0">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-5 py-3 text-sm">
                 <span>
-                  Sold by <span className="font-semibold text-gray-900">{vo.vendor.name}</span>
+                  <span className="font-semibold text-gray-900">Items</span>
                   {vo.shippingMethod ? (
                     <span className="text-gray-500"> · {vo.shippingMethod}</span>
                   ) : null}

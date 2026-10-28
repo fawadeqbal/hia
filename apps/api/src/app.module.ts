@@ -37,7 +37,6 @@ import { PayoutsModule } from './modules/payouts/payouts.module';
 import { LocalizationModule } from './modules/localization/localization.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { SeoModule } from './modules/seo/seo.module';
-import { SupportAssistantModule } from './modules/support-assistant/support-assistant.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { AuditModule } from './modules/audit/audit.module';
 
@@ -81,7 +80,6 @@ import { AuditModule } from './modules/audit/audit.module';
     LocalizationModule,
     AnalyticsModule,
     SeoModule,
-    SupportAssistantModule,
     SettingsModule,
     AuditModule,
   ],

@@ -29,7 +29,6 @@ export { emailAdminApi } from './endpoints/email-admin';
 export { seoApi } from './endpoints/seo';
 export { documentsApi } from './endpoints/documents';
 export { toolsApi } from './endpoints/tools';
-export { supportAssistantApi } from './endpoints/support-assistant';
 export { cmsApi } from './endpoints/cms';
 export { reportsApi } from './endpoints/reports';
 export { blogApi } from './endpoints/blog';

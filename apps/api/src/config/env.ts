@@ -25,8 +25,6 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   // Support assistant (services/support-ai). Internal service: only this API calls it, with the shared key.
-  SUPPORT_AI_URL: z.string().default('http://localhost:5000'),
-  SUPPORT_AI_KEY: z.string().default('dev-support-ai-key-change-me'),
   PAYMENT_ALLOW_MOCK_IN_PRODUCTION: z.enum(['true', 'false']).default('false'),
 
   // Object storage (MinIO locally, any S3-compatible service in production)

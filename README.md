@@ -1,177 +1,106 @@
-# E-Commerce Platform (Monorepo)
+# HIA Furniture Solutions — online shop
 
-Multi-vendor e-commerce platform built with **Next.js**, **NestJS**, **PostgreSQL** and **Prisma**.
-Email is the only notification channel.
+Website + admin panel for **HIA Furniture Solutions**: office chair spare parts (gas lifts, wheels, bases,
+armrests, tilt mechanisms, accessories), office chairs, furniture, general order supplies, and chair repair &
+maintenance.
 
-| Doc                                            | What it is for                                                         |
-| ---------------------------------------------- | ---------------------------------------------------------------------- |
-| [`docs/roadmap.md`](docs/roadmap.md)           | What is built, what is next (progress table)                           |
-| [`AGENTS.md`](AGENTS.md)                       | How to write code here: recipe, conventions, gotchas (read first)      |
-| [`docs/architecture.md`](docs/architecture.md) | Request flow, packages, business flows (vendor, product, stock, order) |
-| [`CREDENTIALS.md`](CREDENTIALS.md)             | Local URLs, logins, seeded demo data, test walkthroughs                |
-| [`docs/scope.md`](docs/scope.md)               | Full product scope (all phases)                                        |
+> **Quality Products | Competitive Prices | Reliable Service**
 
-## Stack
+This is a **single-shop** copy of [`ecommerce-platform`](https://github.com/fawadeqbal/ecommerce-platform)
+(that repository is unchanged). The multi-vendor marketplace parts are switched off: there are no sellers,
+no seller sign-up, no commissions or payouts. One **super admin** (the shop owner) manages everything from
+the admin panel.
 
-| Layer          | Tech                                                                                   |
-| -------------- | -------------------------------------------------------------------------------------- |
-| Monorepo       | Turborepo + pnpm workspaces                                                            |
-| Frontends      | Next.js 15 (App Router), React 19, Tailwind CSS, TanStack Query, React Hook Form + Zod |
-| API            | NestJS 11 (modular), REST + Swagger, class-validator, JWT in HttpOnly cookies          |
-| Database       | PostgreSQL 16 + Prisma 6 (`pg_trgm` for fuzzy search)                                  |
-| Queues / cache | Redis + BullMQ (separate worker process)                                               |
-| Email          | React Email templates, provider-agnostic sender (SMTP → Mailpit locally)               |
-| Storage        | S3-compatible (MinIO locally)                                                          |
-| Testing        | Jest (API unit tests), Playwright (planned)                                            |
-| DevOps         | Docker, GitHub Actions                                                                 |
+| App      | What it is                        | Local URL                                        |
+| -------- | --------------------------------- | ------------------------------------------------ |
+| `web`    | The shop website for customers    | http://localhost:3000                            |
+| `admin`  | Admin panel for the shop owner    | http://localhost:3001                            |
+| `api`    | Backend (NestJS REST API)         | http://localhost:4000/api/v1 (docs: `/api/docs`) |
+| `worker` | Sends emails, runs scheduled jobs | —                                                |
 
-## Structure
+## What the shop owner can do (admin panel)
 
-```
-apps/
-  web/              Next.js storefront (customers)               → http://localhost:3000
-  admin/            Next.js admin panel                          → http://localhost:3001
-  vendor/           Next.js seller center                        → http://localhost:3002
-  api/              NestJS REST API                              → http://localhost:4000/api/v1  (docs: /api/docs)
-  worker/           NestJS BullMQ worker (emails, cron jobs)
-packages/
-  config/           shared tsconfig, ESLint, Tailwind preset
-  types/            shared DTO interfaces, enums, zod form schemas, helpers (compiled, CJS)
-  api-client/       typed fetch functions + TanStack Query keys used by all three Next apps
-  ui/               shared React components (DataTable, Modal, Tabs, Timeline, AppShell, …)
-  database/         Prisma schema, migrations, seed, Prisma client
-  email-templates/  React Email templates + renderEmail()             → preview http://localhost:3003
-docker/             Dockerfiles + Postgres init
-docs/               scope, roadmap, architecture
-```
+| Menu                   | Use it to…                                                                                                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dashboard / Reports    | See new orders to confirm, new inquiries, low stock, sales                                                                                                 |
+| **Orders**             | Open an order → **Confirm → Packed → Shipped → Delivered** (tracking number optional), invoice PDF, packing slip, cancel                                   |
+| **Inquiries**          | Repair requests, wholesale / institutional quotes and questions from the website Contact page. Call / WhatsApp / email the customer, keep notes, mark done |
+| Customers / Returns    | Customer list and history; approve and refund returns                                                                                                      |
+| **Products**           | Add / edit products: photos, price, options (size, colour), specifications, publish, show on home page                                                     |
+| Categories             | Product groups shown in the website menu                                                                                                                   |
+| **Stock**              | Add or remove stock quantities, see the history                                                                                                            |
+| Options (size, colour) | The option values products can use (e.g. 50 mm / 60 mm, Black / Grey)                                                                                      |
+| Coupons                | Discount codes                                                                                                                                             |
+| Website                | Home page banners, pages (About, Services, policies), menus, FAQs, reviews & questions                                                                     |
+| **Shop settings**      | Shop name, motto, logo, **phone, WhatsApp number**, email, address, COD fee/limit, delivery charge, return window                                          |
+| Delivery zones         | Delivery prices and the "pick up from shop" option                                                                                                         |
+| Payments               | **Cash on delivery** is on. Online card payments can be switched on later here                                                                             |
 
-## Prerequisites
+New inquiries and new orders are also emailed to the admin.
 
-- Node.js 22+
-- pnpm 9+ (`corepack enable` then `corepack prepare pnpm@9.15.4 --activate`)
-- Docker Desktop (for Postgres, Redis, Mailpit, MinIO)
+## Website
 
-## Getting started (fresh machine)
+Same design as `ecommerce-platform`, rebranded for HIA: home page (chair parts / repair / wholesale slides,
+categories, new & featured products, offers, motto), category and product pages, cart, checkout
+(**Cash on delivery**, prices in **PKR**), order tracking, customer accounts, About / Services / policy pages,
+FAQ, and a **Contact page** whose form sends repair and quote requests into Admin → Inquiries.
+When a WhatsApp number is set in Shop settings, a "Chat on WhatsApp" button appears on every page.
+
+The 15 sample products use simple placeholder drawings (`apps/web/public/demo`). Replace them with real
+photos in Admin → Products.
+
+## Run it on your computer
+
+Needs **Node.js 22+**, **pnpm 9+** and **Docker Desktop** (for Postgres, Redis, Mailpit and MinIO).
 
 ```bash
-# 1. Install dependencies
 pnpm install
-
-# 2. Environment
-cp .env.example .env          # Git Bash / macOS / Linux
-# PowerShell: Copy-Item .env.example .env   |   CMD: copy .env.example .env
-
-# 3. Start infrastructure (Postgres, Redis, Mailpit, MinIO)
-pnpm infra:up
-
-# 4. Database: apply all migrations, then seed demo data
-pnpm db:migrate
-pnpm db:seed
-
-# 5. Run everything (web, admin, vendor, api, worker)
-pnpm dev
+cp .env.example .env          # PowerShell: Copy-Item .env.example .env
+pnpm infra:up                 # Postgres, Redis, Mailpit (emails), MinIO (images)
+pnpm db:migrate               # create the database tables
+pnpm db:seed                  # HIA shop, super admin, categories, sample products
+pnpm dev                      # website :3000, admin :3001, API :4000, worker
 ```
 
-### Updating an existing checkout
+**Admin login:** http://localhost:3001 — `admin@example.com` / `Admin@12345`
+(set your own `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` in `.env` **before** the first `pnpm db:seed`).
+Emails sent locally appear in Mailpit: http://localhost:8025.
 
-After pulling new steps:
+More: [`CREDENTIALS.md`](CREDENTIALS.md) (logins, first steps for the shop owner, test walkthrough).
 
-```bash
-pnpm install          # only if a package.json changed
-pnpm db:migrate       # applies new migrations (the step notes say when one is needed)
-pnpm db:seed          # idempotent: adds new demo data and new settings, never overwrites existing rows
-pnpm dev
-```
+## First things to do as the shop owner
 
-If you changed `schema.prisma` yourself: `pnpm db:migrate --name <what_changed>` and commit the new folder in
-`packages/database/prisma/migrations/`.
+1. Admin → **Shop settings**: phone, WhatsApp number (e.g. `923001234567`), email, address, logo.
+2. Admin → **Delivery zones**: set your delivery price and free-delivery amount (seeded: Rs 500, free above Rs 25,000, plus "Pick up from shop").
+3. Admin → **Products**: replace the sample photos and prices with your own, add your real products and stock.
+4. Admin → **Pages**: check About, Products & services, delivery and return policies, terms and privacy.
 
-Logins and demo data: see [`CREDENTIALS.md`](CREDENTIALS.md). Super admin: `admin@example.com` / `Admin@12345`.
+## Put it online
 
-| Service               | URL                                          |
-| --------------------- | -------------------------------------------- |
-| Storefront            | http://localhost:3000                        |
-| Admin                 | http://localhost:3001                        |
-| Seller center         | http://localhost:3002                        |
-| API + Swagger         | http://localhost:4000/api/docs               |
-| Mailpit (email inbox) | http://localhost:8025                        |
-| MinIO console         | http://localhost:9001                        |
-| Prisma Studio         | `pnpm db:studio` → http://localhost:5555     |
-| Email preview         | `pnpm email:preview` → http://localhost:3003 |
+One Docker image runs the website, admin, API and worker (`docker/Dockerfile`); Postgres, Redis, an
+S3-compatible bucket (for product photos) and an SMTP service (for emails) are separate.
+See [`deploy/deploy.sh`](deploy/deploy.sh) and [`deploy/nginx.conf`](deploy/nginx.conf)
+(domains: shop, `admin.` and `api.`). Build-time settings: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`,
+`NEXT_PUBLIC_ADMIN_URL`.
 
-## Scripts
+## For developers
 
-| Command                                                 | What it does                                                   |
-| ------------------------------------------------------- | -------------------------------------------------------------- |
-| `pnpm dev`                                              | Run every app in watch mode                                    |
-| `pnpm dev:web` / `dev:admin` / `dev:vendor` / `dev:api` | Run one app (plus its dependencies)                            |
-| `pnpm build`                                            | Build everything                                               |
-| `pnpm lint` / `pnpm typecheck` / `pnpm test`            | Quality checks                                                 |
-| `pnpm --filter @ecommerce/api test`                     | API unit tests only                                            |
-| `pnpm db:migrate`                                       | Apply migrations / create one from `schema.prisma` changes     |
-| `pnpm db:seed`                                          | Seed roles, admin, settings, catalog, vendors, products, stock |
-| `pnpm db:studio`                                        | Open Prisma Studio                                             |
-| `pnpm infra:up` / `infra:down`                          | Start / stop local Docker services                             |
-| `pnpm format`                                           | Prettier across the repo                                       |
+Same stack and conventions as the original: Turborepo + pnpm, Next.js 15 (web, admin), NestJS 11 (api, worker),
+PostgreSQL + Prisma 6, Redis + BullMQ. Read [`AGENTS.md`](AGENTS.md) first.
 
-## What works today
+How the single shop works (short version):
 
-Built entity by entity through every layer (types → API → api-client → ui → screens → seed).
-Status per entity: [`docs/roadmap.md`](docs/roadmap.md).
-
-**Phase 1: Catalog foundation (done)**
-
-- Admin sign-in (HttpOnly cookies), categories (tree), brands, attributes & values, media upload to MinIO.
-- Vendor onboarding: apply → admin approves / rejects / suspends (emails), store profile, payout details, commission.
-- Products: seller CRUD with gallery, specs and variants (option combinations); submit for review →
-  admin approve / reject / feature (emails); suspended vendors' products are hidden.
-- Inventory: warehouses, stock adjustments with a movement log, low-stock and back-in-stock emails, admin low-stock report.
-
-**Phase 2: Buying flow (done)**
-
-- Storefront: home, product listing with filters, category pages, product page with variant picker, sign in / register.
-- Cart: guest cart (cookie) merged into the account at sign-in, stock & price checks, save for later.
-- Checkout & orders (cash on delivery): quote with per-seller shipping, idempotent order placement, stock reservation,
-  one sub-order per seller, confirmation emails; customer order history, detail, cancel, guest order tracking, address book;
-  seller order screens with status actions (shipping deducts stock, tracking number); admin order list / detail / cancel.
-- Online payments (card / wallet / bank) through a pluggable gateway; a mock gateway is used until a real one
-  (Safepay, PayFast, …) is plugged in. Unpaid orders expire, cancellations of paid orders are refunded.
-- Shipping zones (country / province / city) with flat, weight and order-value rates, delivery choice per seller,
-  couriers with tracking links.
-
-**Phase 3: After-sale & growth (in progress)**
-
-- Returns (RMA): request from a delivered order, seller / admin approve, receive + restock, refund (gateway or
-  recorded manual refund for COD).
-- Reviews (verified buyers, seller replies, moderation) and product Q&A.
-- Wishlist with price-drop emails, back-in-stock alerts.
-- Coupons (store and seller) and automatic discounts (sales, buy X get Y, spend tiers) at checkout.
-- Loyalty points (tiers, referrals, expiry) and gift cards, usable at checkout.
-- **Next:** vendor payouts. See the roadmap.
-
-**Not built yet:** every module that has not reached its roadmap step still exposes `GET /<module>/status`, and
-every screen not yet built shows a scaffold card listing the features it needs.
-
-## Backend modules
-
-One NestJS module per domain under `apps/api/src/modules/`:
-
-`auth` · `users` · `rbac` · `vendors` · `catalog` · `inventory` · `search` · `cart` · `checkout` · `pricing` ·
-`promotions` · `orders` · `payments` · `shipping` · `returns` · `reviews` · `wishlist` · `loyalty` ·
-`recommendations` · `cms` · `media` · `notifications` · `marketing` · `support` · `payouts` · `analytics` · `seo` ·
-`settings` · `audit` · `jobs`
-
-Implemented: `auth`, `users` (profile, addresses), `vendors`, `catalog` (categories, brands, attributes, products,
-storefront), `media`, `inventory`, `cart`, `checkout`, `orders`, `payments`, `shipping`, `returns`, `reviews`, `wishlist`, `promotions`, `loyalty`, `payouts`, `notifications`, `audit`.
-
-## Deployment
-
-One-container production image, generic server deploy script and CI/CD pipeline: [`docs/deployment.md`](docs/deployment.md).
-
-## Docker (one image per app, optional)
+- The seed creates **one store** (`Vendor` row, slug `hia-furniture`) **owned by the super admin**.
+  `SUPER_ADMIN` passes every role check, so the admin panel uses the store endpoints
+  (`/vendor/products`, `/vendor/inventory`, `/vendor/orders/:id/status`) directly. Every product and order
+  belongs to that one store; checkout and stock logic are unchanged.
+- Removed: the seller app (`apps/vendor`), the public seller sign-up route, the AI support service
+  (`services/support-ai`) and the original server's deploy scripts.
+- Switched off by settings (code kept): product review before publishing, commission (0 %), reward points (0),
+  tax, abandoned-cart / win-back emails, online card payments.
+- Added: **Inquiries** (`Ticket` + migration `ticket_inquiry_fields`; `POST /inquiries`, `/admin/inquiries`),
+  WhatsApp / motto settings, optional tracking number, delivery chosen before pickup by default.
 
 ```bash
-docker build -f docker/Dockerfile.node --build-arg APP=api    -t ecommerce-api .
-docker build -f docker/Dockerfile.node --build-arg APP=worker -t ecommerce-worker .
-docker build -f docker/Dockerfile.next --build-arg APP=web    -t ecommerce-web .
+pnpm typecheck && pnpm test && pnpm lint
 ```
