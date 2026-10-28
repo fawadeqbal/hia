@@ -1,6 +1,5 @@
 import {
   allocate,
-  commissionFor,
   deriveOrderStatus,
   generateOrderNumber,
   mergeDuplicateHistory,
@@ -12,11 +11,6 @@ describe('order rules', () => {
     expect(shippingFor(30, 5, 50)).toBe(5);
     expect(shippingFor(50, 5, 50)).toBe(0);
     expect(shippingFor(30, 5, 0)).toBe(5);
-  });
-
-  it('calculates commission in cents', () => {
-    expect(commissionFor(199.99, 10)).toBe(20);
-    expect(commissionFor(100, 12.5)).toBe(12.5);
   });
 
   it('prefers the smallest single warehouse that can fill the line', () => {

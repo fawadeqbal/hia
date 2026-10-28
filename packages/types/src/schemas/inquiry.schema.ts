@@ -26,7 +26,9 @@ export const inquiryFormSchema = z.object({
 
 export type InquiryFormValues = z.infer<typeof inquiryFormSchema>;
 
-export const emptyInquiryForm = (topic: InquiryFormValues['topic'] = 'GENERAL'): InquiryFormValues => ({
+export const emptyInquiryForm = (
+  topic: InquiryFormValues['topic'] = 'GENERAL',
+): InquiryFormValues => ({
   topic,
   name: '',
   phone: '',

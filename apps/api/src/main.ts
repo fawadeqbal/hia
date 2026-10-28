@@ -14,7 +14,10 @@ async function bootstrap() {
 
   app.use(helmet());
   app.use(cookieParser());
-  const corsOrigins: (string | RegExp)[] = config.get<string>('CORS_ORIGINS', '').split(',').filter(Boolean);
+  const corsOrigins: (string | RegExp)[] = config
+    .get<string>('CORS_ORIGINS', '')
+    .split(',')
+    .filter(Boolean);
   // Flutter web / local dev on any localhost port (opt-in).
   if (config.get<string>('CORS_ALLOW_LOCALHOST') === 'true') {
     corsOrigins.push(/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/);

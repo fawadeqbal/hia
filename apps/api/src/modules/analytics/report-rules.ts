@@ -11,7 +11,6 @@ import {
   type ReportRangeQuery,
   type SalesKpis,
   type SeriesPoint,
-  type VendorKpis,
 } from '@ecommerce/types';
 
 export const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
@@ -71,7 +70,6 @@ export function assembleSalesKpis(raw: {
   shipping: number;
   cancelledOrders: number;
   itemsSold: number;
-  commission: number;
   refunds: number;
   newCustomers: number;
 }): SalesKpis {
@@ -84,33 +82,8 @@ export function assembleSalesKpis(raw: {
     itemsSold: Number(raw.itemsSold) || 0,
     discounts: round2(raw.discounts),
     shipping: round2(raw.shipping),
-    commission: round2(raw.commission),
     refunds: round2(raw.refunds),
     newCustomers: Number(raw.newCustomers) || 0,
-    cancelledOrders: Number(raw.cancelledOrders) || 0,
-    cancellationRate: rate(Number(raw.cancelledOrders) || 0, orders),
-  };
-}
-
-export function assembleVendorKpis(raw: {
-  orders: number;
-  sales: number;
-  commission: number;
-  netEarnings: number;
-  cancelledOrders: number;
-  itemsSold: number;
-  refunds: number;
-}): VendorKpis {
-  const orders = Number(raw.orders) || 0;
-  const sales = round2(raw.sales);
-  return {
-    sales,
-    orders,
-    averageOrderValue: orders === 0 ? 0 : round2(sales / orders),
-    itemsSold: Number(raw.itemsSold) || 0,
-    commission: round2(raw.commission),
-    netEarnings: round2(raw.netEarnings),
-    refunds: round2(raw.refunds),
     cancelledOrders: Number(raw.cancelledOrders) || 0,
     cancellationRate: rate(Number(raw.cancelledOrders) || 0, orders),
   };

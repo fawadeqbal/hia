@@ -62,10 +62,7 @@ export function ProductList() {
             >
               {p.name}
             </Link>
-            <p className="text-xs text-gray-500">
-              {p.categoryName}
-              {p.brandName ? ` · ${p.brandName}` : ''}
-            </p>
+            <p className="text-xs text-gray-500">{p.categoryName}</p>
           </div>
         </div>
       ),

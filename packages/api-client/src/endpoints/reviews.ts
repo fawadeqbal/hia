@@ -9,7 +9,6 @@ import type {
   ReviewEligibilityDto,
   ReviewInput,
   ReviewListQuery,
-  VendorReplyInput,
 } from '@ecommerce/types';
 import { api } from '../http';
 
@@ -36,14 +35,6 @@ export const reviewsApi = {
   ask: (body: QuestionInput) => api<QuestionDto>('/questions', { method: 'POST', body }),
 
   // ---- seller ----
-  vendorReviews: (params: ReviewListQuery = {}) =>
-    api<Paginated<ReviewDto>>(`/vendor/reviews${toQuery(params)}`),
-  vendorReply: (id: string, body: VendorReplyInput) =>
-    api<ReviewDto>(`/vendor/reviews/${id}/reply`, { method: 'POST', body }),
-  vendorQuestions: (params: ReviewListQuery = {}) =>
-    api<Paginated<QuestionDto>>(`/vendor/questions${toQuery(params)}`),
-  vendorAnswer: (id: string, body: AnswerInput) =>
-    api<QuestionDto>(`/vendor/questions/${id}/answers`, { method: 'POST', body }),
 
   // ---- admin moderation ----
   adminReviews: (params: ReviewListQuery = {}) =>

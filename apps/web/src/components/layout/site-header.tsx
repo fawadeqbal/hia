@@ -4,7 +4,6 @@ import { SearchBox } from '@/components/search/search-box';
 import { getMenu } from '@/lib/cms';
 import { categoriesApi } from '@/lib/api-client';
 import { getStoreSettings, storeName } from '@/lib/store-settings';
-import { LocaleSwitcher } from '@/components/locale/locale-switcher';
 import { AnnouncementBar } from './announcement-bar';
 import { container } from './container';
 import { HeaderActions } from './header-actions';
@@ -81,9 +80,6 @@ export async function SiteHeader() {
             <SearchBox />
           </Suspense>
           <div className="ml-auto flex flex-none items-center gap-1.5">
-            <div className="hidden sm:block">
-              <LocaleSwitcher />
-            </div>
             <HeaderActions />
           </div>
         </div>

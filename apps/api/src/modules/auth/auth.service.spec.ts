@@ -2,7 +2,6 @@ import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import type { PrismaService } from '../../prisma/prisma.service';
-import type { LoyaltyService } from '../loyalty/loyalty.service';
 import type { NotificationsService } from '../notifications/notifications.service';
 import { hashSecret } from './auth-tokens';
 import { AuthService } from './auth.service';
@@ -42,7 +41,6 @@ function setup() {
     { signAsync: jest.fn().mockResolvedValue('jwt') } as unknown as JwtService,
     config as unknown as ConfigService,
     notifications as unknown as NotificationsService,
-    { onRegister: jest.fn() } as unknown as LoyaltyService,
   );
   return { prisma, notifications, service };
 }

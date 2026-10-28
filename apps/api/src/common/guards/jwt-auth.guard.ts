@@ -71,7 +71,10 @@ export class JwtAuthGuard implements CanActivate {
   private async isRevoked(sid: string): Promise<boolean> {
     const now = Date.now();
     const known = sessionState.get(sid);
-    if (known && (known.revoked ? now - known.at < KEEP_REVOKED_MS : now - known.at < CHECK_TTL_MS)) {
+    if (
+      known &&
+      (known.revoked ? now - known.at < KEEP_REVOKED_MS : now - known.at < CHECK_TTL_MS)
+    ) {
       return known.revoked;
     }
     if (!this.prisma) return false;

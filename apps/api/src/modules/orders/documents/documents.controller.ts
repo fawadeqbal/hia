@@ -52,62 +52,9 @@ export class CustomerDocumentsController {
   }
 }
 
-@ApiTags('Vendor · Order documents')
-@ApiBearerAuth()
-@Roles(Role.VENDOR)
-@Controller('vendor/orders')
-export class VendorDocumentsController {
-  constructor(
-    private readonly docs: DocumentsService,
-    private readonly notes: OrderNotesService,
-  ) {}
-
-  @Get(':id/invoice')
-  async invoice(
-    @CurrentUser('sub') userId: string,
-    @Param('id') id: string,
-    @Res() res: Response,
-  ): Promise<void> {
-    sendPdf(res, await this.docs.vendorInvoice(userId, id));
-  }
-
-  @Get(':id/packing-slip')
-  async packingSlip(
-    @CurrentUser('sub') userId: string,
-    @Param('id') id: string,
-    @Res() res: Response,
-  ): Promise<void> {
-    sendPdf(res, await this.docs.vendorPackingSlip(userId, id));
-  }
-
-  @Get(':id/notes')
-  list(@CurrentUser('sub') userId: string, @Param('id') id: string): Promise<OrderNoteDto[]> {
-    return this.notes.vendorList(userId, id);
-  }
-
-  @Post(':id/notes')
-  add(
-    @CurrentUser('sub') userId: string,
-    @Param('id') id: string,
-    @Body() dto: OrderNoteDtoBody,
-  ): Promise<OrderNoteDto> {
-    return this.notes.vendorAdd(userId, id, dto);
-  }
-
-  @Delete(':id/notes/:noteId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  remove(
-    @CurrentUser('sub') userId: string,
-    @Param('id') id: string,
-    @Param('noteId') noteId: string,
-  ): Promise<void> {
-    return this.notes.vendorRemove(userId, id, noteId);
-  }
-}
-
 @ApiTags('Admin · Order documents')
 @ApiBearerAuth()
-@Roles(Role.ADMIN, Role.SUPPORT_AGENT)
+@Roles(Role.ADMIN)
 @Controller('admin/orders')
 export class AdminDocumentsController {
   constructor(
@@ -126,8 +73,8 @@ export class AdminDocumentsController {
   }
 
   @Get(':id/notes')
-  list(@Param('id') id: string, @CurrentUser('sub') actorId: string): Promise<OrderNoteDto[]> {
-    return this.notes.adminList(id, actorId);
+  list(@Param('id') id: string): Promise<OrderNoteDto[]> {
+    return this.notes.adminList(id);
   }
 
   @Post(':id/notes')

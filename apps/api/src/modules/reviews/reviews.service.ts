@@ -1,4 +1,3 @@
-import { ownedOrStaffed } from '../../common/utils/vendor-scope';
 import {
   BadRequestException,
   ForbiddenException,
@@ -17,24 +16,11 @@ import { paginate } from '../../common/dto/pagination.dto';
 import { readSetting } from '../../common/utils/settings';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
-import { LoyaltyService } from '../loyalty/loyalty.service';
 import type { ModerateDto, ReviewDtoIn, ReviewQueryDto } from './dto/review.dto';
 import { reviewInclude, toReviewDto } from './review.mapper';
 import { summarize } from './review-rules';
 
 type ListParams = Pick<ReviewQueryDto, 'page' | 'limit' | 'status' | 'rating'>;
-
-/** Seller account → its store id (approved or suspended stores can still reply). */
-export async function vendorIdOf(prisma: PrismaService, userId: string): Promise<string> {
-  const vendor = await prisma.vendor.findFirst({
-    where: ownedOrStaffed(userId),
-    orderBy: { createdAt: 'asc' },
-  });
-  if (!vendor) throw new NotFoundException('No store is linked to this account');
-  if (vendor.status === 'PENDING' || vendor.status === 'REJECTED')
-    throw new ForbiddenException('Your store is not approved');
-  return vendor.id;
-}
 
 /**
  * Product reviews. Only customers who received the product (a DELIVERED sub-order item) can review it,
@@ -46,7 +32,6 @@ export class ReviewsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
-    private readonly loyalty: LoyaltyService,
   ) {}
 
   // ================================================================ public
@@ -118,7 +103,6 @@ export class ReviewsService {
           include: reviewInclude,
         });
     await this.recalculate(dto.productId);
-    if (!existing) await this.loyalty.awardReview(userId, review.id);
     await this.audit.log({
       actorId: userId,
       action: existing ? 'review.update' : 'review.create',
@@ -140,35 +124,6 @@ export class ReviewsService {
       entityType: 'Review',
       entityId: id,
     });
-  }
-
-  // ================================================================ seller
-
-  async vendorList(userId: string, q: ListParams): Promise<Paginated<ReviewDto>> {
-    const vendorId = await vendorIdOf(this.prisma, userId);
-    return this.list(
-      { product: { vendorId }, status: 'APPROVED', ...(q.rating ? { rating: q.rating } : {}) },
-      q,
-    );
-  }
-
-  async reply(userId: string, id: string, reply: string): Promise<ReviewDto> {
-    const vendorId = await vendorIdOf(this.prisma, userId);
-    const review = await this.prisma.review.findFirst({ where: { id, product: { vendorId } } });
-    if (!review) throw new NotFoundException('Review not found');
-    const updated = await this.prisma.review.update({
-      where: { id },
-      data: { vendorReply: reply.trim() || null },
-      include: reviewInclude,
-    });
-    await this.audit.log({
-      actorId: userId,
-      action: 'review.reply',
-      entityType: 'Review',
-      entityId: id,
-      after: { reply },
-    });
-    return toReviewDto(updated);
   }
 
   // ================================================================ admin
@@ -229,35 +184,17 @@ export class ReviewsService {
     });
   }
 
-  /** Product rating + count, and the store's average over all its published reviews. */
+  /** Product rating + count over its published reviews. */
   private async recalculate(productId: string): Promise<void> {
-    const product = await this.prisma.product.findUnique({
-      where: { id: productId },
-      select: { vendorId: true },
+    const own = await this.prisma.review.findMany({
+      where: { productId, status: 'APPROVED' },
+      select: { rating: true },
     });
-    if (!product) return;
-    const [own, store] = await Promise.all([
-      this.prisma.review.findMany({
-        where: { productId, status: 'APPROVED' },
-        select: { rating: true },
-      }),
-      this.prisma.review.findMany({
-        where: { product: { vendorId: product.vendorId }, status: 'APPROVED' },
-        select: { rating: true },
-      }),
-    ]);
     const p = summarize(own.map((r) => r.rating));
-    const v = summarize(store.map((r) => r.rating));
-    await this.prisma.$transaction([
-      this.prisma.product.update({
-        where: { id: productId },
-        data: { ratingAverage: p.average, ratingCount: p.count },
-      }),
-      this.prisma.vendor.update({
-        where: { id: product.vendorId },
-        data: { ratingAverage: v.average },
-      }),
-    ]);
+    await this.prisma.product.update({
+      where: { id: productId },
+      data: { ratingAverage: p.average, ratingCount: p.count },
+    });
   }
 }
 

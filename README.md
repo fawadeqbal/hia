@@ -7,9 +7,9 @@ maintenance.
 > **Quality Products | Competitive Prices | Reliable Service**
 
 This is a **single-shop** copy of [`ecommerce-platform`](https://github.com/fawadeqbal/ecommerce-platform)
-(that repository is unchanged). The multi-vendor marketplace parts are switched off: there are no sellers,
-no seller sign-up, no commissions or payouts. One **super admin** (the shop owner) manages everything from
-the admin panel.
+(that repository is unchanged). Everything that only made sense for a multi-vendor marketplace has been
+**removed** — no sellers, no seller sign-up, no commissions or payouts. One **super admin** (the shop owner)
+manages everything from the admin panel.
 
 | App      | What it is                        | Local URL                                        |
 | -------- | --------------------------------- | ------------------------------------------------ |
@@ -94,10 +94,13 @@ How the single shop works (short version):
   `SUPER_ADMIN` passes every role check, so the admin panel uses the store endpoints
   (`/vendor/products`, `/vendor/inventory`, `/vendor/orders/:id/status`) directly. Every product and order
   belongs to that one store; checkout and stock logic are unchanged.
-- Removed: the seller app (`apps/vendor`), the public seller sign-up route, the AI support service
-  (`services/support-ai`) and the original server's deploy scripts.
-- Switched off by settings (code kept): product review before publishing, commission (0 %), reward points (0),
-  tax, abandoned-cart / win-back emails, online card payments.
+- Removed completely (code, API endpoints, admin screens, emails, settings and database tables): the seller app
+  (`apps/vendor`) and seller sign-up / approval / store pages / staff, brands, commissions and payouts, loyalty
+  points, gift cards and referrals, automatic promotions (only coupons remain), tax, extra currencies and
+  languages, newsletter and campaigns, blog, SEO redirects, custom staff roles and permissions, the email-template
+  editor, disputes, the AI support service (`services/support-ai`) and the original server's deploy scripts.
+  Roles left: `SUPER_ADMIN`, `ADMIN`, `VENDOR` (the built-in shop account) and `CUSTOMER`.
+- Kept but off: online card payments (the gateway code is ready; switch it on in Admin → Settings → Payments).
 - Added: **Inquiries** (`Ticket` + migration `ticket_inquiry_fields`; `POST /inquiries`, `/admin/inquiries`),
   WhatsApp / motto settings, optional tracking number, delivery chosen before pickup by default.
 

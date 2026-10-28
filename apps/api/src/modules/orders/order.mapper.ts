@@ -56,7 +56,7 @@ export const orderInclude = {
 
 export const orderSummaryInclude = {
   items: { take: 1, include: itemInclude },
-  _count: { select: { items: true, vendorOrders: true } },
+  _count: { select: { items: true } },
 } satisfies Prisma.OrderInclude;
 
 export const vendorOrderInclude = {
@@ -125,12 +125,8 @@ export function toOrderDto(o: OrderFull, returnWindowDays = 0): OrderDto {
     subtotal: n(o.subtotal),
     shippingTotal: n(o.shippingTotal),
     discountTotal: n(o.discountTotal),
-    taxTotal: n(o.taxTotal),
-    taxAdded: n(o.taxAdded),
     grandTotal: n(o.grandTotal),
     couponCode: o.couponCode,
-    loyaltyDiscount: n(o.loyaltyDiscount),
-    giftCardTotal: n(o.giftCardTotal),
     shippingAddress: o.shippingAddress as unknown as ShippingAddress,
     customerNote: o.customerNote,
     placedAt: o.placedAt.toISOString(),
@@ -157,8 +153,6 @@ export function toOrderDto(o: OrderFull, returnWindowDays = 0): OrderDto {
         status: v.status as OrderStatus,
         subtotal: n(v.subtotal),
         shippingTotal: n(v.shippingTotal),
-        taxTotal: n(v.taxTotal),
-        taxAdded: n(v.taxAdded),
         shippingMethod: v.shippingMethod,
         items: v.items.map((i) => toItemDto(i, open)),
         shipment: toShipmentDto(v.shipments[0]),
@@ -187,7 +181,6 @@ export function toOrderSummary(o: OrderSummaryRow): OrderSummaryDto {
     currency: o.currency,
     itemCount: o._count.items,
     imageUrl: o.items[0]?.variant.product.images[0]?.url ?? null,
-    vendorCount: o._count.vendorOrders,
     placedAt: o.placedAt.toISOString(),
   };
 }
@@ -214,7 +207,6 @@ export function toVendorListItem(
     status: v.status as OrderStatus,
     itemCount: v._count.items,
     subtotal: n(v.subtotal),
-    netAmount: n(v.netAmount),
     currency: v.order.currency,
     customerName: address.fullName,
     city: address.city,
@@ -234,10 +226,6 @@ export function toVendorDetail(v: VendorOrderFull): VendorOrderDetailDto {
     items: v.items.map((i) => toItemDto(i)),
     subtotal: n(v.subtotal),
     shippingTotal: n(v.shippingTotal),
-    taxTotal: n(v.taxTotal),
-    taxAdded: n(v.taxAdded),
-    commissionAmount: n(v.commissionAmount),
-    netAmount: n(v.netAmount),
     shippingMethod: v.shippingMethod,
     suggestedCourierId: null,
     customer: { name: address.fullName, email: v.order.email, phone: address.phone },

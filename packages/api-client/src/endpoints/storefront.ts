@@ -1,8 +1,6 @@
 import type {
   DidYouMean,
   ProductRecommendations,
-  PublicBrandPage,
-  PublicStorePage,
   SearchSuggestions,
   Paginated,
   StorefrontProductCard,
@@ -40,10 +38,6 @@ export const storefrontApi = {
       method: 'POST',
       body: { sessionId },
     }),
-  brand: (slug: string, options?: RequestOptions) =>
-    api<PublicBrandPage>(`/catalog/brands/${encodeURIComponent(slug)}`, options),
-  store: (slug: string, options?: RequestOptions) =>
-    api<PublicStorePage>(`/catalog/stores/${encodeURIComponent(slug)}`, options),
 };
 
 export const searchApi = {

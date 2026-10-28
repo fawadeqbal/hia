@@ -105,7 +105,12 @@ export function ContactForm() {
       </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input label="Your name" autoComplete="name" {...register('name')} error={errors.name?.message} />
+        <Input
+          label="Your name"
+          autoComplete="name"
+          {...register('name')}
+          error={errors.name?.message}
+        />
         <Input
           label="Phone / WhatsApp"
           type="tel"

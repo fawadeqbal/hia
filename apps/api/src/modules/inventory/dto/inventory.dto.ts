@@ -84,8 +84,7 @@ export class StockAdjustDto implements StockAdjustInput {
   @IsIn(MANUAL_MOVEMENT_TYPES)
   type: ManualMovementType;
   @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsString() @MaxLength(200) note?:
-    | string
-    | null;
+    string | null;
   @ApiPropertyOptional() @IsOptional() @IsInt() @Min(0) @Max(100_000) lowStockThreshold?: number;
 }
 

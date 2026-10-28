@@ -10,7 +10,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { buildMenuTree, groupFaqs } from './cms-rules';
 import { toPublicBanner, toPublicPage } from './cms.mapper';
 import { assertHandle } from './menus.service';
-import { DEFAULT_LOCALE } from './pages.service';
 
 const MAX_BANNERS = 10;
 
@@ -19,8 +18,8 @@ const MAX_BANNERS = 10;
 export class CmsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async page(slug: string, locale = DEFAULT_LOCALE): Promise<PublicPageDto> {
-    const page = await this.prisma.page.findFirst({ where: { slug, locale, status: 'PUBLISHED' } });
+  async page(slug: string): Promise<PublicPageDto> {
+    const page = await this.prisma.page.findFirst({ where: { slug, status: 'PUBLISHED' } });
     if (!page) throw new NotFoundException('Page not found');
     return toPublicPage(page);
   }

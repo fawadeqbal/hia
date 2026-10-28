@@ -7,24 +7,6 @@ export const queryKeys = {
   checkoutQuote: (cartSignature: string) => ['checkout', 'quote', cartSignature] as const,
   wishlist: ['wishlist'] as const,
   orderNotes: (scope: string, id: string) => ['order-notes', scope, id] as const,
-  seo: {
-    redirects: ['seo', 'redirects'] as const,
-  },
-  emailAdmin: {
-    all: ['email-admin'] as const,
-    templates: ['email-admin', 'templates'] as const,
-    template: (key: string) => ['email-admin', 'template', key] as const,
-    logs: (params: object) => ['email-admin', 'logs', params] as const,
-    suppressions: ['email-admin', 'suppressions'] as const,
-  },
-  marketing: {
-    all: ['marketing'] as const,
-    subscribers: (params: object) => ['marketing', 'subscribers', params] as const,
-    campaigns: ['marketing', 'campaigns'] as const,
-    campaign: (id: string) => ['marketing', 'campaign', id] as const,
-    audience: (audience: string, segment: string | null) =>
-      ['marketing', 'audience', audience, segment] as const,
-  },
   paymentAdmin: {
     all: ['payment-admin'] as const,
     gateways: ['payment-admin', 'gateways'] as const,
@@ -33,34 +15,10 @@ export const queryKeys = {
     webhooks: (params: object) => ['payment-admin', 'webhooks', params] as const,
     webhook: (id: string) => ['payment-admin', 'webhook', id] as const,
   },
-  localization: {
-    all: ['localization'] as const,
-    public: ['localization', 'public'] as const,
-    taxRates: ['localization', 'tax-rates'] as const,
-    currencies: ['localization', 'currencies'] as const,
-    languages: ['localization', 'languages'] as const,
-  },
-  payouts: {
-    all: ['payouts'] as const,
-    earnings: ['payouts', 'earnings'] as const,
-    vendorList: ['payouts', 'vendor-list'] as const,
-    adminList: (status: string) => ['payouts', 'admin-list', status] as const,
-    detail: (scope: string, id: string) => ['payouts', 'detail', scope, id] as const,
-  },
-  loyalty: {
-    all: ['loyalty'] as const,
-    summary: ['loyalty', 'summary'] as const,
-    tiers: ['loyalty', 'tiers'] as const,
-    member: (email: string) => ['loyalty', 'member', email] as const,
-    giftCards: ['loyalty', 'gift-cards'] as const,
-    giftCard: (id: string) => ['loyalty', 'gift-card', id] as const,
-  },
   promotions: {
     all: ['promotions'] as const,
-    coupons: (scope: 'admin' | 'vendor') => ['promotions', 'coupons', scope] as const,
-    coupon: (scope: 'admin' | 'vendor', id: string) => ['promotions', 'coupon', scope, id] as const,
-    discounts: ['promotions', 'discounts'] as const,
-    discount: (id: string) => ['promotions', 'discount', id] as const,
+    coupons: ['promotions', 'coupons'] as const,
+    coupon: (id: string) => ['promotions', 'coupon', id] as const,
   },
   reviews: {
     all: ['reviews'] as const,
@@ -69,8 +27,6 @@ export const queryKeys = {
     eligibility: (productId: string) => ['reviews', 'eligibility', productId] as const,
     questions: (productId: string, params: object) =>
       ['reviews', 'questions', productId, params] as const,
-    vendorReviews: (params: object) => ['reviews', 'vendor-reviews', params] as const,
-    vendorQuestions: (params: object) => ['reviews', 'vendor-questions', params] as const,
     adminReviews: (params: object) => ['reviews', 'admin-reviews', params] as const,
     adminQuestions: (params: object) => ['reviews', 'admin-questions', params] as const,
   },
@@ -117,12 +73,6 @@ export const queryKeys = {
     detail: (id: string) => ['categories', 'detail', id] as const,
     tree: ['categories', 'tree'] as const,
   },
-  brands: {
-    all: ['brands'] as const,
-    adminList: ['brands', 'admin-list'] as const,
-    detail: (id: string) => ['brands', 'detail', id] as const,
-    list: ['brands', 'public'] as const,
-  },
   products: {
     all: ['products'] as const,
     vendorList: (params: object) => ['products', 'vendor-list', params] as const,
@@ -137,19 +87,6 @@ export const queryKeys = {
     movements: (params: object) => ['inventory', 'movements', params] as const,
     lowStock: (params: object) => ['inventory', 'low-stock', params] as const,
   },
-  vendors: {
-    all: ['vendors'] as const,
-    me: ['vendors', 'me'] as const,
-    adminList: (params: { status?: string; search?: string; page?: number }) =>
-      [
-        'vendors',
-        'admin-list',
-        params.status ?? 'all',
-        params.search ?? '',
-        params.page ?? 1,
-      ] as const,
-    detail: (id: string) => ['vendors', 'detail', id] as const,
-  },
   media: {
     all: ['media'] as const,
     list: (folder?: string, page = 1) => ['media', 'list', folder ?? 'all', page] as const,
@@ -159,31 +96,8 @@ export const queryKeys = {
   recentlyViewed: (slugs: string[]) => ['catalog', 'by-slugs', slugs.join(',')] as const,
   authProviders: ['auth', 'providers'] as const,
   authSessions: ['auth', 'sessions'] as const,
-  rbac: {
-    access: ['rbac', 'access'] as const,
-    roles: ['rbac', 'roles'] as const,
-    staff: ['rbac', 'staff'] as const,
-    audit: (q: object) => ['rbac', 'audit', q] as const,
-  },
   settings: ['settings', 'admin'] as const,
   publicSettings: ['settings', 'public'] as const,
-  vendorStaff: {
-    access: ['vendor-staff', 'me'] as const,
-    list: ['vendor-staff', 'list'] as const,
-  },
-  rewards: {
-    all: ['rewards'] as const,
-    activity: (q: object) => ['rewards', 'activity', q] as const,
-    summary: (range: object) => ['rewards', 'summary', range] as const,
-    order: (id: string) => ['rewards', 'order', id] as const,
-    coupon: (id: string, page: number) => ['rewards', 'coupon', id, page] as const,
-    customer: (id: string) => ['rewards', 'customer', id] as const,
-  },
-  commissions: {
-    all: ['commissions'] as const,
-    list: ['commissions', 'list'] as const,
-    preview: (q: object) => ['commissions', 'preview', q] as const,
-  },
   customers: {
     all: ['customers'] as const,
     list: (q: object) => ['customers', 'list', q] as const,
@@ -193,8 +107,6 @@ export const queryKeys = {
     all: ['reports'] as const,
     adminSales: (range: object) => ['reports', 'admin-sales', range] as const,
     adminAttention: ['reports', 'admin-attention'] as const,
-    vendorSales: (range: object) => ['reports', 'vendor-sales', range] as const,
-    vendorAttention: ['reports', 'vendor-attention'] as const,
   },
   cms: {
     all: ['cms'] as const,
@@ -205,9 +117,6 @@ export const queryKeys = {
     menus: ['cms', 'menus'] as const,
     menu: (handle: string) => ['cms', 'menu', handle] as const,
     faqs: ['cms', 'faqs'] as const,
-    blogPosts: ['cms', 'blog-posts'] as const,
-    blogPost: (id: string) => ['cms', 'blog-post', id] as const,
-    blogCategories: ['cms', 'blog-categories'] as const,
   },
   attributes: {
     all: ['attributes'] as const,

@@ -8,7 +8,7 @@ import { OrdersService } from './orders.service';
 
 @ApiTags('Admin · Orders')
 @ApiBearerAuth()
-@Roles(Role.ADMIN, Role.SUPPORT_AGENT)
+@Roles(Role.ADMIN)
 @Controller('admin/orders')
 export class AdminOrdersController {
   constructor(private readonly orders: OrdersService) {}

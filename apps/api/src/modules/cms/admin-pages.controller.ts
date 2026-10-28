@@ -18,7 +18,7 @@ import { PagesService } from './pages.service';
 
 @ApiTags('Admin · CMS pages')
 @ApiBearerAuth()
-@Roles(Role.ADMIN, Role.CONTENT_MANAGER)
+@Roles(Role.ADMIN)
 @Controller('admin/cms/pages')
 export class AdminPagesController {
   constructor(private readonly service: PagesService) {}

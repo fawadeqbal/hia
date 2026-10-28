@@ -21,12 +21,6 @@ export class CreatePageDto implements PageInput {
   @Matches(SLUG_REGEX, { message: 'slug may contain lowercase letters, numbers and hyphens only' })
   slug?: string;
 
-  @ApiPropertyOptional({ default: 'en' })
-  @IsOptional()
-  @IsString()
-  @Length(2, 10)
-  locale?: string;
-
   @ApiProperty({ example: { blocks: [{ type: 'paragraph', text: 'Hello' }] } })
   @IsObject()
   content: PageContent;

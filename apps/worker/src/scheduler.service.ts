@@ -14,10 +14,6 @@ export class SchedulerService implements OnApplicationBootstrap {
   async onApplicationBootstrap() {
     const schedules: [string, string][] = [
       [MAINTENANCE_JOBS.RELEASE_EXPIRED_RESERVATIONS, '*/5 * * * *'],
-      [MAINTENANCE_JOBS.ABANDONED_CART_SWEEP, '*/30 * * * *'],
-      [MAINTENANCE_JOBS.EXPIRE_LOYALTY_POINTS, '0 2 * * *'],
-      [MAINTENANCE_JOBS.DAILY_SALES_SUMMARY, '0 7 * * *'],
-      [MAINTENANCE_JOBS.BUILD_VENDOR_PAYOUTS, '0 3 1 * *'],
     ];
     for (const [name, pattern] of schedules) {
       await this.maintenance.add(name, {}, { repeat: { pattern }, jobId: name });

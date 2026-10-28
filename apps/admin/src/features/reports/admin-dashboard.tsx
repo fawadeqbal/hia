@@ -74,7 +74,7 @@ export function AdminDashboard() {
 
       {attention.error ? <Alert tone="error">{attention.error.message}</Alert> : null}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <AttentionCard label="New orders to confirm" count={a?.ordersAwaitingSellers} href="/orders" />
+        <AttentionCard label="New orders to confirm" count={a?.ordersToConfirm} href="/orders" />
         <AttentionCard label="New inquiries" count={a?.newInquiries} href="/inquiries" />
         <AttentionCard label="Open returns" count={a?.openReturns} href="/returns" />
         <AttentionCard label="Low-stock items" count={a?.lowStock} href="/inventory" />

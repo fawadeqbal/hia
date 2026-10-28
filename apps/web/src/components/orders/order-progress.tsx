@@ -31,7 +31,10 @@ export function OrderProgress({ status }: { status: OrderStatus }) {
         return (
           <li key={step} className="relative flex flex-1 flex-col items-center gap-2 text-center">
             {i < ORDER_PROGRESS.length - 1 ? (
-              <span aria-hidden className="absolute left-1/2 right-[-50%] top-[17px] h-[2px] rounded-full bg-gray-100">
+              <span
+                aria-hidden
+                className="absolute left-1/2 right-[-50%] top-[17px] h-[2px] rounded-full bg-gray-100"
+              >
                 <span
                   className={cn(
                     'block h-full rounded-full bg-brand-600 transition-[width] duration-700 ease-out',

@@ -1,16 +1,14 @@
-import { PRODUCT_CSV_COLUMNS, SKU_REGEX, TAX_CLASSES } from '@ecommerce/types';
+import { PRODUCT_CSV_COLUMNS, SKU_REGEX } from '@ecommerce/types';
 
 export interface CsvRow {
   sku: string;
   name?: string;
   category?: string;
-  brand?: string;
   price?: number;
   compareAtPrice?: number | null;
   shortDescription?: string;
   description?: string;
   weightGrams?: number | null;
-  taxClass?: string;
 }
 
 /** Header → column index (case-insensitive, spaces / dashes = underscores). Missing required columns are listed. */
@@ -55,7 +53,6 @@ export function readRow(
     row.name = name;
   }
   if (get('category')) row.category = get('category').toLowerCase();
-  if (get('brand')) row.brand = get('brand').toLowerCase();
   const price = num(get('price'));
   if (price !== null) {
     if (!Number.isFinite(price) || price <= 0) problems.push('price must be a number above 0');
@@ -75,12 +72,6 @@ export function readRow(
   if (weight !== null) {
     if (!Number.isInteger(weight) || weight < 0) problems.push('weight_grams must be whole grams');
     row.weightGrams = weight;
-  }
-  const tax = get('tax_class').toLowerCase();
-  if (tax) {
-    if (!(TAX_CLASSES as readonly string[]).includes(tax))
-      problems.push(`tax_class must be one of ${TAX_CLASSES.join(', ')}`);
-    row.taxClass = tax;
   }
   return { row, problems };
 }

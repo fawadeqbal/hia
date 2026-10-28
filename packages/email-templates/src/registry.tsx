@@ -6,7 +6,6 @@ import OtpCodeEmail from './templates/otp-code';
 import PasswordResetEmail from './templates/password-reset';
 import OrderConfirmationEmail from './templates/order-confirmation';
 import OrderStatusEmail from './templates/order-status';
-import AbandonedCartEmail from './templates/abandoned-cart';
 import GenericNotificationEmail from './templates/generic-notification';
 
 type Data = Record<string, unknown>;
@@ -14,8 +13,6 @@ type Data = Record<string, unknown>;
 export interface TemplateDefinition {
   subject: (data: Data) => string;
   render: (data: Data) => React.ReactElement;
-  /** Generic layout: heading / body / button text can be overridden by admins. */
-  blocks?: boolean;
 }
 
 const str = (v: unknown, fallback = '') => (typeof v === 'string' && v.length > 0 ? v : fallback);
@@ -25,7 +22,6 @@ function generic(subject: string | ((d: Data) => string), heading?: string): Tem
   const subjectFn = typeof subject === 'string' ? () => subject : subject;
   return {
     subject: subjectFn,
-    blocks: true,
     render: (d) => (
       <GenericNotificationEmail heading={heading ?? subjectFn(d)} {...(d as object)} />
     ),
@@ -46,13 +42,13 @@ function status(
 const order = (d: Data) => str(d.orderNumber, 'your order');
 
 /**
- * One entry per EmailTemplateKey (scope section 6.2).
+ * One entry per EmailTemplateKey.
  * TypeScript enforces that every key is handled.
  */
 export const templateRegistry: Record<EmailTemplateKey, TemplateDefinition> = {
   // Account
   [EmailTemplateKey.WELCOME]: {
-    subject: () => 'Welcome to our store',
+    subject: () => 'Welcome to HIA Furniture Solutions',
     render: (d) => <WelcomeEmail {...(d as object)} />,
   },
   [EmailTemplateKey.VERIFY_EMAIL]: {
@@ -69,18 +65,12 @@ export const templateRegistry: Record<EmailTemplateKey, TemplateDefinition> = {
   },
   [EmailTemplateKey.PASSWORD_CHANGED]: generic('Your password was changed'),
   [EmailTemplateKey.ACCOUNT_DELETED]: generic('Your account has been deleted'),
-  [EmailTemplateKey.STAFF_INVITATION]: generic('You have been invited to join the team'),
 
   // Orders
   [EmailTemplateKey.ORDER_CONFIRMATION]: {
     subject: (d) => `Order ${order(d)} confirmed`,
     render: (d) => <OrderConfirmationEmail {...(d as object)} />,
   },
-  [EmailTemplateKey.PAYMENT_RECEIVED]: status(
-    (d) => `Payment received for ${order(d)}`,
-    'Payment received',
-    'we have received your payment.',
-  ),
   [EmailTemplateKey.PAYMENT_FAILED]: status(
     (d) => `Payment failed for ${order(d)}`,
     'Payment failed',
@@ -89,7 +79,7 @@ export const templateRegistry: Record<EmailTemplateKey, TemplateDefinition> = {
   [EmailTemplateKey.ORDER_CONFIRMED_BY_VENDOR]: status(
     (d) => `${order(d)} is being prepared`,
     'Your order is being prepared',
-    'the seller has confirmed your order.',
+    'we have confirmed your order and are preparing it.',
   ),
   [EmailTemplateKey.ORDER_SHIPPED]: status(
     (d) => `${order(d)} has shipped`,
@@ -111,7 +101,6 @@ export const templateRegistry: Record<EmailTemplateKey, TemplateDefinition> = {
     'Order cancelled',
     'your order has been cancelled.',
   ),
-  [EmailTemplateKey.ORDER_INVOICE]: generic((d) => `Invoice for ${order(d)}`),
 
   // Returns
   [EmailTemplateKey.RETURN_RECEIVED]: generic('We received your return request'),
@@ -119,11 +108,7 @@ export const templateRegistry: Record<EmailTemplateKey, TemplateDefinition> = {
   [EmailTemplateKey.RETURN_REJECTED]: generic('Update on your return request'),
   [EmailTemplateKey.REFUND_PROCESSED]: generic('Your refund has been processed'),
 
-  // Engagement & marketing
-  [EmailTemplateKey.ABANDONED_CART]: {
-    subject: () => 'You left something in your cart',
-    render: (d) => <AbandonedCartEmail {...(d as object)} />,
-  },
+  // Customer updates
   [EmailTemplateKey.BACK_IN_STOCK]: generic(
     (d) => `${str(d.productName, 'An item you wanted')} is back in stock`,
   ),
@@ -131,44 +116,15 @@ export const templateRegistry: Record<EmailTemplateKey, TemplateDefinition> = {
     (d) => `Price drop on ${str(d.productName, 'your wishlist item')}`,
   ),
   [EmailTemplateKey.REVIEW_REQUEST]: generic('How was your order? Leave a review'),
-  [EmailTemplateKey.LOYALTY_POINTS_EARNED]: generic('You earned loyalty points'),
-  [EmailTemplateKey.LOYALTY_POINTS_EXPIRING]: generic('Your loyalty points are expiring soon'),
-  [EmailTemplateKey.REFERRAL_REWARD]: generic('You earned a referral reward'),
-  [EmailTemplateKey.NEWSLETTER]: generic((d) => str(d.subject, 'News from our store')),
-  [EmailTemplateKey.CAMPAIGN]: generic((d) => str(d.subject, 'Special offer for you')),
-  [EmailTemplateKey.NEWSLETTER_CONFIRM]: generic('Confirm your newsletter subscription'),
-  [EmailTemplateKey.WIN_BACK]: generic((d) => str(d.subject, 'We miss you')),
-  [EmailTemplateKey.GIFT_CARD_RECEIVED]: generic('You received a gift card'),
 
-  // Vendor
-  [EmailTemplateKey.VENDOR_APPLICATION_RECEIVED]: generic('We received your seller application'),
-  [EmailTemplateKey.VENDOR_APPROVED]: generic('Your seller account is approved'),
-  [EmailTemplateKey.VENDOR_REJECTED]: generic('Update on your seller application'),
-  [EmailTemplateKey.VENDOR_SUSPENDED]: generic('Your seller account has been suspended'),
+  // To the shop (admin)
   [EmailTemplateKey.VENDOR_NEW_ORDER]: generic((d) => `New order ${order(d)}`),
-  [EmailTemplateKey.VENDOR_PRODUCT_APPROVED]: generic('Your product was approved'),
-  [EmailTemplateKey.VENDOR_PRODUCT_REJECTED]: generic('Your product needs changes'),
   [EmailTemplateKey.VENDOR_LOW_STOCK]: generic('Low stock alert'),
-  [EmailTemplateKey.VENDOR_PAYOUT_PROCESSED]: generic('Your payout has been processed'),
   [EmailTemplateKey.VENDOR_RETURN_REQUEST]: generic('New return request'),
+  [EmailTemplateKey.ADMIN_NEW_TICKET]: generic((d) => `New inquiry ${str(d.ticketNumber)}`),
 
-  // Admin / staff
-  [EmailTemplateKey.ADMIN_NEW_VENDOR_APPLICATION]: generic('New seller application'),
-  [EmailTemplateKey.ADMIN_NEW_TICKET]: generic((d) => `New support ticket ${str(d.ticketNumber)}`),
-  [EmailTemplateKey.ADMIN_SALES_SUMMARY]: generic('Sales summary'),
-  [EmailTemplateKey.ADMIN_SCHEDULED_REPORT]: generic(
-    (d) => `Report: ${str(d.reportName, 'scheduled report')}`,
-  ),
-  [EmailTemplateKey.ADMIN_SYSTEM_ALERT]: generic((d) => `[Alert] ${str(d.title, 'System alert')}`),
-
-  // Support
+  // Contact / repair inquiries
   [EmailTemplateKey.TICKET_CREATED]: generic(
     (d) => `We received your request ${str(d.ticketNumber)}`,
-  ),
-  [EmailTemplateKey.TICKET_REPLY]: generic(
-    (d) => `New reply on ${str(d.ticketNumber, 'your ticket')}`,
-  ),
-  [EmailTemplateKey.TICKET_RESOLVED]: generic(
-    (d) => `${str(d.ticketNumber, 'Your ticket')} was resolved`,
   ),
 };

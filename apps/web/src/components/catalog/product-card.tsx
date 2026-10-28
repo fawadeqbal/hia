@@ -16,8 +16,6 @@ export interface ProductCardProps {
   quickAdd?: boolean | 'icon';
   /** Price in the sale colour (deal rows). */
   dealPrice?: boolean;
-  /** "Sold by …" line (listings). */
-  showVendor?: boolean;
   /** Heart in the photo corner. */
   wishlist?: boolean;
   /** Eager-load the photo (first row of a listing). */
@@ -37,7 +35,6 @@ export function ProductCard({
   rank,
   quickAdd,
   dealPrice,
-  showVendor,
   wishlist = true,
   priority,
   tone = 'light',
@@ -132,11 +129,6 @@ export function ProductCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-1 px-0.5">
-        {p.brandName ? (
-          <span className={cn('type-eyebrow truncate', dark ? 'text-white/55' : 'text-gray-500')}>
-            {p.brandName}
-          </span>
-        ) : null}
         <Link
           href={href}
           className={cn(
@@ -204,11 +196,6 @@ export function ProductCard({
             />
           ) : null}
         </div>
-        {showVendor ? (
-          <p className={cn('text-[12.5px]', dark ? 'text-white/55' : 'text-gray-500')}>
-            Sold by {p.vendor.name}
-          </p>
-        ) : null}
       </div>
     </article>
   );

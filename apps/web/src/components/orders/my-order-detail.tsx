@@ -46,7 +46,10 @@ export function MyOrderDetail({ orderNumber }: { orderNumber: string }) {
 
   return (
     <div className="space-y-4">
-      <Link href="/account/orders" className="inline-flex items-center gap-1 text-sm font-semibold text-gray-500 hover:text-brand-700">
+      <Link
+        href="/account/orders"
+        className="inline-flex items-center gap-1 text-sm font-semibold text-gray-500 hover:text-brand-700"
+      >
         ← All orders
       </Link>
       <OrderDetails

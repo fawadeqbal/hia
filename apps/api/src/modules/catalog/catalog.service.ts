@@ -28,8 +28,6 @@ const SORT: Record<ProductSort, Prisma.ProductOrderByWithRelationInput[]> = {
 
 const detailInclude = {
   category: { select: { name: true, slug: true } },
-  brand: { select: { name: true, slug: true } },
-  vendor: { select: { name: true, slug: true, logoUrl: true } },
   images: { orderBy: { position: 'asc' }, select: { url: true, altText: true } },
   variants: {
     where: { isActive: true },
@@ -58,9 +56,7 @@ export class CatalogService {
 
     const where: Prisma.ProductWhereInput = {
       ...VISIBLE,
-      ...(q.vendor ? { vendor: { status: 'APPROVED', slug: q.vendor } } : {}),
       ...(categoryIds ? { categoryId: { in: categoryIds } } : {}),
-      ...(q.brand ? { brand: { slug: q.brand } } : {}),
       ...(q.featured ? { isFeatured: true } : {}),
       ...(q.onSale ? { compareAtPrice: { gt: this.prisma.product.fields.basePrice } } : {}),
       ...(ids ? { id: { in: ids } } : {}),
@@ -201,8 +197,6 @@ export class CatalogService {
       ratingAverage: Number(p.ratingAverage),
       ratingCount: p.ratingCount,
       category: p.category,
-      brand: p.brand,
-      vendor: p.vendor,
       options: [...options.values()]
         .sort((a, b) => a.position - b.position)
         .map(({ position: _p, valuePositions, ...o }) => ({

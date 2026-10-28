@@ -24,7 +24,7 @@ const describe = (c: CouponDto) =>
 
 export function CouponList() {
   const { data, error, isLoading } = useQuery({
-    queryKey: queryKeys.promotions.coupons('admin'),
+    queryKey: queryKeys.promotions.coupons,
     queryFn: promotionsApi.adminCoupons.list,
   });
   const columns: DataTableColumn<CouponDto>[] = [

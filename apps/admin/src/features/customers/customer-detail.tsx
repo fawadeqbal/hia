@@ -12,8 +12,6 @@ import {
   DataTable,
   DetailList,
   EmptyState,
-  Input,
-  Modal,
   PageHeader,
   ReasonDialog,
   Spinner,
@@ -24,10 +22,9 @@ import {
   type DataTableColumn,
 } from '@ecommerce/ui';
 import type { OrderSummaryDto } from '@ecommerce/types';
-import { customersApi, loyaltyApi, queryKeys } from '@/lib/api-client';
+import { customersApi, queryKeys } from '@/lib/api-client';
 import { OrderStatusBadge } from '../orders/order-status-badge';
 import { CustomerStatusBadge, SegmentBadges } from './customer-badges';
-import { CustomerRewards } from './customer-rewards';
 
 export function CustomerDetail({ id }: { id: string }) {
   const queryClient = useQueryClient();
@@ -36,9 +33,6 @@ export function CustomerDetail({ id }: { id: string }) {
     queryFn: () => customersApi.get(id),
   });
   const [blocking, setBlocking] = useState(false);
-  const [adjusting, setAdjusting] = useState(false);
-  const [points, setPoints] = useState('');
-  const [reason, setReason] = useState('');
 
   const onSaved = async (updated: Awaited<ReturnType<typeof customersApi.get>>) => {
     queryClient.setQueryData(queryKeys.customers.detail(id), updated);
@@ -52,14 +46,6 @@ export function CustomerDetail({ id }: { id: string }) {
     },
   });
   const unblock = useMutation({ mutationFn: () => customersApi.unblock(id), onSuccess: onSaved });
-  const adjust = useMutation({
-    mutationFn: () =>
-      loyaltyApi.adjustPoints(id, { points: Number(points), reason: reason.trim() }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.customers.detail(id) });
-      setAdjusting(false);
-    },
-  });
 
   if (error) {
     return (
@@ -96,8 +82,6 @@ export function CustomerDetail({ id }: { id: string }) {
     },
     { key: 'status', header: 'Status', cell: (o) => <OrderStatusBadge status={o.status} /> },
   ];
-  const pointsValid =
-    Number.isInteger(Number(points)) && Number(points) !== 0 && reason.trim().length >= 3;
 
   return (
     <div className="mx-auto max-w-6xl p-6">
@@ -162,8 +146,6 @@ export function CustomerDetail({ id }: { id: string }) {
             </div>
           </Card>
 
-          <CustomerRewards userId={c.id} currency={c.currency} />
-
           <Card>
             <CardTitle className="mb-3">Addresses</CardTitle>
             {c.addresses.length === 0 ? (
@@ -201,33 +183,6 @@ export function CustomerDetail({ id }: { id: string }) {
               ]}
             />
           </Card>
-
-          <Card className="space-y-3">
-            <CardTitle>Loyalty</CardTitle>
-            {c.loyalty ? (
-              <DetailList
-                items={[
-                  { label: 'Points', value: c.loyalty.points.toLocaleString() },
-                  { label: 'Lifetime', value: c.loyalty.lifetimePoints.toLocaleString() },
-                  { label: 'Tier', value: c.loyalty.tier },
-                ]}
-              />
-            ) : (
-              <p className="text-sm text-gray-500">No loyalty account yet.</p>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                adjust.reset();
-                setPoints('');
-                setReason('');
-                setAdjusting(true);
-              }}
-            >
-              Adjust points
-            </Button>
-          </Card>
         </div>
       </div>
 
@@ -243,49 +198,6 @@ export function CustomerDetail({ id }: { id: string }) {
         onConfirm={(r) => block.mutate(r)}
         onClose={() => setBlocking(false)}
       />
-
-      <Modal
-        open={adjusting}
-        title="Adjust loyalty points"
-        description="Use a negative number to remove points. The reason shows in the customer's points history."
-        onClose={() => setAdjusting(false)}
-        footer={
-          <>
-            <Button
-              variant="outline"
-              onClick={() => setAdjusting(false)}
-              disabled={adjust.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              loading={adjust.isPending}
-              disabled={!pointsValid}
-              onClick={() => adjust.mutate()}
-            >
-              Save
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          {adjust.error ? <Alert tone="error">{adjust.error.message}</Alert> : null}
-          <Input
-            label="Points"
-            type="number"
-            step={1}
-            value={points}
-            onChange={(e) => setPoints(e.target.value)}
-            placeholder="e.g. 500 or -200"
-          />
-          <Input
-            label="Reason"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="Goodwill for late delivery"
-          />
-        </div>
-      </Modal>
     </div>
   );
 }

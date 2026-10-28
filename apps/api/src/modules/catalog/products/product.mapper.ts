@@ -12,8 +12,6 @@ const ref = { select: { id: true, name: true, slug: true } } as const;
 
 export const productDetailInclude = {
   category: ref,
-  brand: ref,
-  vendor: ref,
   images: { orderBy: { position: 'asc' } },
   variants: {
     orderBy: [{ isDefault: 'desc' }, { position: 'asc' }],
@@ -26,8 +24,6 @@ export const productDetailInclude = {
 
 export const productListInclude = {
   category: { select: { name: true } },
-  brand: { select: { name: true } },
-  vendor: ref,
   images: { orderBy: { position: 'asc' }, take: 1, select: { url: true } },
   variants: { where: { isDefault: true }, take: 1, select: { sku: true } },
 } satisfies Prisma.ProductInclude;
@@ -114,18 +110,14 @@ export function toProductDto(p: ProductWithDetail): ProductDto {
     currency: p.currency,
     sku: defaultVariant?.sku ?? '',
     weightGrams: p.weightGrams,
-    taxClass: p.taxClass,
     videoUrl: p.videoUrl,
     seoTitle: p.seoTitle,
     seoDescription: p.seoDescription,
     isFeatured: p.isFeatured,
-    rejectionReason: p.rejectionReason,
     hasOptions: p.variants.some((v) => v.attributes.length > 0),
     variants: p.variants.map(toVariantDto),
     options: productOptions(p.variants),
     category: p.category,
-    brand: p.brand,
-    vendor: p.vendor,
     images: p.images.map((i) => ({
       id: i.id,
       url: i.url,
@@ -150,8 +142,6 @@ export function toProductListItem(p: ProductWithList): ProductListItem {
     currency: p.currency,
     imageUrl: p.images[0]?.url ?? null,
     categoryName: p.category.name,
-    brandName: p.brand?.name ?? null,
-    vendor: p.vendor,
     updatedAt: p.updatedAt.toISOString(),
   };
 }

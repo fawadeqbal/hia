@@ -28,14 +28,13 @@ import {
   Spinner,
 } from '@ecommerce/ui';
 import { categoriesApi, productsApi, promotionsApi, queryKeys } from '@/lib/api-client';
-import { CouponUsage } from './coupon-usage';
 import { ScopePicker, flattenCategories } from './scope-picker';
 
 const optional = { setValueAs: emptyNumberToNull };
 
 export function CouponEditor({ id }: { id?: string }) {
   const detail = useQuery({
-    queryKey: queryKeys.promotions.coupon('admin', id ?? 'new'),
+    queryKey: queryKeys.promotions.coupon(id ?? 'new'),
     queryFn: () => promotionsApi.adminCoupons.get(id!),
     enabled: id !== undefined,
   });
@@ -55,7 +54,6 @@ export function CouponEditor({ id }: { id?: string }) {
         initial={couponToForm(detail.data)}
         usedCount={detail.data.usedCount}
       />
-      <CouponUsage couponId={detail.data.id} />
     </>
   );
 }
@@ -74,7 +72,7 @@ function CouponForm({
   const [deleting, setDeleting] = useState(false);
   const products = useQuery({
     queryKey: ['coupon-products', 'admin'],
-    queryFn: () => productsApi.adminList({ limit: 100 }),
+    queryFn: () => productsApi.vendorList({ limit: 100 }),
   });
   const categories = useQuery({ queryKey: ['coupon-categories'], queryFn: categoriesApi.tree });
   const {
@@ -206,7 +204,6 @@ function CouponForm({
           {...register('endsAt')}
           error={errors.endsAt?.message}
         />
-        <Checkbox label="Can be combined with automatic discounts" {...register('stackable')} />
         <Checkbox label="Active" {...register('isActive')} />
       </Card>
       <Card className="grid gap-6 sm:grid-cols-2">

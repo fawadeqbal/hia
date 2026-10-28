@@ -8,7 +8,7 @@ import { MenusService } from './menus.service';
 
 @ApiTags('Admin · CMS menus')
 @ApiBearerAuth()
-@Roles(Role.ADMIN, Role.CONTENT_MANAGER)
+@Roles(Role.ADMIN)
 @Controller('admin/cms/menus')
 export class AdminMenusController {
   constructor(private readonly menus: MenusService) {}

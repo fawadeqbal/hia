@@ -5,22 +5,25 @@ const inv = (n: string): InvoiceData => ({
   issuedAt: new Date('2026-10-12'),
   orderNumber: 'ORD-261012-ABCDE',
   placedAt: new Date('2026-10-11'),
-  store: { name: 'Ecommerce', address: 'Lahore', email: 'support@example.com', phone: null },
-  seller: { name: 'Demo Electronics', email: 'vendor@example.com', phone: null },
+  store: {
+    name: 'HIA Furniture Solutions',
+    address: 'Lahore',
+    email: 'support@example.com',
+    phone: null,
+  },
   billTo: ['Sana Ali', 'House 1', 'Lahore, Punjab', 'PK'],
   payment: 'Cash on delivery · Pending',
   lines: [
     {
-      name: 'Galaxy A55',
-      sku: 'SAM-A55',
+      name: 'Gas lift (class 4)',
+      sku: 'HIA-GL-4',
       qty: 2,
       unit: '$10.00',
       total: '$20.00',
-      tax: '18% incl.',
     },
   ],
   totals: [{ label: 'Total', value: '$20.00', strong: true }],
-  notes: ['Prices include GST.'],
+  notes: ['Thank you for your order.'],
 });
 const pages = (b: Buffer) => (b.toString('latin1').match(/\/Type \/Page\b/g) ?? []).length;
 

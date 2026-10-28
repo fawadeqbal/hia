@@ -3,13 +3,12 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { AdminInquiriesController } from './inquiries/admin-inquiries.controller';
 import { InquiriesController } from './inquiries/inquiries.controller';
 import { InquiriesService } from './inquiries/inquiries.service';
-import { SupportController } from './support.controller';
-import { SupportService } from './support.service';
 
+/** Website inquiries (Contact page) and the admin Inquiries inbox. */
 @Module({
   imports: [NotificationsModule],
-  controllers: [SupportController, InquiriesController, AdminInquiriesController],
-  providers: [SupportService, InquiriesService],
-  exports: [SupportService, InquiriesService],
+  controllers: [InquiriesController, AdminInquiriesController],
+  providers: [InquiriesService],
+  exports: [InquiriesService],
 })
 export class SupportModule {}

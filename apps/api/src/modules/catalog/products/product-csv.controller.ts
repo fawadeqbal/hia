@@ -37,16 +37,3 @@ export class VendorProductCsvController {
     return this.csv.vendorImport(userId, dto.csv, dto.dryRun);
   }
 }
-
-@ApiTags('Admin · Product CSV')
-@ApiBearerAuth()
-@Roles(Role.ADMIN)
-@Controller('admin/products-csv')
-export class AdminProductCsvController {
-  constructor(private readonly csv: ProductCsvService) {}
-
-  @Get()
-  export(): Promise<CsvExportDto> {
-    return this.csv.adminExport();
-  }
-}

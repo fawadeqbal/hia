@@ -169,7 +169,10 @@ export function InquiryDetail({ id }: { id: string }) {
             />
             <div className="flex flex-wrap gap-2 pt-1">
               {q.phone ? (
-                <a href={`tel:${q.phone.replace(/\s/g, '')}`} className={buttonStyles({ variant: 'outline', size: 'sm' })}>
+                <a
+                  href={`tel:${q.phone.replace(/\s/g, '')}`}
+                  className={buttonStyles({ variant: 'outline', size: 'sm' })}
+                >
                   Call
                 </a>
               ) : null}

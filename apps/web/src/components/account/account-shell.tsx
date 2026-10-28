@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -17,7 +17,7 @@ import {
   SettingsIcon,
   UserIcon,
 } from '@/components/icons';
-import { authApi, loyaltyApi, queryKeys } from '@/lib/api-client';
+import { authApi } from '@/lib/api-client';
 
 const NAV = [
   { href: '/account/orders', label: 'Orders', icon: BoxIcon },
@@ -35,12 +35,6 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const { data: me, isPending } = useMe();
   const wishlist = useWishlist();
-  const loyalty = useQuery({
-    queryKey: queryKeys.loyalty.summary,
-    queryFn: loyaltyApi.summary,
-    enabled: Boolean(me),
-    staleTime: 60_000,
-  });
 
   const signOut = async () => {
     await authApi.logout().catch(() => undefined);
@@ -80,7 +74,6 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const initials = `${me.firstName.charAt(0)}${me.lastName.charAt(0)}`.toUpperCase();
   const counts = {
     wishlist: wishlist.data?.items.length,
-    points: loyalty.data?.points,
   };
 
   return (

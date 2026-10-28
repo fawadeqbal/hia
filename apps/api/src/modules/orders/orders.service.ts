@@ -33,7 +33,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PaymentsService } from '../payments/payments.service';
-import { LoyaltyService } from '../loyalty/loyalty.service';
 import type { OrderQueryDto, VendorOrderStatusDto } from './dto/order.dto';
 import {
   orderInclude,
@@ -66,12 +65,10 @@ const subOrderTotal = (v: {
   subtotal: Prisma.Decimal;
   shippingTotal: Prisma.Decimal;
   discountTotal: Prisma.Decimal;
-  taxAdded: Prisma.Decimal;
 }) =>
   fromCents(
     toCents(Number(v.subtotal)) +
-      toCents(Number(v.shippingTotal)) +
-      toCents(Number(v.taxAdded)) -
+      toCents(Number(v.shippingTotal)) -
       toCents(Number(v.discountTotal)),
   );
 
@@ -91,7 +88,6 @@ export class OrdersService {
     private readonly notifications: NotificationsService,
     private readonly config: ConfigService,
     private readonly payments: PaymentsService,
-    private readonly loyalty: LoyaltyService,
   ) {}
 
   // ================================================================ customer
@@ -265,10 +261,8 @@ export class OrdersService {
     });
     if (dto.status === 'DELIVERED') {
       await this.requestReviews(vo.orderId, vo.id);
-      await this.loyalty.awardForOrder(vo.orderId);
     }
     if (dto.status === 'CANCELLED') {
-      await this.loyalty.restoreForCancellation(vo.orderId, [vo.id], userId);
       await this.payments.refundOrder(
         vo.orderId,
         subOrderTotal(vo),
@@ -383,11 +377,6 @@ export class OrdersService {
       after: { reason },
     });
     const paidPart = open.reduce((sum, v) => sum + toCents(subOrderTotal(v)), 0);
-    await this.loyalty.restoreForCancellation(
-      order.id,
-      open.map((v) => v.id),
-      actorId,
-    );
     await this.payments.refundOrder(order.id, fromCents(paidPart), note, actorId);
     await this.emailStatusChange(order.id, 'CANCELLED', { reason });
     return toOrderDto(

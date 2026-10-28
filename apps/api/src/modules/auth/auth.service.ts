@@ -26,7 +26,6 @@ import {
 } from '@ecommerce/types';
 import { markSessionsRevoked } from '../../common/guards/jwt-auth.guard';
 import { PrismaService } from '../../prisma/prisma.service';
-import { LoyaltyService } from '../loyalty/loyalty.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { hashSecret, newOtp, newToken } from './auth-tokens';
 import type { LoginDto, RegisterDto } from './dto/auth.dto';
@@ -48,7 +47,6 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly notifications: NotificationsService,
-    private readonly loyalty: LoyaltyService,
   ) {}
 
   // ================================================================ password sign-up / sign-in
@@ -76,7 +74,6 @@ export class AuthService {
       data: { firstName: user.firstName },
     });
     await this.sendVerification(user.id);
-    await this.loyalty.onRegister(user.id, dto.referralCode);
     return this.issueTokens(user.id);
   }
 
@@ -274,9 +271,9 @@ export class AuthService {
       }),
     ]);
     markSessionsRevoked(
-      (await this.prisma.session.findMany({ where: { userId: user.id }, select: { id: true } })).map(
-        (x) => x.id,
-      ),
+      (
+        await this.prisma.session.findMany({ where: { userId: user.id }, select: { id: true } })
+      ).map((x) => x.id),
     );
     await this.passwordChangedEmail(user);
   }
@@ -408,7 +405,6 @@ export class AuthService {
       userId: user.id,
       data: { firstName: user.firstName },
     });
-    await this.loyalty.onRegister(user.id, undefined);
     return user;
   }
 

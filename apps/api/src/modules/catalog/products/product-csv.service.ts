@@ -22,16 +22,13 @@ const exportSelect = {
   shortDescription: true,
   description: true,
   weightGrams: true,
-  taxClass: true,
   category: { select: { slug: true } },
-  brand: { select: { slug: true } },
-  vendor: { select: { name: true } },
   variants: { where: { isDefault: true }, select: { sku: true }, take: 1 },
 } as const;
 
 /**
- * Product CSV. Sellers: export their products, import to create (as drafts) or update by SKU — through ProductsService,
- * so every product rule (refs, prices, unique SKU, moderation) applies. Staff: export all products.
+ * Product CSV: export the shop's products, import to create (as drafts) or update by SKU — through ProductsService,
+ * so every product rule (category, prices, unique SKU) applies.
  * Only simple products (no options) are updated by import; variants stay in the product editor.
  */
 @Injectable()
@@ -55,22 +52,6 @@ export class ProductCsvService {
     };
   }
 
-  async adminExport(): Promise<CsvExportDto> {
-    const rows = await this.prisma.product.findMany({
-      where: { deletedAt: null },
-      select: exportSelect,
-      orderBy: { createdAt: 'asc' },
-      take: 50_000,
-    });
-    return {
-      filename: 'products.csv',
-      rows: [
-        [...PRODUCT_CSV_COLUMNS, 'seller'],
-        ...rows.map((p) => [...this.line(p), p.vendor.name]),
-      ],
-    };
-  }
-
   async vendorImport(userId: string, csv: string, dryRun: boolean): Promise<ProductImportResult> {
     const vendor = await this.vendorOf(userId);
     const table = parseCsv(csv);
@@ -81,9 +62,8 @@ export class ProductCsvService {
     const { index, missing } = mapHeader(table[0]!);
     if (missing.length) throw new BadRequestException(`Missing column: ${missing.join(', ')}`);
 
-    const [categories, brands, mine, taken] = await Promise.all([
+    const [categories, mine, taken] = await Promise.all([
       this.prisma.category.findMany({ select: { id: true, slug: true } }),
-      this.prisma.brand.findMany({ select: { id: true, slug: true } }),
       this.prisma.productVariant.findMany({
         where: { product: { vendorId: vendor.id, deletedAt: null } },
         select: {
@@ -98,7 +78,6 @@ export class ProductCsvService {
       }),
     ]);
     const catId = new Map(categories.map((c) => [c.slug, c.id]));
-    const brandId = new Map(brands.map((b) => [b.slug, b.id]));
     const ownSku = new Map(mine.map((v) => [v.sku.toLowerCase(), v]));
     const otherSku = new Set(taken.map((t) => t.sku.toLowerCase()));
     const seen = new Set<string>();
@@ -112,9 +91,8 @@ export class ProductCsvService {
       seen.add(key);
       if (row.category && !catId.has(row.category))
         problems.push(`unknown category "${row.category}"`);
-      if (row.brand && !brandId.has(row.brand)) problems.push(`unknown brand "${row.brand}"`);
       const existing = ownSku.get(key);
-      if (!existing && otherSku.has(key)) problems.push('sku is used by another seller');
+      if (!existing && otherSku.has(key)) problems.push('sku is already used');
       if (existing && !existing.isDefault)
         problems.push('sku belongs to a product option; edit it in the product editor');
       if (existing && existing.product._count.variants > 1)
@@ -136,13 +114,11 @@ export class ProductCsvService {
         const fields = {
           name: row.name,
           categoryId: row.category ? catId.get(row.category) : undefined,
-          brandId: row.brand ? brandId.get(row.brand) : undefined,
           basePrice: row.price,
           compareAtPrice: row.compareAtPrice,
           shortDescription: row.shortDescription,
           description: row.description,
           weightGrams: row.weightGrams,
-          taxClass: row.taxClass,
         };
         try {
           if (existing) {
@@ -186,22 +162,18 @@ export class ProductCsvService {
     shortDescription: string | null;
     description: string | null;
     weightGrams: number | null;
-    taxClass: string | null;
     category: { slug: string };
-    brand: { slug: string } | null;
     variants: { sku: string }[];
   }): string[] {
     return [
       p.variants[0]?.sku ?? '',
       p.name,
       p.category.slug,
-      p.brand?.slug ?? '',
       String(Number(p.basePrice)),
       p.compareAtPrice === null ? '' : String(Number(p.compareAtPrice)),
       p.shortDescription ?? '',
       p.description ?? '',
       p.weightGrams === null ? '' : String(p.weightGrams),
-      p.taxClass ?? 'standard',
       p.status,
     ];
   }

@@ -20,7 +20,6 @@ import { readSetting } from '../../common/utils/settings';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { LoyaltyService } from '../loyalty/loyalty.service';
 import {
   sendOrderNotice,
   sendOrderPlacedEmails,
@@ -63,7 +62,6 @@ export class PaymentsService {
     private readonly notifications: NotificationsService,
     private readonly config: ConfigService,
     private readonly gateways: PaymentGatewaysService,
-    private readonly loyalty: LoyaltyService,
   ) {}
 
   /** Gateway new online payments go to ('' when none is usable). */
@@ -213,7 +211,8 @@ export class PaymentsService {
     });
     const expiresAt = paymentDeadline(payment.order.placedAt, await this.holdMinutes());
     const provider = await this.gateways.byName(payment.provider);
-    if (!provider?.enabled) throw new BadRequestException('Online payment is not available right now');
+    if (!provider?.enabled)
+      throw new BadRequestException('Online payment is not available right now');
     const session = await provider.createSession({
       paymentId,
       orderNumber: payment.order.orderNumber,
@@ -594,14 +593,6 @@ export class PaymentsService {
       return true;
     });
     if (cancelled) {
-      const vos = await this.prisma.vendorOrder.findMany({
-        where: { orderId },
-        select: { id: true },
-      });
-      await this.loyalty.restoreForCancellation(
-        orderId,
-        vos.map((v) => v.id),
-      );
       await this.audit.log({
         action: 'order.payment_expired',
         entityType: 'Order',

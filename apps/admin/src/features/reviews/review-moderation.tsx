@@ -43,7 +43,7 @@ export function ReviewModeration() {
         value={section}
         onChange={(v) => setSection(v as Section)}
       />
-      {section === 'reviews' ? <Reviews /> : <QuestionList admin />}
+      {section === 'reviews' ? <Reviews /> : <QuestionList />}
     </div>
   );
 }
@@ -97,9 +97,6 @@ function Reviews() {
           </div>
           {r.title ? <p className="font-semibold">{r.title}</p> : null}
           {r.body ? <p className="whitespace-pre-line text-gray-700">{r.body}</p> : null}
-          {r.vendorReply ? (
-            <p className="rounded bg-gray-50 p-2 text-gray-700">Shop reply: {r.vendorReply}</p>
-          ) : null}
           <div className="flex gap-2">
             {r.status !== 'APPROVED' ? (
               <Button

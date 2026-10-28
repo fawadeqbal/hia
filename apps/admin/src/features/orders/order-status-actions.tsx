@@ -51,7 +51,8 @@ export function OrderStatusActions({
     mutationFn: (status: OrderStatus) =>
       ordersApi.vendorUpdateStatus(vendorOrderId, {
         status,
-        trackingNumber: status === 'SHIPPED' && trackingNumber.trim() ? trackingNumber.trim() : undefined,
+        trackingNumber:
+          status === 'SHIPPED' && trackingNumber.trim() ? trackingNumber.trim() : undefined,
         courierId: status === 'SHIPPED' && courierId ? courierId : undefined,
         note: note.trim() || undefined,
       }),
@@ -103,7 +104,11 @@ export function OrderStatusActions({
             <>
               <Select
                 label="Delivered by"
-                hint={part.data?.shippingMethod ? `Customer chose: ${part.data.shippingMethod}` : undefined}
+                hint={
+                  part.data?.shippingMethod
+                    ? `Customer chose: ${part.data.shippingMethod}`
+                    : undefined
+                }
                 placeholder="Not specified"
                 value={courierId}
                 onChange={(e) => setCourierId(e.target.value)}

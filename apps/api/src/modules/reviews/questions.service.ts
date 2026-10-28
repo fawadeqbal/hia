@@ -7,7 +7,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import type { ModerateDto, QuestionDtoIn, ReviewQueryDto } from './dto/review.dto';
 import { questionInclude, toQuestionDto } from './review.mapper';
-import { vendorIdOf } from './reviews.service';
 
 type ListParams = Pick<ReviewQueryDto, 'page' | 'limit' | 'status' | 'unanswered'>;
 
@@ -51,21 +50,6 @@ export class QuestionsService {
     return toQuestionDto(question);
   }
 
-  async vendorList(userId: string, q: ListParams): Promise<Paginated<QuestionDto>> {
-    const vendorId = await vendorIdOf(this.prisma, userId);
-    return this.list(
-      { product: { vendorId }, status: { not: 'REJECTED' }, ...this.unanswered(q) },
-      q,
-    );
-  }
-
-  async vendorAnswer(userId: string, id: string, body: string): Promise<QuestionDto> {
-    const vendorId = await vendorIdOf(this.prisma, userId);
-    const question = await this.prisma.question.findFirst({ where: { id, product: { vendorId } } });
-    if (!question) throw new NotFoundException('Question not found');
-    return this.answer(userId, question.id, question.status, body, true);
-  }
-
   async adminList(q: ListParams): Promise<Paginated<QuestionDto>> {
     return this.list({ ...(q.status ? { status: q.status } : {}), ...this.unanswered(q) }, q);
   }
@@ -73,7 +57,7 @@ export class QuestionsService {
   async adminAnswer(userId: string, id: string, body: string): Promise<QuestionDto> {
     const question = await this.prisma.question.findUnique({ where: { id } });
     if (!question) throw new NotFoundException('Question not found');
-    return this.answer(userId, question.id, question.status, body, false);
+    return this.answer(userId, question.id, question.status, body);
   }
 
   async moderate(actorId: string, id: string, dto: ModerateDto): Promise<QuestionDto> {
@@ -98,17 +82,11 @@ export class QuestionsService {
   // ---------------------------------------------------------------- helpers
 
   /** Answering publishes a pending question; a hidden (rejected) one stays hidden. */
-  private async answer(
-    userId: string,
-    id: string,
-    status: string,
-    body: string,
-    isVendor: boolean,
-  ) {
+  private async answer(userId: string, id: string, status: string, body: string) {
     if (status === 'REJECTED')
       throw new BadRequestException('This question was hidden by the store');
     await this.prisma.$transaction([
-      this.prisma.answer.create({ data: { questionId: id, userId, isVendor, body } }),
+      this.prisma.answer.create({ data: { questionId: id, userId, body } }),
       this.prisma.question.update({ where: { id }, data: { status: 'APPROVED' } }),
     ]);
     await this.audit.log({

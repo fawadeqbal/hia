@@ -96,7 +96,6 @@ export interface CustomerDetail extends CustomerListItem {
   blockedReason: string | null;
   addresses: AddressDto[];
   recentOrders: OrderSummaryDto[];
-  loyalty: { points: number; lifetimePoints: number; tier: string | null } | null;
   reviews: number;
   returns: number;
   currency: string;

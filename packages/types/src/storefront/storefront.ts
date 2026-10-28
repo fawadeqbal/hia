@@ -1,4 +1,4 @@
-/** Public product data for the storefront (only published products of approved vendors). */
+/** Public product data for the storefront (only published products). */
 
 export const STOREFRONT_SORTS = [
   'relevance',
@@ -22,8 +22,6 @@ export const STOREFRONT_SORT_LABELS: Record<StorefrontSort, string> = {
 export interface StorefrontProductQuery {
   q?: string;
   category?: string;
-  brand?: string;
-  vendor?: string;
   minPrice?: number;
   maxPrice?: number;
   sort?: StorefrontSort;
@@ -50,8 +48,6 @@ export interface StorefrontProductCard {
   price: number;
   compareAtPrice: number | null;
   currency: string;
-  brandName: string | null;
-  vendor: { name: string; slug: string };
   ratingAverage: number;
   ratingCount: number;
   inStock: boolean;
@@ -93,8 +89,6 @@ export interface StorefrontProductDetail {
   ratingAverage: number;
   ratingCount: number;
   category: { name: string; slug: string };
-  brand: { name: string; slug: string } | null;
-  vendor: { name: string; slug: string; logoUrl: string | null };
   options: StorefrontOption[];
   variants: StorefrontVariant[];
   defaultVariantId: string;
@@ -127,32 +121,10 @@ export interface SearchSuggestions {
     currency: string;
   }[];
   categories: { name: string; slug: string }[];
-  brands: { name: string; slug: string }[];
 }
 
 export interface DidYouMean {
   suggestion: string | null;
-}
-
-export interface PublicBrandPage {
-  name: string;
-  slug: string;
-  logoUrl: string | null;
-  description: string | null;
-  productCount: number;
-}
-
-export interface PublicStorePage {
-  name: string;
-  slug: string;
-  logoUrl: string | null;
-  bannerUrl: string | null;
-  description: string | null;
-  ratingAverage: number;
-  reviewCount: number;
-  productCount: number;
-  joinedAt: string;
-  policies: { shipping: string | null; returns: string | null };
 }
 
 export interface ProductRecommendations {

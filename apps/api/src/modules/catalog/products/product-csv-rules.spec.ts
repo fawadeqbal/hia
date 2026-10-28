@@ -15,23 +15,16 @@ describe('product CSV', () => {
   });
 
   it('reads a valid row and treats empty cells as unchanged', () => {
-    const { index } = mapHeader([
-      'sku',
-      'name',
-      'price',
-      'compare_at_price',
-      'tax_class',
-      'weight_grams',
-    ]);
-    const { row, problems } = readRow(['ABC-1', 'Blue Shirt', '1,250', '', 'Reduced', ''], index);
+    const { index } = mapHeader(['sku', 'name', 'price', 'compare_at_price', 'weight_grams']);
+    const { row, problems } = readRow(['HIA-GL-1', 'Gas Lift', '2,200', '', ''], index);
     expect(problems).toEqual([]);
-    expect(row).toEqual({ sku: 'ABC-1', name: 'Blue Shirt', price: 1250, taxClass: 'reduced' });
+    expect(row).toEqual({ sku: 'HIA-GL-1', name: 'Gas Lift', price: 2200 });
     expect(createProblems(row)).toEqual(['new product needs category']);
   });
 
   it('reports bad values', () => {
-    const { index } = mapHeader(['sku', 'price', 'compare_at_price', 'tax_class']);
-    const { problems } = readRow(['bad sku!', '-5', '1', 'luxury'], index);
+    const { index } = mapHeader(['sku', 'price', 'compare_at_price', 'weight_grams']);
+    const { problems } = readRow(['bad sku!', '-5', '1', '2.5'], index);
     expect(problems).toHaveLength(3);
   });
 });

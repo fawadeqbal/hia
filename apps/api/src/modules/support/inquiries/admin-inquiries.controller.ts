@@ -8,7 +8,7 @@ import { InquiriesService } from './inquiries.service';
 
 @ApiTags('Admin · Inquiries')
 @ApiBearerAuth()
-@Roles(Role.ADMIN, Role.SUPPORT_AGENT)
+@Roles(Role.ADMIN)
 @Controller('admin/inquiries')
 export class AdminInquiriesController {
   constructor(private readonly inquiries: InquiriesService) {}

@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 import { AppShell, Button } from '@ecommerce/ui';
 import { navigation } from '@/config/navigation';
-import { filterNav, useAccess } from '@/hooks/use-access';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { ApiClientError, authApi } from '@/lib/api-client';
 
@@ -15,7 +14,6 @@ export function SidebarShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: me, error } = useCurrentUser();
-  const { data: access } = useAccess();
 
   useEffect(() => {
     if (error instanceof ApiClientError && error.isUnauthorized) {
@@ -32,7 +30,7 @@ export function SidebarShell({ children }: { children: ReactNode }) {
   return (
     <AppShell
       brand="HIA Furniture"
-      nav={filterNav(navigation, access)}
+      nav={navigation}
       activePath={pathname}
       renderLink={(item, className) => (
         <Link href={item.href} className={className}>

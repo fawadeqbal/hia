@@ -90,7 +90,10 @@ export function AppShell({ brand, nav, activePath, renderLink, topBar, children 
                     viewBox="0 0 20 20"
                     fill="currentColor"
                     aria-hidden
-                    className={cn('h-4 w-4 transition-transform duration-200', open ? 'rotate-0' : '-rotate-90')}
+                    className={cn(
+                      'h-4 w-4 transition-transform duration-200',
+                      open ? 'rotate-0' : '-rotate-90',
+                    )}
                   >
                     <path
                       fillRule="evenodd"

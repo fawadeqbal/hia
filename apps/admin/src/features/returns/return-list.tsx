@@ -61,9 +61,7 @@ export function ReturnList() {
           >
             {r.rmaNumber}
           </Link>
-          <p className="text-xs text-gray-500">
-            Order {r.orderNumber}
-          </p>
+          <p className="text-xs text-gray-500">Order {r.orderNumber}</p>
         </div>
       ),
     },

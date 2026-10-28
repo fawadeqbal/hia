@@ -30,7 +30,7 @@ function newIdempotencyKey(): string {
 }
 
 export function CheckoutView() {
-  const { t, currency: displayCurrency } = useLocale();
+  const { t } = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: cart, isLoading: cartLoading, error: cartError } = useCart();
@@ -88,8 +88,7 @@ export function CheckoutView() {
   // Coupon: what the customer typed vs the code sent to the API.
   const [couponInput, setCouponInput] = useState('');
   const [couponCode, setCouponCode] = useState<string | null>(null);
-  const [redeemPoints, setRedeemPoints] = useState(false);
-  // Checkout is a 4-step flow: address → delivery → payment → review (savings, note).
+  // Checkout is a 4-step flow: address → delivery → payment → review (coupon, note).
   const [step, setStep] = useState(0);
   // Steps the customer tried to leave (or submit) while incomplete: shown in red.
   const [flagged, setFlagged] = useState<number[]>([]);
@@ -104,8 +103,6 @@ export function CheckoutView() {
       setCouponCode(fromCart);
     }
   }, []);
-  // Gift cards are not used in the single-shop build (the API still accepts a code).
-  const giftCardCode: string | null = null;
   const guestEmail = useDeferredValue(watch('email'));
   // Where the parcel goes decides the shipping zone: saved address, or the typed one (debounced).
   const [countryCode, state, city] = watch(['countryCode', 'state', 'city']);
@@ -116,8 +113,6 @@ export function CheckoutView() {
     ...(addressId ? { addressId } : { destination: typedDestination }),
     shippingRateIds,
     couponCode,
-    redeemPoints,
-    giftCardCode,
     email: guestEmail.includes('@') ? guestEmail.trim() : undefined,
   };
 
@@ -151,8 +146,6 @@ export function CheckoutView() {
         ...checkoutFormToInput(values, idempotencyKey),
         shippingRateIds,
         couponCode: q?.coupon?.applied ? couponCode : null,
-        redeemPoints,
-        giftCardCode: q?.giftCard?.applied ? giftCardCode : null,
       }),
     onSuccess: async ({ order, payment }) => {
       const left = 3000 - (Date.now() - placeStartedAt.current);
@@ -694,30 +687,7 @@ export function CheckoutView() {
                     ))}
                   </dl>
                 </Panel>
-                <Panel id="step-savings" title="Savings (optional)">
-                  {q?.loyalty && q.loyalty.balance > 0 ? (
-                    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl bg-brand-100 px-4 py-3.5">
-                      <span className="flex min-w-0 flex-col">
-                        <b>Use my points</b>
-                        <span className="text-[13px] text-gray-600">
-                          {q.loyalty.balance.toLocaleString()} available · up to{' '}
-                          {Math.min(q.loyalty.balance, q.loyalty.maxPoints).toLocaleString()} on
-                          this order
-                        </span>
-                      </span>
-                      <input
-                        type="checkbox"
-                        className="peer sr-only"
-                        checked={redeemPoints}
-                        onChange={(e) => setRedeemPoints(e.target.checked)}
-                      />
-                      <span
-                        aria-hidden
-                        className="relative h-[26px] w-11 flex-none rounded-full bg-gray-300 transition-colors after:absolute after:left-[3px] after:top-[3px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-brand-600 peer-checked:after:left-[21px]"
-                      />
-                    </label>
-                  ) : null}
-
+                <Panel id="step-savings" title="Coupon (optional)">
                   <div className="flex flex-col gap-1">
                     <div className="flex gap-2">
                       <input
@@ -864,26 +834,6 @@ export function CheckoutView() {
                         tone="saving"
                       />
                     ))}
-                    {q.loyalty && q.loyalty.pointsUsed > 0 ? (
-                      <SummaryRow
-                        label={`Points (${q.loyalty.pointsUsed})`}
-                        value={`−${formatMoney(q.loyalty.amount, q.currency)}`}
-                        tone="saving"
-                      />
-                    ) : null}
-                    {q.giftCard?.applied ? (
-                      <SummaryRow
-                        label={`Gift card ${q.giftCard.code}`}
-                        value={`−${formatMoney(q.giftCard.amount, q.currency)}`}
-                        tone="saving"
-                      />
-                    ) : null}
-                    {q.taxAdded > 0 ? (
-                      <SummaryRow
-                        label={t('checkout.tax')}
-                        value={formatMoney(q.taxAdded, q.currency)}
-                      />
-                    ) : null}
                     {paymentMethod === 'COD' ? (
                       <SummaryRow label="COD fee" value={formatMoney(q.codFee, q.currency)} />
                     ) : null}
@@ -894,18 +844,6 @@ export function CheckoutView() {
                       {formatMoney(q.grandTotal, q.currency)}
                     </span>
                   </div>
-                  {q.taxIncluded > 0 ? (
-                    <p className="-mt-2 text-right text-xs text-gray-500">
-                      {t('checkout.includesTax', {
-                        amount: formatMoney(q.taxIncluded, q.currency),
-                      })}
-                    </p>
-                  ) : null}
-                  {displayCurrency !== q.currency ? (
-                    <p className="text-xs text-gray-500">
-                      {t('checkout.chargedIn', { display: displayCurrency, base: q.currency })}
-                    </p>
-                  ) : null}
                   {q.problems.length > 0 ? (
                     <Alert tone="warning">
                       <ul className="list-disc space-y-1 pl-4">

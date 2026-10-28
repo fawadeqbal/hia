@@ -28,7 +28,10 @@ export function PayNow({ order }: { order: OrderDto }) {
   useEffect(() => {
     if (left !== 0) return;
     const t = setTimeout(
-      () => void queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(order.orderNumber) }),
+      () =>
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.orders.detail(order.orderNumber),
+        }),
       5000,
     );
     return () => clearTimeout(t);
@@ -53,7 +56,11 @@ export function PayNow({ order }: { order: OrderDto }) {
         <div
           className={cn(
             'grid h-16 w-24 flex-none place-items-center rounded-2xl font-extrabold tabular-nums text-2xl',
-            expired ? 'bg-gray-200 text-gray-500' : urgent ? 'bg-red-500 text-white' : 'bg-gray-900 text-white',
+            expired
+              ? 'bg-gray-200 text-gray-500'
+              : urgent
+                ? 'bg-red-500 text-white'
+                : 'bg-gray-900 text-white',
           )}
         >
           {pad(Math.floor(left / 60))}:{pad(left % 60)}
@@ -73,7 +80,11 @@ export function PayNow({ order }: { order: OrderDto }) {
         {pay.error ? <p className="mt-1 text-red-700">{pay.error.message}</p> : null}
       </div>
       {!expired ? (
-        <Button loading={pay.isPending} onClick={() => pay.mutate()} className="h-11 rounded-2xl px-6">
+        <Button
+          loading={pay.isPending}
+          onClick={() => pay.mutate()}
+          className="h-11 rounded-2xl px-6"
+        >
           Pay now
         </Button>
       ) : null}

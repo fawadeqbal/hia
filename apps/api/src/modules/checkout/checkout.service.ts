@@ -25,26 +25,20 @@ import { CartService, type CartContext } from '../cart/cart.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { sendOrderPlacedEmails } from '../orders/order-emails';
 import { orderInclude, toOrderDto, type OrderFull } from '../orders/order.mapper';
-import { commissionForLines, generateOrderNumber } from '../orders/order-rules';
-import { loadCommissionResolver, type CommissionResolver } from '../vendors/commission-resolver';
+import { generateOrderNumber } from '../orders/order-rules';
 import { reserveStock } from '../orders/order-stock';
 import { PaymentsService } from '../payments/payments.service';
 import { PromotionsService } from '../promotions/promotions.service';
-import { allocate } from '../promotions/discount-engine';
-import { GiftCardsService } from '../loyalty/gift-cards.service';
-import { LoyaltyService } from '../loyalty/loyalty.service';
-import { lineTaxCents, pickRate } from '../localization/tax-rules';
-import { TaxesService } from '../localization/taxes.service';
 import { shippingMethodLabel } from '../shipping/shipping-rules';
 import { ShippingService } from '../shipping/shipping.service';
 import type { PlaceOrderDto } from './dto/checkout.dto';
 
 /**
  * Checkout: quote (totals) and place order.
- * One Order → one VendorOrder per vendor → OrderItems (price snapshots). Stock is reserved in the same
- * transaction; the cart is emptied; confirmation emails go to the customer and each vendor.
- * Online methods start as PENDING_PAYMENT with a short stock hold; PaymentsService confirms them via the gateway webhook.
- * TODO: coupons/gift cards/loyalty (Promotions step), tax rates (Settings).
+ * One Order → one VendorOrder (the shop's parcel) → OrderItems (price snapshots). Stock is reserved in the same
+ * transaction; the cart is emptied; confirmation emails go to the customer and the shop.
+ * Totals: items + delivery − coupon (+ COD fee). Online methods start as PENDING_PAYMENT with a short stock
+ * hold; PaymentsService confirms them via the gateway webhook.
  */
 @Injectable()
 export class CheckoutService {
@@ -59,9 +53,6 @@ export class CheckoutService {
     private readonly payments: PaymentsService,
     private readonly shipping: ShippingService,
     private readonly promotions: PromotionsService,
-    private readonly loyalty: LoyaltyService,
-    private readonly giftCards: GiftCardsService,
-    private readonly taxes: TaxesService,
   ) {}
 
   async quote(ctx: CartContext, input: CheckoutQuoteInput = {}): Promise<CheckoutQuoteDto> {
@@ -74,7 +65,7 @@ export class CheckoutService {
       this.payments.onlineMethods(),
     ]);
 
-    // Shipping: one parcel per seller, priced by the zone of the destination.
+    // Delivery: priced by the zone of the destination.
     const destination = await this.destinationFor(ctx, input);
     const weights = await this.parcelWeights(cart.groups.flatMap((g) => g.items));
     const shipping = await this.shipping.quote(
@@ -102,16 +93,11 @@ export class CheckoutService {
         estimatedDays: pick?.estimatedDays ?? null,
         weightGrams: g.items.reduce((n, i) => n + (weights.get(i.variantId) ?? 0) * i.quantity, 0),
         discount: 0,
-        sellerFundedDiscount: 0,
-        tenders: 0,
-        tax: 0,
-        taxAdded: 0,
-        taxLines: [],
       };
     });
     const subtotal = cart.subtotal;
     const shippingTotal = fromCents(groups.reduce((sum, g) => sum + toCents(g.shipping), 0));
-    // Discounts: automatic promotions + coupon (engine works in cents, per seller).
+    // Coupon (engine works in cents).
     const products = await this.productInfo(
       cart.groups.flatMap((g) => g.items.map((i) => i.productId)),
     );
@@ -134,79 +120,9 @@ export class CheckoutService {
     for (const g of groups) {
       const d = deals.byVendor.get(g.vendor.id);
       g.discount = d ? fromCents(d.itemsCents + d.shippingCents) : 0;
-      g.sellerFundedDiscount = d ? fromCents(d.vendorFundedCents) : 0;
     }
     const discountTotal = fromCents(deals.totalCents);
-    // Tax per line on the price after item discounts (the seller's item discount is spread over their lines).
-    // Inclusive rates: the tax is part of the price. Exclusive rates: added on top (part of the total).
-    const taxCtx = await this.taxes.checkoutContext();
-    const taxDest = destination?.countryCode ? destination : { countryCode: taxCtx.defaultCountry };
-    for (const g of groups) {
-      if (!taxCtx.enabled) break;
-      const itemDiscount = allocate(
-        deals.byVendor.get(g.vendor.id)?.itemsCents ?? 0,
-        new Map(g.items.map((i) => [i.id, toCents(i.unitPrice) * i.quantity])),
-      );
-      let taxCents = 0;
-      let addedCents = 0;
-      for (const i of g.items) {
-        const rate = pickRate(
-          taxCtx.rates,
-          products.get(i.productId)?.taxClass ?? 'standard',
-          taxDest,
-        );
-        if (!rate) continue;
-        const cents = lineTaxCents(
-          toCents(i.unitPrice) * i.quantity - (itemDiscount.get(i.id) ?? 0),
-          rate.rate,
-          rate.isInclusive,
-        );
-        taxCents += cents;
-        if (!rate.isInclusive) addedCents += cents;
-        g.taxLines.push({
-          itemId: i.id,
-          name: rate.name,
-          rate: Math.round(rate.rate * 10000) / 100,
-          inclusive: rate.isInclusive,
-          amount: fromCents(cents),
-        });
-      }
-      g.tax = fromCents(taxCents);
-      g.taxAdded = fromCents(addedCents);
-    }
-    const taxTotal = fromCents(groups.reduce((s, g) => s + toCents(g.tax), 0));
-    const taxAdded = fromCents(groups.reduce((s, g) => s + toCents(g.taxAdded), 0));
-    const afterDiscountCents =
-      toCents(subtotal) + toCents(shippingTotal) - deals.totalCents + toCents(taxAdded);
-    // Points, then the gift card, pay part (or all) of what is left. Store-funded; split across sellers so
-    // refunds on cancellation / returns never exceed the money actually paid.
-    const loyalty = ctx.userId
-      ? await this.loyalty.checkoutPoints(
-          ctx.userId,
-          afterDiscountCents,
-          Boolean(input.redeemPoints),
-        )
-      : null;
-    const pointsCents = loyalty ? toCents(loyalty.amount) : 0;
-    const giftCard = input.giftCardCode
-      ? await this.giftCards.checkoutCard(
-          input.giftCardCode,
-          cart.currency,
-          afterDiscountCents - pointsCents,
-        )
-      : null;
-    const tenderCents = pointsCents + (giftCard?.applied ? toCents(giftCard.amount) : 0);
-    const shares = allocate(
-      tenderCents,
-      new Map(
-        groups.map((g) => [
-          g.vendor.id,
-          toCents(g.subtotal) + toCents(g.shipping) - toCents(g.discount) + toCents(g.taxAdded),
-        ]),
-      ),
-    );
-    for (const g of groups) g.tenders = fromCents(shares.get(g.vendor.id) ?? 0);
-    const beforeFees = fromCents(afterDiscountCents - tenderCents);
+    const beforeFees = fromCents(toCents(subtotal) + toCents(shippingTotal) - deals.totalCents);
     // COD fee = store fee + the selected delivery options' COD fees.
     const codFeeTotal = fromCents(toCents(codFeeSetting) + shipping.codFeeCents);
     const codTotal = fromCents(toCents(beforeFees) + toCents(codFeeTotal));
@@ -237,9 +153,6 @@ export class CheckoutService {
       ),
     ];
     if (!codEnabled) paymentOptions = paymentOptions.filter((o) => o.method !== 'COD');
-    // Nothing left to pay: no payment method needed.
-    if (cart.itemCount > 0 && toCents(beforeFees) === 0)
-      paymentOptions = [option('GIFT_CARD', 0, null)];
     const paymentMethods = paymentOptions.filter((o) => o.available).map((o) => o.method);
     const selected =
       requested && paymentMethods.includes(requested) ? requested : (paymentMethods[0] ?? null);
@@ -252,7 +165,7 @@ export class CheckoutService {
       problems.push('Some items are unavailable or low on stock. Update your cart.');
     if (undeliverable.length > 0)
       problems.push(
-        `We cannot deliver ${undeliverable.join(', ')}'s items to this address. Try another address or remove them.`,
+        'Sorry, we do not deliver to this address yet. Contact us and we will arrange it.',
       );
     if (cart.itemCount > 0 && paymentMethods.length === 0)
       problems.push(
@@ -267,9 +180,6 @@ export class CheckoutService {
       subtotal,
       shippingTotal,
       discountTotal,
-      taxTotal,
-      taxAdded,
-      taxIncluded: fromCents(toCents(taxTotal) - toCents(taxAdded)),
       codFee,
       grandTotal,
       paymentMethods,
@@ -279,17 +189,20 @@ export class CheckoutService {
       problems,
       freeShippingAbove: shipping.freeShippingAbove,
       shippingZone: shipping.zoneName,
-      discounts: deals.lines.map((l) => ({
-        source: l.source,
-        label: l.label,
-        amount: fromCents(l.amountCents),
-      })),
+      discounts:
+        deals.couponCode && deals.totalCents > 0
+          ? [
+              {
+                source: 'coupon' as const,
+                label: `Coupon ${deals.couponCode}`,
+                amount: fromCents(deals.totalCents),
+              },
+            ]
+          : [],
       coupon:
         deals.couponCode && deals.coupon
           ? { code: deals.couponCode, applied: deals.coupon.applied, message: deals.coupon.message }
           : null,
-      loyalty,
-      giftCard,
     };
   }
 
@@ -337,12 +250,8 @@ export class CheckoutService {
       destination: address,
       shippingRateIds: dto.shippingRateIds,
       couponCode: dto.couponCode,
-      redeemPoints: dto.redeemPoints,
-      giftCardCode: dto.giftCardCode,
       email,
     });
-    if (dto.giftCardCode && !quote.giftCard?.applied)
-      throw new BadRequestException(quote.giftCard?.message ?? 'This gift card cannot be used');
     if (dto.couponCode && !quote.coupon?.applied)
       throw new BadRequestException(quote.coupon?.message ?? 'This coupon cannot be used');
     if (!quote.canPlace) throw new BadRequestException(quote.problems.join(' '));
@@ -357,8 +266,6 @@ export class CheckoutService {
     });
     if (!cartRow || cartRow.items.length === 0) throw new BadRequestException('Your cart is empty');
 
-    const defaultRate = await readSetting(this.prisma, 'marketplace.defaultCommissionRate', 10);
-    const commissionRate = await loadCommissionResolver(this.prisma, defaultRate);
     const online = isOnlinePayment(dto.paymentMethod);
     const order = await this.createOrder({
       online,
@@ -369,7 +276,6 @@ export class CheckoutService {
       email,
       userId: user?.id ?? null,
       address,
-      commissionRate,
     });
 
     await this.audit.log({
@@ -420,18 +326,14 @@ export class CheckoutService {
     return input.destination?.countryCode ? input.destination : null;
   }
 
-  /** Product → category (category-scoped discounts) and tax class. */
-  private async productInfo(
-    productIds: string[],
-  ): Promise<Map<string, { categoryId: string; taxClass: string }>> {
+  /** Product → category (category-scoped coupons). */
+  private async productInfo(productIds: string[]): Promise<Map<string, { categoryId: string }>> {
     if (productIds.length === 0) return new Map();
     const rows = await this.prisma.product.findMany({
       where: { id: { in: [...new Set(productIds)] } },
-      select: { id: true, categoryId: true, taxClass: true },
+      select: { id: true, categoryId: true },
     });
-    return new Map(
-      rows.map((r) => [r.id, { categoryId: r.categoryId, taxClass: r.taxClass ?? 'standard' }]),
-    );
+    return new Map(rows.map((r) => [r.id, { categoryId: r.categoryId }]));
   }
 
   /** Grams per variant (variant weight, else product weight, else 0). */
@@ -486,16 +388,9 @@ export class CheckoutService {
     email: string;
     userId: string | null;
     address: ShippingAddress;
-    commissionRate: CommissionResolver;
   }): Promise<OrderFull> {
-    const { cartRow, quote, dto, email, userId, address, commissionRate, online, holdMinutes } =
-      args;
-    const prepaid = dto.paymentMethod === 'GIFT_CARD'; // fully covered by gift card / points
-    const initialStatus = online
-      ? ('PENDING_PAYMENT' as const)
-      : prepaid
-        ? ('PAID' as const)
-        : ('COD_CONFIRMED' as const);
+    const { cartRow, quote, dto, email, userId, address, online, holdMinutes } = args;
+    const initialStatus = online ? ('PENDING_PAYMENT' as const) : ('COD_CONFIRMED' as const);
 
     const gatewayName = online ? await this.payments.activeProviderName() : '';
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -514,14 +409,10 @@ export class CheckoutService {
                 shippingTotal: quote.shippingTotal,
                 discountTotal: quote.discountTotal,
                 couponCode: quote.coupon?.applied ? quote.coupon.code : null,
-                loyaltyDiscount: quote.loyalty?.amount ?? 0,
-                giftCardTotal: quote.giftCard?.applied ? quote.giftCard.amount : 0,
-                taxTotal: quote.taxTotal,
-                taxAdded: quote.taxAdded,
                 grandTotal: quote.grandTotal,
                 shippingAddress: address as unknown as Prisma.InputJsonValue,
                 paymentMethod: dto.paymentMethod,
-                paymentStatus: prepaid ? 'PAID' : 'PENDING',
+                paymentStatus: 'PENDING',
                 customerNote: dto.customerNote ?? null,
                 idempotencyKey: dto.idempotencyKey,
               },
@@ -539,23 +430,6 @@ export class CheckoutService {
             );
 
             for (const group of quote.groups) {
-              const taxOf = new Map(group.taxLines.map((t) => [t.itemId, t]));
-              // Each item gets the most specific rule (seller+category → seller → category → global).
-              // Commission is charged on the price without tax (tax belongs to the seller).
-              const commission = commissionForLines(
-                cartRow.items
-                  .filter((i) => i.variant.product.vendorId === group.vendor.id)
-                  .map((i) => ({
-                    amount: preTaxAmount(
-                      toCents(Number(i.variant.price)) * i.quantity,
-                      taxOf.get(i.id),
-                    ),
-                    rate: commissionRate({
-                      vendorId: i.variant.product.vendorId,
-                      categoryId: i.variant.product.categoryId,
-                    }).rate,
-                  })),
-              );
               const vendorOrder = await tx.vendorOrder.create({
                 data: {
                   orderId: order.id,
@@ -563,20 +437,9 @@ export class CheckoutService {
                   status: initialStatus,
                   shippingRateId: group.shippingRateId,
                   shippingMethod: group.shippingMethod,
-                  discountTotal: fromCents(toCents(group.discount) + toCents(group.tenders)),
+                  discountTotal: group.discount,
                   subtotal: group.subtotal,
                   shippingTotal: group.shipping,
-                  commissionAmount: commission,
-                  taxTotal: group.tax,
-                  taxAdded: group.taxAdded,
-                  // Seller keeps the tax (included tax is already in subtotal; added tax on top).
-                  netAmount: fromCents(
-                    toCents(group.subtotal) +
-                      toCents(group.shipping) +
-                      toCents(group.taxAdded) -
-                      toCents(commission) -
-                      toCents(group.sellerFundedDiscount),
-                  ),
                 },
               });
               await tx.orderItem.createMany({
@@ -592,10 +455,6 @@ export class CheckoutService {
                     quantity: i.quantity,
                     unitPrice: i.variant.price,
                     total: fromCents(toCents(Number(i.variant.price)) * i.quantity),
-                    tax: taxOf.get(i.id)?.amount ?? 0,
-                    taxRate: taxOf.has(i.id) ? taxOf.get(i.id)!.rate / 100 : null,
-                    taxInclusive: taxOf.get(i.id)?.inclusive ?? false,
-                    taxName: taxOf.get(i.id)?.name ?? null,
                   })),
               });
               await tx.orderStatusHistory.create({
@@ -619,8 +478,8 @@ export class CheckoutService {
               data: {
                 orderId: order.id,
                 method: dto.paymentMethod,
-                provider: online ? gatewayName : prepaid ? 'internal' : 'cod',
-                status: prepaid ? 'PAID' : 'PENDING',
+                provider: online ? gatewayName : 'cod',
+                status: 'PENDING',
                 amount: quote.grandTotal,
                 currency: quote.currency,
               },
@@ -633,23 +492,6 @@ export class CheckoutService {
                 order.id,
                 userId,
                 couponLine?.amount ?? 0,
-              );
-            }
-            if (quote.loyalty && quote.loyalty.pointsUsed > 0 && userId) {
-              await this.loyalty.redeemInTx(
-                tx,
-                userId,
-                quote.loyalty.pointsUsed,
-                order.id,
-                orderNumber,
-              );
-            }
-            if (quote.giftCard?.applied) {
-              await this.giftCards.redeemInTx(
-                tx,
-                quote.giftCard.code,
-                quote.giftCard.amount,
-                order.id,
               );
             }
             await tx.cartItem.deleteMany({ where: { cartId: cartRow.id } });
@@ -670,13 +512,4 @@ export class CheckoutService {
     }
     throw new BadRequestException('Could not create the order, please try again');
   }
-}
-
-/** Line amount without its included tax (for commission). Exclusive tax is not part of the price. */
-function preTaxAmount(
-  cents: number,
-  tax: { rate: number; inclusive: boolean } | undefined,
-): number {
-  if (!tax?.inclusive) return fromCents(cents);
-  return fromCents(cents - lineTaxCents(cents, tax.rate / 100, true));
 }

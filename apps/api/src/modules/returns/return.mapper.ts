@@ -55,8 +55,8 @@ export function itemsTotal(r: ReturnRow): number {
 }
 
 /**
- * What the customer paid for the returned items: price less the sub-order's discounts (in proportion),
- * plus tax that was added on top. The default refund; shipping can be added on top of it.
+ * What the customer paid for the returned items: price less the order's discount (in proportion).
+ * The default refund; shipping can be added on top of it.
  */
 export function refundableForItems(r: ReturnRow): number {
   const vo = r.items[0]?.orderItem.vendorOrder;
@@ -64,14 +64,7 @@ export function refundableForItems(r: ReturnRow): number {
   const items = toCents(itemsTotal(r));
   const paid =
     sub > 0 ? Math.round(items * (1 - toCents(Number(vo?.discountTotal ?? 0)) / sub)) : items;
-  const addedTax = r.items.reduce(
-    (s, i) =>
-      i.orderItem.taxInclusive || i.orderItem.quantity === 0
-        ? s
-        : s + Math.round((toCents(Number(i.orderItem.tax)) * i.quantity) / i.orderItem.quantity),
-    0,
-  );
-  return fromCents(Math.max(0, paid) + addedTax);
+  return fromCents(Math.max(0, paid));
 }
 
 function vendorOf(r: ReturnRow) {

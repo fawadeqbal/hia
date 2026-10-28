@@ -1,91 +1,27 @@
-# Build roadmap
+# Roadmap
 
-> **HIA single-shop build (current).** Converted from the multi-vendor platform: one store owned by the super
-> admin, seller app and AI support service removed, admin panel trimmed to the shop owner's menu, product /
-> stock / order-status screens moved into admin, **Inquiries** added (contact form → admin inbox, migration
-> `ticket_inquiry_fields`), COD only, PKR, HIA seed and storefront branding. The phases below describe how the
-> original platform was built; marketplace rows (vendors, commissions, payouts, loyalty…) are switched off here.
+## Done
 
-We build one entity at a time through every layer:
+1. **Single-shop conversion** (from `ecommerce-platform`): one store owned by the super admin, seller app and AI
+   support service removed, admin menu trimmed to the shop owner's work, product / stock / order-status screens in
+   the admin panel, COD only, PKR, HIA branding and seed.
+2. **Inquiries**: website Contact page → Admin → Inquiries (migration `ticket_inquiry_fields`).
+3. **Cleanup**: every marketplace-only feature deleted — code, endpoints, screens, emails, settings and database
+   tables / columns (migrations `single_shop_cleanup` and `single_shop_cleanup_2`). See `docs/scope.md` §4.
+
+## Possible next steps (when the shop owner asks)
+
+- Online payments: add a real gateway (`docs/architecture.md` → Payments) and switch it on in Admin → Settings → Payments.
+- Courier integration (booking, labels, live tracking) behind the existing `Courier` records.
+- Real product photos and the full product list (Admin → Products or CSV import).
+
+## How to build a feature
+
+One entity at a time through every layer (details in `AGENTS.md` §3):
 
 1. `packages/types`: interfaces + zod form schemas + helpers
-2. `apps/api`: DTOs (class-validator), service with business rules, controller, unit tests
-3. `packages/api-client`: typed endpoint functions + query keys
-4. `packages/ui`: any new reusable component the screens need
-5. App screens (admin / vendor / web)
-6. Seed data so the screen has something to show
-
-**Where we are:** Phase 1 and Phase 2 done (payments run on the mock gateway until a real one is plugged in).
-Phase 3 done (steps 12–19, 18b). **Phase 4 — scope completion — in progress. Next: step 32.** (Step 22 support is deferred: it will be built together with the RAG support assistant. Step 33a connected the assistant; step 33b adds tickets.)
-
-**Storefront theme:** the web app now uses the **KADAM** footwear design system (tokens, header, mega menu,
-product card hover swap, size picker, sticky add-to-bag, bag drawer, home sections). See `apps/web/DESIGN_SYSTEM.md`.
-`StorefrontProductCard` gained `hoverImageUrl` (no migration).
-
-**Migrations so far** (`packages/database/prisma/migrations/`): `init` → vendor `statusReason` →
-product `rejectionReason` (`pnpm db:migrate --name product_rejection_reason`, Step 6b). Steps 7–10 needed no migration. Step 11: `vendor_order_shipping_method` (VendorOrder.shippingRateId /
-shippingMethod snapshot). Step 12: `return_request_vendor_order` (ReturnRequest.vendorOrderId / decisionNote / refundedAt). Step 25: `commission_rules_only`
-(per-seller rates moved into `CommissionRule`, `Vendor.commissionRate` dropped — run `pnpm db:migrate`).
-Step 26: `order_tax_language_rtl` (Order / VendorOrder `taxAdded`, OrderItem `taxRate` / `taxInclusive` / `taxName`,
-Language `isRtl`). Step 27: `payment_gateways` (PaymentGateway: enabled, test mode, methods, priority,
-encrypted credentials). Step 28: `cart_recovery` (CartRecovery: abandoned-cart email progress per cart). Step 31: `order_documents`
-(OrderNote / Invoice `vendorOrderId`).
-
-## Phase 1: Catalog foundation
-
-| #   | Entity                                              | API                                                                                                  | Admin                                  | Vendor                                         | Storefront                 | Status   |
-| --- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------------------------------------------- | -------------------------- | -------- |
-| 0   | Admin sign-in (cookies)                             | ✅                                                                                                   | ✅                                     | –                                              | –                          | Done     |
-| 1   | **Category**                                        | ✅ CRUD + tree                                                                                       | ✅ list, create, edit, delete          | –                                              | menu (with products)       | **Done** |
-| 2   | **Brand**                                           | ✅ CRUD + public list                                                                                | ✅ list, create, edit, delete          | –                                              | filters (with products)    | **Done** |
-| 3   | **Attribute & values**                              | ✅ CRUD + value sync + public filters                                                                | ✅ list, create, edit, delete          | –                                              | filters (with products)    | **Done** |
-| 4   | **Media upload (S3/MinIO)**                         | ✅ upload, list, delete; byte-level type check                                                       | ✅ category image, brand logo          | (with products)                                | –                          | **Done** |
-| 5   | **Vendor (onboarding, approval)**                   | ✅ apply, self profile/payout, approve/reject/suspend + emails                                       | ✅ list, review, decisions, commission | ✅ apply, sign-in, onboarding, profile, payout | store page (with products) | **Done** |
-| 6a  | **Product core** (info, gallery, price, SKU, specs) | ✅ seller CRUD + submit/archive/restore; admin list/detail                                           | ✅ list + detail (read-only)           | ✅ list, create, edit, status actions          | (with storefront step)     | **Done** |
-| 6b  | **Product variants + moderation**                   | ✅ variant sync, approve/reject/feature + emails, suspended vendors hidden                           | ✅ moderation actions, variants table  | ✅ variant builder                             | (with storefront step)     | **Done** |
-| 7   | **Inventory / warehouses**                          | ✅ warehouses, stock adjust + movement log, low-stock & back-in-stock emails, admin low-stock report | ✅ low-stock report                    | ✅ inventory, adjust, history, warehouses      | (with cart)                | **Done** |
-
-## Phase 2: Buying flow
-
-| #   | Entity                                           | API                                                                                                                                                                        | Admin                                          | Vendor                                                 | Storefront                                                                                | Status   |
-| --- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------- | -------- |
-| 8   | **Cart** (+ first storefront pages)              | ✅ guest/user cart, merge at sign-in, stock & price checks, save for later                                                                                                 | –                                              | –                                                      | ✅ listing, category, product + variant picker, cart, sign-in/up                          | **Done** |
-| 9   | **Checkout + Orders** (vendor sub-orders, COD)   | ✅ quote, idempotent place order, stock reservation, vendor status flow (ship commits stock), cancel, guest tracking, addresses, emails                                    | ✅ list, detail, cancel                        | ✅ list, detail, status actions + tracking             | ✅ checkout, success, my orders, order detail + cancel, track order, address book         | **Done** |
-| 10  | **Payments** (gateway abstraction, mock gateway) | ✅ PaymentProvider interface + mock adapter, signed idempotent webhooks, unpaid-order expiry, retry, auto-refund on cancel / late payment                                  | ✅ payment attempts on order detail            | ✅ only paid online orders are visible                 | ✅ card / wallet / bank choice, mock gateway page, payment return, pay now on order pages | **Done** |
-| 11  | **Shipping** (zones, rates, couriers)            | ✅ zones + rates CRUD (rate sync), couriers CRUD, zone matching + weight / value brackets, per-seller delivery choice, COD per option, courier + tracking link on shipment | ✅ Settings → Shipping: zones editor, couriers | ✅ courier picker when shipping, delivery method shown | ✅ delivery options per seller at checkout, tracking link on orders                       | **Done** |
-
-## Phase 3: After-sale & growth
-
-| #   | Entity                                | API                                                                                                                                                                                                                                                                                                                               | Admin                                                                   | Vendor                                                                  | Storefront                                                                                                                   | Status   |
-| --- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 12  | **Returns (RMA)**                     | ✅ request within `returns.windowDays`, approve / reject, receive + restock, refund (gateway or recorded manual for COD), emails                                                                                                                                                                                                  | ✅ all returns, any action                                              | ✅ own returns, actions                                                 | ✅ return items from the order, my returns, withdraw                                                                         | **Done** |
-| 13  | **Reviews & Q&A**                     | ✅ verified-buyer reviews (one per product, editable), ratings recalculated, seller reply, questions + seller / admin answers, moderation settings, review-request email on delivery                                                                                                                                              | ✅ Support → Reviews & Q&A: publish / hide, answer                      | ✅ reviews + reply, questions + answer                                  | ✅ rating on product page, reviews with star filter, write / edit review, Q&A, JSON-LD rating                                | **Done** |
-| 14  | **Wishlist** (+ back-in-stock alerts) | ✅ save / remove / move to cart, price-drop sweep (email), back-in-stock subscription                                                                                                                                                                                                                                             | –                                                                       | –                                                                       | ✅ ♡ Save on product page, wishlist page, header link, Notify me on sold-out options                                         | **Done** |
-| 15  | **Coupons & promotions**              | ✅ discount engine (flash sale, buy X get Y, tiers, coupons: %, fixed, free shipping, limits, dates, scopes, stacking), per-seller allocation, atomic usage count, discounted refunds                                                                                                                                             | ✅ coupons, automatic discounts                                         | ✅ own coupons (seller-funded)                                          | ✅ coupon box + discount lines at checkout                                                                                   | **Done** |
-| 16  | **Loyalty & gift cards**              | ✅ points ledger (earn on delivery × tier, signup / review / referral bonuses, FIFO expiry), redeem at checkout, gift cards (issue, redeem, restore), fully covered orders, restores on cancellation                                                                                                                              | ✅ tiers, customer points + adjust, gift cards (issue, adjust, disable) | –                                                                       | ✅ points page + referral link, use points / gift card at checkout                                                           | **Done** |
-| 17  | **Vendor payouts**                    | ✅ earnings per delivered sub-order (sales − commission − return refunds), hold `payouts.holdDays`, open returns wait, generate (min `payouts.minimumAmount`, never twice), sent / paid / failed, cancel frees orders, paid email                                                                                                 | ✅ Sellers → Payouts: generate, bank details, mark paid with reference  | ✅ Earnings (available / on hold), payout history                       | –                                                                                                                            | **Done** |
-| 18  | **CMS** (pages, banners, menus, FAQs) | ✅ block-based pages (safe typed blocks, slug per locale, SEO, publish), scheduled banners per placement, header / footer menus (two levels, replaced in one transaction), FAQs; public read endpoints                                                                                                                            | ✅ Content → Pages (block editor), Banners, Menus, FAQs                 | –                                                                       | ✅ /pages/[slug], home hero + mid banners, category banners, header & footer from menus (with fallbacks), FAQ page + JSON-LD | **Done** |
-| 19  | **Reports & dashboards**              | ✅ sales KPIs with previous-period comparison (gross sales, orders, AOV, items, commission, refunds, new customers, cancellation rate), day / week / month series in the store time zone (`store.timezone`), breakdowns by status & payment method, top products / sellers / categories, seller-scoped report, attention counters | ✅ Dashboard (to-dos + 30 days), Reports with date range + CSV export   | ✅ Dashboard (to-dos + 30 days), Analytics with date range + CSV export | –                                                                                                                            | **Done** |
-| 18b | **Blog**                              | ✅ posts (typed blocks like pages, tags, cover, SEO, author), scheduling via future publish date, categories (no delete while used), public list with category / tag filters and pagination, post with related posts, sitemap of pages + posts                                                                                    | ✅ Content → Blog: posts (status tabs, block editor) and categories     | –                                                                       | ✅ /blog with category chips, tags and paging, /blog/[slug] with JSON-LD and related posts, sitemap                          | **Done** |
-
-## Phase 4: Scope completion (audit of docs/scope.md vs what is built)
-
-| #   | Entity                             | Covers (scope section)                                                                                                                                                        | Status                        |
-| --- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| 20  | **Account & auth completion**      | Email verification, forgot / reset password, email OTP login, Google OAuth, profile + change password, email preferences, account deletion request (3.4)                      | **Done**                      |
-| 21  | **Search & discovery**             | Search page with typo-tolerant search + suggestions, brand pages, seller store pages, recently viewed, related / frequently bought together, product view tracking (3.2, 3.3) | **Done**                      |
-| 22  | **Support & disputes**             | Contact form → ticket, admin ticket inbox (assign, priority, email replies, internal notes), customer ↔ seller disputes (3.8, 5.15, 5.7)                                      | Deferred (RAG support import) |
-| 23  | **Customers admin**                | Customer list & profile (orders, addresses, points), segments (new, repeat, high-value, inactive), block / unblock (5.6)                                                      | **Done**                      |
-| 24  | **Roles, staff & system settings** | Roles & granular permissions, admin users, audit log viewer, store settings & maintenance mode, seller staff accounts (5.18, 4.6)                                             | **Done**                      |
-| 25  | **Commission rules**               | Global / per-category / per-seller commission applied at checkout (5.7)                                                                                                       | **Done**                      |
-| 26  | **Taxes, currencies & languages**  | Tax classes & regional rates (inclusive / exclusive) at checkout, currency switcher with exchange rates, storefront languages (5.13)                                          | **Done**                      |
-| 27  | **Payment settings & logs**        | Enable / disable gateways, credentials, COD by zone, transaction & webhook logs (5.12)                                                                                        | **Done**                      |
-| 28  | **Email marketing**                | Newsletter subscribers, campaigns to segments with scheduling, abandoned-cart sequence, win-back (5.14)                                                                       | **Done**                      |
-| 29  | **Email templates & logs**         | Template editor (subject / blocks overrides) and email log viewer (5.18, 6)                                                                                                   | **Done**                      |
-| 30  | **SEO tools**                      | Redirect manager (301), canonical URLs, full sitemap (products, categories, brands, stores), Organization / Breadcrumb structured data (5.17)                                 | **Done**                      |
-| 31  | **Documents & bulk tools**         | Invoice PDF, packing slips, order notes, manual orders, reorder / buy now, CSV product import / export (3.7, 4.2, 4.4, 5.2, 5.4)                                              | **Done**                      |
-| 32  | **Reports extras**                 | Customer, coupon, tax, inventory & abandoned-cart reports, conversion rate, scheduled report emails (5.1, 5.16, 4.6)                                                          | Next                          |
-| 33a | **Support assistant (chat)**       | RAG assistant (`services/support-ai`) behind `/support/assistant`; store look-ups (own orders, products) read-only; storefront chat widget                                    | Done                          |
-| 33b | **Support tickets** (was 22)       | "Talk to a person" → ticket in the API, admin inbox (assign, replies, notes), live updates                                                                                    | Next                          |
-
-Later (optional, not in scope doc): branches / multi-location.
+2. `apps/api`: DTOs, service with business rules, controller, unit tests (+ migration if the schema changes)
+3. `packages/api-client`: endpoint functions + query keys
+4. `packages/ui`: only if a new reusable component is needed
+5. Screens in `apps/admin` / `apps/web`
+6. Seed data, then update this file and `CREDENTIALS.md` / `docs/architecture.md` if needed

@@ -35,7 +35,7 @@ overwrites an existing user.
   Couriers: Own delivery, TCS, Leopards Courier (no tracking links; add them in Delivery zones → Couriers).
 - Payments: **Cash on delivery only** (no fee, no limit). The test card gateway exists but is off.
 - Pages: About, Products & Services, Delivery policy, Return policy, Terms, Privacy. Header/footer menus. FAQs.
-- Settings: motto, 7-day returns, no tax, no reward points, no commission, products publish immediately.
+- Settings: motto, 7-day returns, guest checkout on, reviews published straight away, questions approved first.
 
 ## Test walkthrough (5 minutes)
 

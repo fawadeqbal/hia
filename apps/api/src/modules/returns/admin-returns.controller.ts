@@ -13,7 +13,7 @@ import { ReturnsService } from './returns.service';
 
 @ApiTags('Admin · Returns')
 @ApiBearerAuth()
-@Roles(Role.ADMIN, Role.SUPPORT_AGENT)
+@Roles(Role.ADMIN)
 @Controller('admin/returns')
 export class AdminReturnsController {
   constructor(private readonly returns: ReturnsService) {}

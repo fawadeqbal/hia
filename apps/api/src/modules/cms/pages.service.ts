@@ -8,10 +8,8 @@ import { parsePageContent } from './cms-rules';
 import { toPageDto, toPageListItem } from './cms.mapper';
 import type { CreatePageDto, UpdatePageDto } from './dto/page.dto';
 
-export const DEFAULT_LOCALE = 'en';
-
 /**
- * Content pages (About, Terms…). Rules: slug unique per locale, content validated block by block,
+ * Content pages (About, Terms…). Rules: slug unique, content validated block by block,
  * publishedAt set the first time a page is published.
  */
 @Injectable()
@@ -32,12 +30,10 @@ export class PagesService {
 
   async create(dto: CreatePageDto, actorId?: string): Promise<PageDto> {
     const content = parsePageContent(dto.content);
-    const locale = dto.locale ?? DEFAULT_LOCALE;
     const created = await this.prisma.page.create({
       data: {
         title: dto.title,
-        slug: await this.resolveSlug(dto.slug, dto.title, locale),
-        locale,
+        slug: await this.resolveSlug(dto.slug, dto.title),
         content: content as unknown as Prisma.InputJsonValue,
         status: dto.status,
         seoTitle: dto.seoTitle ?? null,
@@ -57,9 +53,7 @@ export class PagesService {
 
   async update(id: string, dto: UpdatePageDto, actorId?: string): Promise<PageDto> {
     const existing = await this.findOrThrow(id);
-    const locale = dto.locale ?? existing.locale;
-    const slugChanged =
-      (dto.slug !== undefined && dto.slug !== existing.slug) || locale !== existing.locale;
+    const slugChanged = dto.slug !== undefined && dto.slug !== existing.slug;
     const firstPublish = dto.status === 'PUBLISHED' && existing.status !== 'PUBLISHED';
 
     const updated = await this.prisma.page.update({
@@ -67,14 +61,8 @@ export class PagesService {
       data: {
         title: dto.title,
         slug: slugChanged
-          ? await this.resolveSlug(
-              dto.slug ?? existing.slug,
-              dto.title ?? existing.title,
-              locale,
-              id,
-            )
+          ? await this.resolveSlug(dto.slug ?? existing.slug, dto.title ?? existing.title, id)
           : undefined,
-        locale: dto.locale,
         content:
           dto.content !== undefined
             ? (parsePageContent(dto.content) as unknown as Prisma.InputJsonValue)
@@ -114,19 +102,14 @@ export class PagesService {
     return page;
   }
 
-  private resolveSlug(
-    requested: string | undefined,
-    source: string,
-    locale: string,
-    excludeId?: string,
-  ) {
+  private resolveSlug(requested: string | undefined, source: string, excludeId?: string) {
     return uniqueSlug({
       requested,
       source,
       entity: 'page',
       isTaken: async (slug) =>
         (await this.prisma.page.findFirst({
-          where: { slug, locale, ...(excludeId ? { NOT: { id: excludeId } } : {}) },
+          where: { slug, ...(excludeId ? { NOT: { id: excludeId } } : {}) },
           select: { id: true },
         })) !== null,
     });

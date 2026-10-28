@@ -3,16 +3,10 @@
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": "./",
-    "types": [
-      "node",
-      "jest"
-    ],
+    "types": ["node", "jest"],
     "declaration": false,
     "declarationMap": false,
     "incremental": false
   },
-  "include": [
-    "src",
-    "test"
-  ]
+  "include": ["src", "test"]
 }

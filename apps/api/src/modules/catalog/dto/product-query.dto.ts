@@ -29,8 +29,6 @@ export class ProductQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   category?: string;
-  @ApiPropertyOptional({ description: 'Brand slug' }) @IsOptional() @IsString() brand?: string;
-  @ApiPropertyOptional({ description: 'Vendor slug' }) @IsOptional() @IsString() vendor?: string;
   @ApiPropertyOptional() @IsOptional() @Type(() => Number) @IsNumber() @Min(0) minPrice?: number;
   @ApiPropertyOptional() @IsOptional() @Type(() => Number) @IsNumber() @Min(0) maxPrice?: number;
   @ApiPropertyOptional({ enum: PRODUCT_SORTS })

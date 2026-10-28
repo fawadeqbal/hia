@@ -104,12 +104,6 @@ export function ProductReviews({ productId, slug }: { productId: string; slug: s
               {r.verified ? ' · Verified purchase' : ''}
             </p>
             {r.body ? <p className="whitespace-pre-line text-sm text-gray-700">{r.body}</p> : null}
-            {r.vendorReply ? (
-              <div className="mt-2 rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
-                <p className="text-xs font-semibold uppercase text-gray-500">Reply from the shop</p>
-                {r.vendorReply}
-              </div>
-            ) : null}
           </article>
         ))}
         {data && data.meta.totalPages > 1 ? (

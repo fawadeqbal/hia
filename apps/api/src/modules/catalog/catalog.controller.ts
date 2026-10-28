@@ -5,16 +5,12 @@ import { ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import type {
   AttributeDto,
-  BrandDto,
   CategoryTreeNode,
   Paginated,
-  PublicBrandPage,
-  PublicStorePage,
   StorefrontProductCard,
   StorefrontProductDetail,
 } from '@ecommerce/types';
 import { AttributesService } from './attributes/attributes.service';
-import { BrandsService } from './brands/brands.service';
 import { CatalogService } from './catalog.service';
 import { DiscoveryService } from './discovery.service';
 import { BySlugsQueryDto, RecordViewDto } from './dto/discovery.dto';
@@ -25,7 +21,6 @@ import { ProductQueryDto } from './dto/product-query.dto';
 export class CatalogController {
   constructor(
     private readonly catalogService: CatalogService,
-    private readonly brandsService: BrandsService,
     private readonly attributesService: AttributesService,
     private readonly discovery: DiscoveryService,
   ) {}
@@ -56,18 +51,6 @@ export class CatalogController {
   }
 
   @Public()
-  @Get('brands/:slug')
-  brand(@Param('slug') slug: string): Promise<PublicBrandPage> {
-    return this.discovery.brandPage(slug);
-  }
-
-  @Public()
-  @Get('stores/:slug')
-  store(@Param('slug') slug: string): Promise<PublicStorePage> {
-    return this.discovery.storePage(slug);
-  }
-
-  @Public()
   @Get('products/:slug')
   getProduct(@Param('slug') slug: string): Promise<StorefrontProductDetail> {
     return this.catalogService.getProduct(slug);
@@ -80,18 +63,12 @@ export class CatalogController {
   }
 
   @Public()
-  @Get('brands')
-  brands(): Promise<BrandDto[]> {
-    return this.brandsService.listActive();
-  }
-
-  @Public()
   @Get('attributes')
   attributes(): Promise<AttributeDto[]> {
     return this.attributesService.listFilterable();
   }
 
-  /** Every attribute (used by the seller center variant builder). */
+  /** Every attribute (used by the admin variant builder). */
   @Public()
   @Get('attributes/all')
   allAttributes(): Promise<AttributeDto[]> {

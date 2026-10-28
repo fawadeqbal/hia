@@ -24,8 +24,8 @@ const TABS: { value: Filter; label: string }[] = [
   { value: 'ALL', label: 'All' },
 ];
 
-/** Questions list with an answer dialog (seller: own products; admin: all, with moderation). */
-export function QuestionList({ admin = false }: { admin?: boolean }) {
+/** Customer questions with an answer dialog and moderation. */
+export function QuestionList() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<Filter>('UNANSWERED');
   const [page, setPage] = useState(1);
@@ -33,17 +33,13 @@ export function QuestionList({ admin = false }: { admin?: boolean }) {
   const [text, setText] = useState('');
   const params = { page, unanswered: filter === 'UNANSWERED' ? true : undefined };
   const { data, isLoading, error } = useQuery({
-    queryKey: admin
-      ? queryKeys.reviews.adminQuestions(params)
-      : queryKeys.reviews.vendorQuestions(params),
-    queryFn: () =>
-      (admin ? reviewsApi.adminQuestions : reviewsApi.vendorQuestions)({ ...params, limit: 20 }),
+    queryKey: queryKeys.reviews.adminQuestions(params),
+    queryFn: () => reviewsApi.adminQuestions({ ...params, limit: 20 }),
     placeholderData: keepPreviousData,
   });
   const refresh = () => queryClient.invalidateQueries({ queryKey: queryKeys.reviews.all });
   const answer = useMutation({
-    mutationFn: () =>
-      (admin ? reviewsApi.adminAnswer : reviewsApi.vendorAnswer)(answering!.id, { body: text }),
+    mutationFn: () => reviewsApi.adminAnswer(answering!.id, { body: text }),
     onSuccess: async () => {
       await refresh();
       setAnswering(null);
@@ -105,7 +101,7 @@ export function QuestionList({ admin = false }: { admin?: boolean }) {
                 Answer
               </Button>
             ) : null}
-            {admin && q.status !== 'APPROVED' ? (
+            {q.status !== 'APPROVED' ? (
               <Button
                 size="sm"
                 variant="outline"
@@ -114,7 +110,7 @@ export function QuestionList({ admin = false }: { admin?: boolean }) {
                 Publish
               </Button>
             ) : null}
-            {admin && q.status !== 'REJECTED' ? (
+            {q.status !== 'REJECTED' ? (
               <Button
                 size="sm"
                 variant="outline"

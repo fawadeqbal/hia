@@ -74,7 +74,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     name: product.name,
     image: product.images.map((i) => i.url),
     description: product.shortDescription ?? undefined,
-    brand: product.brand ? { '@type': 'Brand', name: product.brand.name } : undefined,
     aggregateRating:
       product.ratingCount > 0
         ? {
@@ -136,14 +135,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
         <div className="flex flex-col gap-7">
           <div className="flex flex-col gap-2.5 border-b border-gray-200 pb-6">
-            {product.brand ? (
-              <Link
-                href={`/brands/${product.brand.slug}`}
-                className="type-eyebrow link-grow self-start text-gray-500 hover:text-gray-900"
-              >
-                {product.brand.name}
-              </Link>
-            ) : null}
             <h1 className="text-balance text-[clamp(30px,3.2vw,44px)] font-bold leading-[1.02] tracking-heading">
               {product.name}
             </h1>

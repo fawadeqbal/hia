@@ -132,10 +132,10 @@ export class AccountService {
     const roles = user.roles.map((r) => r.role.name as Role);
     if (
       user.ownedVendors.length > 0 ||
-      roles.some((r) => STAFF_ROLES.includes(r) || r === 'VENDOR' || r === 'VENDOR_STAFF')
+      roles.some((r) => STAFF_ROLES.includes(r) || r === 'VENDOR')
     ) {
       throw new ConflictException(
-        'Seller and staff accounts are closed by an administrator. Please contact support.',
+        'Shop and admin accounts cannot be deleted here. Please contact support.',
       );
     }
     const open = await this.prisma.order.count({

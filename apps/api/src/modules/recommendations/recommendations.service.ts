@@ -7,7 +7,7 @@ import { VISIBLE, cardsForIds } from '../catalog/product-cards';
 const RELATED = 8;
 const TOGETHER = 4;
 
-/** "Related products" (same category, then brand) and "frequently bought together" (order co-occurrence). */
+/** "Related products" (same category) and "frequently bought together" (order co-occurrence). */
 @Injectable()
 export class RecommendationsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -15,7 +15,7 @@ export class RecommendationsService {
   async forProduct(slug: string): Promise<ProductRecommendations> {
     const product = await this.prisma.product.findFirst({
       where: { ...VISIBLE, slug },
-      select: { id: true, categoryId: true, brandId: true },
+      select: { id: true, categoryId: true },
     });
     if (!product) throw new NotFoundException('Product not found');
 
@@ -44,20 +44,7 @@ export class RecommendationsService {
       take: RELATED,
       select: { id: true },
     });
-    let relatedIds = sameCategory.map((p) => p.id);
-    if (relatedIds.length < RELATED && product.brandId) {
-      const sameBrand = await this.prisma.product.findMany({
-        where: {
-          ...VISIBLE,
-          brandId: product.brandId,
-          id: { notIn: [product.id, ...togetherIds, ...relatedIds] },
-        },
-        orderBy: { soldCount: 'desc' },
-        take: RELATED - relatedIds.length,
-        select: { id: true },
-      });
-      relatedIds = [...relatedIds, ...sameBrand.map((p) => p.id)];
-    }
+    const relatedIds = sameCategory.map((p) => p.id);
 
     const [related, boughtTogether] = await Promise.all([
       cardsForIds(this.prisma, relatedIds),

@@ -1,21 +1,10 @@
-import { toCents, fromCents, type OrderStatus } from '@ecommerce/types';
+import type { OrderStatus } from '@ecommerce/types';
 
 /** Flat shipping per vendor sub-order, free above a threshold (0 = never free). */
 export function shippingFor(subtotal: number, flatRate: number, freeAbove: number): number {
   if (subtotal <= 0) return 0;
   if (freeAbove > 0 && subtotal >= freeAbove) return 0;
   return flatRate;
-}
-
-/** Commission on the item subtotal (shipping goes to the vendor who ships). */
-export function commissionFor(subtotal: number, ratePercent: number): number {
-  return fromCents(Math.round((toCents(subtotal) * ratePercent) / 100));
-}
-
-/** Sum of per-line commissions, each rounded to the cent (lines can carry different rates). */
-export function commissionForLines(lines: { amount: number; rate: number }[]): number {
-  const cents = lines.reduce((sum, l) => sum + Math.round((toCents(l.amount) * l.rate) / 100), 0);
-  return fromCents(cents);
 }
 
 export interface WarehouseStock {

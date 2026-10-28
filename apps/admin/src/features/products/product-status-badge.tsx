@@ -3,9 +3,7 @@ import { Badge } from '@ecommerce/ui';
 
 const TONES: Record<ProductStatus, 'gray' | 'yellow' | 'green' | 'red' | 'blue'> = {
   DRAFT: 'gray',
-  PENDING_REVIEW: 'yellow',
   PUBLISHED: 'green',
-  REJECTED: 'red',
   ARCHIVED: 'gray',
 };
 

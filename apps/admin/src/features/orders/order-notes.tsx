@@ -10,32 +10,23 @@ import {
   Card,
   CardTitle,
   Checkbox,
-  Select,
   Textarea,
   formatDateTime,
 } from '@ecommerce/ui';
 import { documentsApi, queryKeys } from '@/lib/api-client';
 
-/** Internal / customer-visible notes on an order. Staff: whole order or one seller's part. */
-export function OrderNotes({
-  id,
-  sellers,
-}: {
-  id: string;
-  sellers?: { id: string; name: string }[];
-}) {
+/** Internal or customer-visible notes on an order. */
+export function OrderNotes({ id }: { id: string }) {
   const queryClient = useQueryClient();
   const key = queryKeys.orderNotes('admin', id);
   const [content, setContent] = useState('');
   const [visible, setVisible] = useState(false);
-  const [target, setTarget] = useState('');
   const { data, error } = useQuery({ queryKey: key, queryFn: () => documentsApi.adminNotes(id) });
   const add = useMutation({
     mutationFn: () =>
       documentsApi.addAdminNote(id, {
         content: content.trim(),
         isCustomerVisible: visible,
-        vendorOrderId: target || null,
       }),
     onSuccess: async () => {
       setContent('');
@@ -57,10 +48,6 @@ export function OrderNotes({
             <li key={n.id} className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm">
               <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                 <span className="font-medium text-gray-700">{n.author.name}</span>
-                <Badge tone={n.author.kind === 'SELLER' ? 'blue' : 'gray'}>
-                  {n.author.kind === 'SELLER' ? 'Shop' : 'Staff'}
-                </Badge>
-                {n.vendorName ? <span>· {n.vendorName}</span> : null}
                 <span>· {formatDateTime(n.createdAt)}</span>
                 {n.isCustomerVisible ? (
                   <Badge tone="yellow">Visible to customer</Badge>
@@ -92,23 +79,9 @@ export function OrderNotes({
         value={content}
         onChange={(e) => setContent(e.target.value)}
       />
-      {sellers && sellers.length > 1 ? (
-        <Select
-          aria-label="About"
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          options={[
-            { value: '', label: 'Whole order' },
-            ...sellers.map((s) => ({
-              value: s.id,
-              label: `Only ${s.name}'s part (the seller sees it)`,
-            })),
-          ]}
-        />
-      ) : null}
       <Checkbox
         label="Show to the customer"
-        description="Off = only staff see it."
+        description="Off = only you see it."
         checked={visible}
         onChange={(e) => setVisible(e.target.checked)}
       />

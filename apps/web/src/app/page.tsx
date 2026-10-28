@@ -1,10 +1,9 @@
 /* eslint-disable @next/next/no-img-element -- images are served from object storage */
 import Link from 'next/link';
-import type { BrandDto, CategoryTreeNode, StorefrontProductCard } from '@ecommerce/types';
+import type { CategoryTreeNode, StorefrontProductCard } from '@ecommerce/types';
 import { cn } from '@ecommerce/ui';
 import { ProductCard } from '@/components/catalog/product-card';
 import { BannerStrip } from '@/components/cms/banner-strip';
-import { BrandMarquee } from '@/components/home/brand-marquee';
 import { ProductTabs } from '@/components/home/product-tabs';
 import { Reveal } from '@/components/home/reveal';
 import { HeroCarousel, type HeroSlide } from '@/components/home/hero-carousel';
@@ -12,7 +11,7 @@ import { ArrowLink, SectionHead } from '@/components/home/section-head';
 import { container } from '@/components/layout/container';
 import { getBanners } from '@/lib/cms';
 import { getStoreSettings, storeName, storeTagline } from '@/lib/store-settings';
-import { brandsApi, categoriesApi, storefrontApi } from '@/lib/api-client';
+import { categoriesApi, storefrontApi } from '@/lib/api-client';
 
 // Live data: new arrivals and offers change as products are published and discounted.
 export const dynamic = 'force-dynamic';
@@ -124,11 +123,10 @@ async function categoryImages(
 }
 
 export default async function HomePage() {
-  const [hero, mid, tree, brands, featured, popular, latest, onSale, store] = await Promise.all([
+  const [hero, mid, tree, featured, popular, latest, onSale, store] = await Promise.all([
     getBanners('home.hero'),
     getBanners('home.mid'),
     safe(categoriesApi.tree(), [] as CategoryTreeNode[]),
-    safe(brandsApi.list(), [] as BrandDto[]),
     products({ featured: true, limit: 10 }),
     products({ sort: 'popular', limit: 20 }),
     products({ sort: 'newest', limit: 10 }),
@@ -409,22 +407,6 @@ export default async function HomePage() {
         {mid.length > 0 ? (
           <Reveal>
             <BannerStrip banners={mid} variant="strip" />
-          </Reveal>
-        ) : null}
-
-        {brands.length > 0 ? (
-          <Reveal>
-            <section className="flex flex-col gap-7">
-              <SectionHead
-                eyebrow="Official stores"
-                title="Shop the brands"
-                href="/products"
-                linkLabel="All products"
-              />
-              <div className="-mx-4 sm:-mx-6 lg:-mx-10">
-                <BrandMarquee brands={brands.slice(0, 24)} />
-              </div>
-            </section>
           </Reveal>
         ) : null}
 

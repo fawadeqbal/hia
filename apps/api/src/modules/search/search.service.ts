@@ -14,10 +14,10 @@ export class SearchService {
 
   async suggest(raw: string): Promise<SearchSuggestions> {
     const q = normalizeQuery(raw, 60);
-    if (q.length < MIN_CHARS) return { products: [], categories: [], brands: [] };
+    if (q.length < MIN_CHARS) return { products: [], categories: [] };
     const scores = await searchScores(this.prisma, q);
     const topIds = [...scores.keys()].slice(0, 6);
-    const [products, categories, brands] = await Promise.all([
+    const [products, categories] = await Promise.all([
       this.prisma.product.findMany({
         where: { ...VISIBLE, id: { in: topIds } },
         select: {
@@ -30,11 +30,6 @@ export class SearchService {
         },
       }),
       this.prisma.category.findMany({
-        where: { isActive: true, name: { contains: q, mode: 'insensitive' } },
-        select: { name: true, slug: true },
-        take: 3,
-      }),
-      this.prisma.brand.findMany({
         where: { isActive: true, name: { contains: q, mode: 'insensitive' } },
         select: { name: true, slug: true },
         take: 3,
@@ -57,7 +52,6 @@ export class SearchService {
           : [];
       }),
       categories,
-      brands,
     };
   }
 

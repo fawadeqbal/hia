@@ -19,7 +19,6 @@ export const PAYMENT_METHOD_DESCRIPTIONS: Partial<Record<PaymentMethod, string>>
   CARD: 'Visa, Mastercard or UnionPay debit / credit card.',
   WALLET: 'Mobile wallet such as JazzCash or Easypaisa.',
   BANK_TRANSFER: 'Pay directly from your bank account.',
-  GIFT_CARD: 'Fully covered by your gift card / points — nothing else to pay.',
 };
 
 /** One row of the payment picker at checkout. */

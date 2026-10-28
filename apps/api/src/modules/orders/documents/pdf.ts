@@ -1,13 +1,12 @@
 import PDFDocument from 'pdfkit';
 
-/** Plain data for one invoice page (one seller's sub-order). Amounts are already formatted. */
+/** Plain data for one invoice page. Amounts are already formatted. */
 export interface InvoiceData {
   number: string;
   issuedAt: Date;
   orderNumber: string;
   placedAt: Date;
   store: { name: string; address: string | null; email: string | null; phone: string | null };
-  seller: { name: string; email: string; phone: string | null };
   billTo: string[];
   payment: string;
   lines: {
@@ -16,7 +15,6 @@ export interface InvoiceData {
     qty: number;
     unit: string;
     total: string;
-    tax: string | null;
   }[];
   totals: { label: string; value: string; strong?: boolean }[];
   notes: string[];
@@ -32,16 +30,16 @@ export interface PackingSlipData {
   customerNote: string | null;
 }
 
-/** Storefront design tokens ("Bazaar Bright"), so documents match the shop. */
+/** HIA website colours, so documents match the shop. */
 const C = {
-  brand: '#6445df',
-  brandDark: '#532bc7',
-  brandSoft: '#ebebff',
-  accent: '#ffd32e',
-  ink: '#1b1830',
-  muted: '#6c6883',
-  line: '#e6e3f0',
-  canvas: '#f5f4fa',
+  brand: '#b6461c',
+  brandDark: '#933818',
+  brandSoft: '#fae5d9',
+  accent: '#f0bd3f',
+  ink: '#1c1a17',
+  muted: '#6b645b',
+  line: '#e7e1d8',
+  canvas: '#f6f2ec',
   white: '#ffffff',
 };
 const PAGE = { w: 595.28, h: 841.89, x: 40, right: 555.28 };
@@ -115,7 +113,7 @@ function band(doc: PDFKit.PDFDocument, store: string, title: string, meta: [stri
   // meta pairs, right aligned
   let y = 38;
   for (const [k, v] of meta) {
-    put(doc, k, 330, y, { size: 8, color: '#d8d7ff', width: 90, align: 'right' });
+    put(doc, k, 330, y, { size: 8, color: '#f6d3c2', width: 90, align: 'right' });
     put(doc, v, 425, y, { size: 9.5, bold: true, color: C.white, width: 130, align: 'right' });
     y += 17;
   }
@@ -181,7 +179,7 @@ function footer(doc: PDFKit.PDFDocument, lines: string[], page: string) {
   put(doc, page, PAGE.right - 60, y + 12, { size: 7.5, color: C.muted, width: 60, align: 'right' });
 }
 
-/** One page per invoice (each seller's sub-order of the order). */
+/** One page per invoice. */
 export function renderInvoices(
   invoices: InvoiceData[],
   opts: { compress?: boolean } = {},
@@ -200,15 +198,12 @@ export function renderInvoices(
     const top = 152;
     const gap = 12;
     const cw = (WIDTH - gap * 2) / 3;
-    const sold = [
-      inv.seller.name,
-      inv.seller.email,
-      inv.seller.phone ?? '',
-      `via ${inv.store.name}`,
-    ];
+    const sold = [inv.store.name, inv.store.address, inv.store.email, inv.store.phone].filter(
+      (x): x is string => !!x,
+    );
     // All three cards share the tallest one's height, so nothing spills out.
     const cardH = Math.max(92, cardHeight(sold), cardHeight(inv.billTo));
-    card(doc, PAGE.x, top, cw, cardH, 'Sold by', sold);
+    card(doc, PAGE.x, top, cw, cardH, 'From', sold);
     card(doc, PAGE.x + cw + gap, top, cw, cardH, 'Bill / ship to', inv.billTo);
     const [method, status] = inv.payment.split(' · ');
     card(doc, PAGE.x + (cw + gap) * 2, top, cw, cardH, 'Payment', [method ?? inv.payment]);
@@ -226,7 +221,7 @@ export function renderInvoices(
 
     // Items table
     let y = top + cardH + 24;
-    const col = { name: PAGE.x + 14, qty: 330, unit: 370, tax: 440, total: 495 };
+    const col = { name: PAGE.x + 14, qty: 330, unit: 375, total: 460 };
     doc.roundedRect(PAGE.x, y, WIDTH, 26, 8).fill(C.brandSoft);
     const head = (s: string, x: number, w?: number) =>
       put(doc, s, x, y + 9, {
@@ -238,8 +233,7 @@ export function renderInvoices(
       });
     head('ITEM', col.name);
     head('QTY', col.qty, 30);
-    head('PRICE', col.unit, 62);
-    head('TAX', col.tax, 48);
+    head('PRICE', col.unit, 70);
     head('TOTAL', col.total, PAGE.right - 14 - col.total);
     y += 34;
 
@@ -254,7 +248,7 @@ export function renderInvoices(
         doc.addPage();
         y = 50;
       }
-      if (i % 2 === 1) doc.roundedRect(PAGE.x, y - 4, WIDTH, rowH, 6).fill('#faf9fd');
+      if (i % 2 === 1) doc.roundedRect(PAGE.x, y - 4, WIDTH, rowH, 6).fill('#fbf8f4');
       put(doc, l.name, col.name, y, {
         size: 9.5,
         bold: true,
@@ -264,8 +258,7 @@ export function renderInvoices(
       });
       put(doc, l.sku, col.name, y + nameH + 1, { size: 7.5, color: C.muted });
       put(doc, String(l.qty), col.qty, y, { size: 9.5, width: 30, align: 'right' });
-      put(doc, l.unit, col.unit, y, { size: 9.5, width: 62, align: 'right' });
-      put(doc, l.tax ?? '—', col.tax, y, { size: 8.5, color: C.muted, width: 48, align: 'right' });
+      put(doc, l.unit, col.unit, y, { size: 9.5, width: 70, align: 'right' });
       put(doc, l.total, col.total, y, {
         size: 9.5,
         bold: true,
@@ -339,7 +332,7 @@ export function renderInvoices(
   return toBuffer(doc);
 }
 
-/** One page per seller parcel: what to pack, no prices. */
+/** One page per parcel: what to pack, no prices. */
 export function renderPackingSlips(
   slips: PackingSlipData[],
   opts: { compress?: boolean } = {},

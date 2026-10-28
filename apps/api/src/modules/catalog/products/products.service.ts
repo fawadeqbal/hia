@@ -4,17 +4,13 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { Prisma, Vendor } from '@ecommerce/database';
 import {
-  EmailTemplateKey,
   PRODUCT_STATUS_LABELS,
   productSubmitProblems,
   variantComboKey,
-  type EmailJobPayload,
   type Paginated,
   type ProductDto,
   type ProductListItem,
@@ -24,7 +20,6 @@ import { paginate } from '../../../common/dto/pagination.dto';
 import { uniqueSlug } from '../../../common/utils/unique-slug';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { AuditService } from '../../audit/audit.service';
-import { NotificationsService } from '../../notifications/notifications.service';
 import type {
   CreateProductDto,
   ManageProductQueryDto,
@@ -39,34 +34,26 @@ import {
   type ProductWithDetail,
 } from './product.mapper';
 
-const APPROVAL_SETTING = 'marketplace.productApprovalRequired';
-
 /** Plain filter shape for list(); a DTO spread loses its class getters, so don't type this as the DTO. */
 type ProductListParams = Pick<
   ManageProductQueryDto,
-  'page' | 'limit' | 'status' | 'search' | 'categoryId' | 'vendorId'
->;
+  'page' | 'limit' | 'status' | 'search' | 'categoryId'
+> & { vendorId: string };
 
 /**
- * Products.
- * Seller lifecycle: DRAFT → submit → PENDING_REVIEW (or PUBLISHED when approval is off)
- *                   any → ARCHIVED → restore → DRAFT;  delete = soft delete.
- * Admin moderation: PENDING_REVIEW → approve → PUBLISHED;  PENDING_REVIEW | PUBLISHED → reject → REJECTED (reason).
+ * Products of the shop (managed in the admin panel through the store routes).
+ * Lifecycle: DRAFT → publish → PUBLISHED;  any → ARCHIVED → restore → DRAFT;  delete = soft delete.
  * Variants: a simple product has one default variant without options; an option product has 1..100
  *           variants, each a unique combination of one value per attribute. basePrice = cheapest active variant.
  */
 @Injectable()
 export class ProductsService {
-  private readonly logger = new Logger(ProductsService.name);
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
-    private readonly notifications: NotificationsService,
-    private readonly config: ConfigService,
   ) {}
 
-  // ================================================================ seller
+  // ================================================================ shop
 
   async vendorList(
     userId: string,
@@ -83,7 +70,7 @@ export class ProductsService {
 
   async create(userId: string, dto: CreateProductDto): Promise<ProductDto> {
     const vendor = await this.vendorOf(userId, { requireApproved: true });
-    await this.assertRefs(dto.categoryId, dto.brandId);
+    await this.assertCategory(dto.categoryId);
     assertPrices(dto.basePrice, dto.compareAtPrice);
     await this.assertSkusFree([dto.sku]);
 
@@ -93,7 +80,6 @@ export class ProductsService {
       data: {
         vendorId: vendor.id,
         categoryId: dto.categoryId,
-        brandId: dto.brandId || null,
         name: dto.name,
         slug: await this.resolveSlug(dto.slug, dto.name),
         shortDescription: dto.shortDescription ?? null,
@@ -103,7 +89,6 @@ export class ProductsService {
         compareAtPrice: dto.compareAtPrice ?? null,
         currency,
         weightGrams: dto.weightGrams ?? null,
-        taxClass: dto.taxClass ?? null,
         videoUrl: dto.videoUrl ?? null,
         seoTitle: dto.seoTitle ?? null,
         seoDescription: dto.seoDescription ?? null,
@@ -143,9 +128,7 @@ export class ProductsService {
     const existing = await this.findOwned(vendor.id, id);
     const hasOptions = existing.variants.some((v) => v.attributes.length > 0);
 
-    if (dto.categoryId !== undefined || dto.brandId !== undefined) {
-      await this.assertRefs(dto.categoryId ?? existing.category.id, dto.brandId);
-    }
+    if (dto.categoryId !== undefined) await this.assertCategory(dto.categoryId);
 
     // Option products: price & SKU live on the variants (PUT /variants); ignore them here.
     const priceFields = hasOptions
@@ -182,7 +165,6 @@ export class ProductsService {
           name: dto.name,
           slug,
           categoryId: dto.categoryId,
-          brandId: dto.brandId === undefined ? undefined : dto.brandId || null,
           shortDescription: dto.shortDescription,
           description: dto.description,
           specifications:
@@ -191,7 +173,6 @@ export class ProductsService {
               : (dto.specifications as unknown as Prisma.InputJsonValue),
           ...priceFields,
           weightGrams: dto.weightGrams,
-          taxClass: dto.taxClass,
           videoUrl: dto.videoUrl,
           seoTitle: dto.seoTitle,
           seoDescription: dto.seoDescription,
@@ -351,23 +332,14 @@ export class ProductsService {
     return toProductDto(updated);
   }
 
-  /** DRAFT / REJECTED → PENDING_REVIEW (or straight to PUBLISHED when approval is turned off). */
+  /** DRAFT → PUBLISHED (visible on the website). */
   async submit(userId: string, id: string): Promise<ProductDto> {
     const vendor = await this.vendorOf(userId, { requireApproved: true });
     const product = await this.findOwned(vendor.id, id);
     const problems = productSubmitProblems(toProductDto(product));
     if (problems.length > 0)
-      throw new BadRequestException(`Not ready to submit: ${problems.join('; ')}`);
-
-    const target: ProductStatus = (await this.approvalRequired()) ? 'PENDING_REVIEW' : 'PUBLISHED';
-    return this.transition(
-      userId,
-      product,
-      ['DRAFT', 'REJECTED'],
-      target,
-      'catalog.product.submit',
-      { rejectionReason: null },
-    );
+      throw new BadRequestException(`Not ready to publish: ${problems.join('; ')}`);
+    return this.transition(userId, product, ['DRAFT'], 'PUBLISHED', 'catalog.product.publish');
   }
 
   async archive(userId: string, id: string): Promise<ProductDto> {
@@ -376,7 +348,7 @@ export class ProductsService {
     return this.transition(
       userId,
       product,
-      ['DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'REJECTED'],
+      ['DRAFT', 'PUBLISHED'],
       'ARCHIVED',
       'catalog.product.archive',
     );
@@ -405,55 +377,6 @@ export class ProductsService {
   }
 
   // ================================================================ admin
-
-  adminList(query: ManageProductQueryDto): Promise<Paginated<ProductListItem>> {
-    return this.list(query);
-  }
-
-  async adminGet(id: string): Promise<ProductDto> {
-    return toProductDto(await this.findAny(id));
-  }
-
-  async approve(id: string, actorId?: string): Promise<ProductDto> {
-    const product = await this.findAny(id);
-    const result = await this.transition(
-      actorId,
-      product,
-      ['PENDING_REVIEW'],
-      'PUBLISHED',
-      'catalog.product.approve',
-      {
-        rejectionReason: null,
-      },
-    );
-    await this.emailVendor(product, EmailTemplateKey.VENDOR_PRODUCT_APPROVED, {
-      heading: 'Your product is live',
-      body: `"${product.name}" was approved and is now visible to customers.`,
-    });
-    return result;
-  }
-
-  /** Rejects a product in review, or takes down a published one. */
-  async reject(id: string, reason: string, actorId?: string): Promise<ProductDto> {
-    const product = await this.findAny(id);
-    const wasPublished = product.status === 'PUBLISHED';
-    const result = await this.transition(
-      actorId,
-      product,
-      ['PENDING_REVIEW', 'PUBLISHED'],
-      'REJECTED',
-      'catalog.product.reject',
-      {
-        rejectionReason: reason,
-        isFeatured: false,
-      },
-    );
-    await this.emailVendor(product, EmailTemplateKey.VENDOR_PRODUCT_REJECTED, {
-      heading: wasPublished ? 'Your product was unpublished' : 'Your product needs changes',
-      body: `"${product.name}" ${wasPublished ? 'was removed from the store' : 'was not approved'}.\nReason: ${reason}\nUpdate it and submit it again.`,
-    });
-    return result;
-  }
 
   async setFeatured(id: string, isFeatured: boolean, actorId?: string): Promise<ProductDto> {
     const product = await this.findAny(id);
@@ -567,7 +490,6 @@ export class ProductsService {
     from: ProductStatus[],
     to: ProductStatus,
     action: string,
-    extra: Prisma.ProductUpdateInput = {},
   ): Promise<ProductDto> {
     const current = product.status as ProductStatus;
     if (!from.includes(current)) {
@@ -578,8 +500,8 @@ export class ProductsService {
     const updated = await this.prisma.product.update({
       where: { id: product.id },
       data: {
-        ...extra,
         status: to,
+        ...(to !== 'PUBLISHED' ? { isFeatured: false } : {}),
         ...(to === 'PUBLISHED' && !product.publishedAt ? { publishedAt: new Date() } : {}),
       },
       include: productDetailInclude,
@@ -589,8 +511,8 @@ export class ProductsService {
       action,
       entityType: 'Product',
       entityId: product.id,
-      before: { status: current, rejectionReason: product.rejectionReason },
-      after: { status: to, rejectionReason: updated.rejectionReason },
+      before: { status: current },
+      after: { status: to },
     });
     return toProductDto(updated);
   }
@@ -628,22 +550,15 @@ export class ProductsService {
     return product;
   }
 
-  private async assertRefs(categoryId: string, brandId: string | null | undefined) {
+  private async assertCategory(categoryId: string) {
     const category = await this.prisma.category.findUnique({
       where: { id: categoryId },
       select: { isActive: true },
     });
     if (!category || !category.isActive) throw new BadRequestException('Choose an active category');
-    if (brandId) {
-      const brand = await this.prisma.brand.findUnique({
-        where: { id: brandId },
-        select: { isActive: true },
-      });
-      if (!brand || !brand.isActive) throw new BadRequestException('Choose an active brand');
-    }
   }
 
-  /** SKUs are unique across the whole marketplace. `exceptIds` = variants allowed to hold them. */
+  /** SKUs are unique across the shop. `exceptIds` = variants allowed to hold them. */
   private async assertSkusFree(skus: string[], exceptIds: string[] = []) {
     const clashes = await this.prisma.productVariant.findMany({
       where: { sku: { in: skus }, ...(exceptIds.length ? { NOT: { id: { in: exceptIds } } } : {}) },
@@ -653,39 +568,6 @@ export class ProductsService {
       throw new ConflictException(
         `SKU already used by another product: ${clashes.map((c) => c.sku).join(', ')}`,
       );
-    }
-  }
-
-  private async approvalRequired(): Promise<boolean> {
-    const setting = await this.prisma.setting.findUnique({ where: { key: APPROVAL_SETTING } });
-    return setting ? setting.value !== false : true;
-  }
-
-  private async emailVendor(
-    product: ProductWithDetail,
-    template: EmailJobPayload['template'],
-    data: { heading: string; body: string },
-  ): Promise<void> {
-    try {
-      const vendor = await this.prisma.vendor.findUnique({
-        where: { id: product.vendor.id },
-        select: { email: true, ownerId: true },
-      });
-      if (!vendor) return;
-      const base = this.config.get<string>('NEXT_PUBLIC_ADMIN_URL', 'http://localhost:3001');
-      await this.notifications.sendEmail({
-        template,
-        to: vendor.email,
-        userId: vendor.ownerId,
-        data: {
-          ...data,
-          productName: product.name,
-          ctaLabel: 'Open product',
-          ctaUrl: `${base}/catalog/products/${product.id}`,
-        },
-      });
-    } catch (error) {
-      this.logger.error(`Could not queue ${template} for product ${product.id}: ${String(error)}`);
     }
   }
 

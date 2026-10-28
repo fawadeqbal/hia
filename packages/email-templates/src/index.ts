@@ -1,3 +1,2 @@
-export { renderEmail, fillPlaceholders, type RenderedEmail, type TemplateOverride } from './render';
-export { SAMPLE_EMAIL_DATA } from './sample-data';
+export { renderEmail, type RenderedEmail } from './render';
 export { templateRegistry } from './registry';

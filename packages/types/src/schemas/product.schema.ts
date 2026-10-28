@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { TAX_CLASSES, type TaxClass } from '../localization/localization';
 import {
   MAX_PRODUCT_IMAGES,
   SKU_REGEX,
@@ -11,13 +10,12 @@ import { emptyToNull, optionalSlugField, optionalUrlField } from './common';
 const MONEY_REGEX = /^\d{1,8}(\.\d{1,2})?$/;
 const isPositiveMoney = (v: string) => MONEY_REGEX.test(v) && Number(v) > 0;
 
-/** Product form (seller center). Prices/weights are strings so empty inputs stay empty. */
+/** Product form (admin). Prices/weights are strings so empty inputs stay empty. */
 export const productFormSchema = z
   .object({
     name: z.string().trim().min(3, 'At least 3 characters').max(200, 'At most 200 characters'),
     slug: optionalSlugField,
     categoryId: z.string().min(1, 'Choose a category'),
-    brandId: z.string(),
     shortDescription: z.string().max(300, 'At most 300 characters'),
     description: z.string().max(20000, 'Too long'),
     basePrice: z
@@ -38,7 +36,6 @@ export const productFormSchema = z
       .string()
       .trim()
       .refine((v) => v === '' || /^\d{1,7}$/.test(v), 'Whole grams only'),
-    taxClass: z.enum(TAX_CLASSES),
     videoUrl: optionalUrlField,
     seoTitle: z.string().max(70, 'At most 70 characters'),
     seoDescription: z.string().max(160, 'At most 160 characters'),
@@ -75,14 +72,12 @@ export const emptyProductForm: ProductFormValues = {
   name: '',
   slug: '',
   categoryId: '',
-  brandId: '',
   shortDescription: '',
   description: '',
   basePrice: '',
   compareAtPrice: '',
   sku: '',
   weightGrams: '',
-  taxClass: 'standard',
   videoUrl: '',
   seoTitle: '',
   seoDescription: '',
@@ -95,16 +90,12 @@ export function productToForm(p: ProductDto): ProductFormValues {
     name: p.name,
     slug: p.slug,
     categoryId: p.category.id,
-    brandId: p.brand?.id ?? '',
     shortDescription: p.shortDescription ?? '',
     description: p.description ?? '',
     basePrice: p.basePrice.toFixed(2),
     compareAtPrice: p.compareAtPrice === null ? '' : p.compareAtPrice.toFixed(2),
     sku: p.sku,
     weightGrams: p.weightGrams === null ? '' : String(p.weightGrams),
-    taxClass: (TAX_CLASSES as readonly string[]).includes(p.taxClass ?? '')
-      ? (p.taxClass as TaxClass)
-      : 'standard',
     videoUrl: p.videoUrl ?? '',
     seoTitle: p.seoTitle ?? '',
     seoDescription: p.seoDescription ?? '',
@@ -118,14 +109,12 @@ export function productFormToInput(f: ProductFormValues): ProductInput {
     name: f.name.trim(),
     slug: f.slug.trim() === '' ? undefined : f.slug.trim(),
     categoryId: f.categoryId,
-    brandId: f.brandId === '' ? null : f.brandId,
     shortDescription: emptyToNull(f.shortDescription),
     description: emptyToNull(f.description),
     basePrice: Number(f.basePrice),
     compareAtPrice: f.compareAtPrice === '' ? null : Number(f.compareAtPrice),
     sku: f.sku.trim(),
     weightGrams: f.weightGrams === '' ? null : Number(f.weightGrams),
-    taxClass: f.taxClass,
     videoUrl: emptyToNull(f.videoUrl),
     seoTitle: emptyToNull(f.seoTitle),
     seoDescription: emptyToNull(f.seoDescription),

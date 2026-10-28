@@ -33,7 +33,11 @@ const listInclude = {
 type InquiryListRow = Prisma.TicketGetPayload<{ include: typeof listInclude }>;
 
 const firstLine = (s: string, max = 120) => {
-  const line = s.split('\n').find((l) => l.trim().length > 0)?.trim() ?? '';
+  const line =
+    s
+      .split('\n')
+      .find((l) => l.trim().length > 0)
+      ?.trim() ?? '';
   return line.length > max ? `${line.slice(0, max - 1)}…` : line;
 };
 
@@ -104,7 +108,8 @@ export class InquiriesService {
     let created: { id: string; number: string } | null = null;
     for (let attempt = 0; attempt < 5 && !created; attempt++) {
       const number = inquiryNumber();
-      if (await this.prisma.ticket.findUnique({ where: { number }, select: { id: true } })) continue;
+      if (await this.prisma.ticket.findUnique({ where: { number }, select: { id: true } }))
+        continue;
       created = await this.prisma.ticket.create({
         data: {
           number,

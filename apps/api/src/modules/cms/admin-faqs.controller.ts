@@ -18,7 +18,7 @@ import { FaqsService } from './faqs.service';
 
 @ApiTags('Admin · CMS FAQs')
 @ApiBearerAuth()
-@Roles(Role.ADMIN, Role.CONTENT_MANAGER)
+@Roles(Role.ADMIN)
 @Controller('admin/cms/faqs')
 export class AdminFaqsController {
   constructor(private readonly service: FaqsService) {}

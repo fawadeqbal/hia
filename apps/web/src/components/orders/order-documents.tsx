@@ -37,9 +37,7 @@ export function OrderDocuments({ order }: { order: OrderDto }) {
           <ul className="space-y-2">
             {notes.map((n) => (
               <li key={n.id}>
-                <p className="text-xs text-gray-500">
-                  {n.from} · {formatDateTime(n.createdAt)}
-                </p>
+                <p className="text-xs text-gray-500">{formatDateTime(n.createdAt)}</p>
                 <p className="whitespace-pre-line text-gray-800">{n.content}</p>
               </li>
             ))}

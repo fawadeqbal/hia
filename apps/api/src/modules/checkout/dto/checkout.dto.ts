@@ -17,7 +17,7 @@ import { DestinationDto } from '../../shipping/dto/shipping.dto';
 import { ShippingAddressDto } from '../../users/dto/address.dto';
 
 /** Methods the storefront can request; availability is decided by CheckoutService.quote(). */
-const CHECKOUT_METHODS: PaymentMethod[] = ['COD', 'CARD', 'WALLET', 'BANK_TRANSFER', 'GIFT_CARD'];
+const CHECKOUT_METHODS: PaymentMethod[] = ['COD', 'CARD', 'WALLET', 'BANK_TRANSFER'];
 
 export class QuoteRequestDto implements CheckoutQuoteInput {
   @ApiPropertyOptional({ enum: CHECKOUT_METHODS })
@@ -46,17 +46,6 @@ export class QuoteRequestDto implements CheckoutQuoteInput {
   @IsString()
   @MaxLength(40)
   couponCode?: string | null;
-
-  @ApiPropertyOptional({ description: 'Use loyalty points (signed-in)' })
-  @IsOptional()
-  @IsBoolean()
-  redeemPoints?: boolean;
-
-  @ApiPropertyOptional({ nullable: true })
-  @IsOptional()
-  @IsString()
-  @MaxLength(40)
-  giftCardCode?: string | null;
 
   @ApiPropertyOptional({ description: 'Guest email (per-customer coupon limits)' })
   @IsOptional()
@@ -104,17 +93,6 @@ export class PlaceOrderDto implements PlaceOrderInput {
   @IsString()
   @MaxLength(40)
   couponCode?: string | null;
-
-  @ApiPropertyOptional({ description: 'Use loyalty points (signed-in)' })
-  @IsOptional()
-  @IsBoolean()
-  redeemPoints?: boolean;
-
-  @ApiPropertyOptional({ nullable: true })
-  @IsOptional()
-  @IsString()
-  @MaxLength(40)
-  giftCardCode?: string | null;
 
   @ApiProperty({ description: 'Random id per checkout attempt' })
   @IsString()

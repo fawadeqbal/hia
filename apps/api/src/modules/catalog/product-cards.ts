@@ -3,7 +3,7 @@ import type { StorefrontProductCard } from '@ecommerce/types';
 import { availableByVariant } from '../../common/utils/stock-availability';
 import type { PrismaService } from '../../prisma/prisma.service';
 
-/** Only published, not deleted products of approved vendors are ever visible. */
+/** Only published, not deleted products of the (approved) shop are ever visible. */
 export const VISIBLE: Prisma.ProductWhereInput = {
   status: 'PUBLISHED',
   deletedAt: null,
@@ -11,8 +11,6 @@ export const VISIBLE: Prisma.ProductWhereInput = {
 };
 
 export const cardInclude = {
-  brand: { select: { name: true } },
-  vendor: { select: { name: true, slug: true } },
   images: { orderBy: { position: 'asc' }, take: 2, select: { url: true } },
   variants: {
     where: { isActive: true },
@@ -40,8 +38,6 @@ export async function toProductCards(
     price: Number(p.basePrice),
     compareAtPrice: p.compareAtPrice === null ? null : Number(p.compareAtPrice),
     currency: p.currency,
-    brandName: p.brand?.name ?? null,
-    vendor: p.vendor,
     ratingAverage: Number(p.ratingAverage),
     ratingCount: p.ratingCount,
     inStock: p.variants.some((v) => (stock.get(v.id) ?? 0) > 0),

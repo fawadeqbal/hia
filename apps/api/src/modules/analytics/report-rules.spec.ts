@@ -67,7 +67,6 @@ describe('report rules', () => {
       shipping: 20,
       cancelledOrders: 1,
       itemsSold: 9,
-      commission: 36,
       refunds: 5,
       newCustomers: 3,
     });

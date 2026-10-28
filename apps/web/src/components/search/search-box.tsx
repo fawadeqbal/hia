@@ -93,8 +93,7 @@ export function SearchBox() {
   });
 
   const typed = value.trim();
-  const hasResults =
-    !!data && (data.products.length > 0 || data.categories.length > 0 || data.brands.length > 0);
+  const hasResults = !!data && (data.products.length > 0 || data.categories.length > 0);
   const matchingRecent = typed
     ? recent.filter((r) => r.toLowerCase().includes(typed.toLowerCase()) && r !== typed).slice(0, 3)
     : [];
@@ -359,7 +358,7 @@ export function SearchBox() {
                   </span>
                 </Link>
               ))}
-              {data && data.categories.length + data.brands.length > 0 ? (
+              {data && data.categories.length > 0 ? (
                 <div className="mt-1 flex flex-wrap gap-2 border-t border-gray-100 px-2 pt-2">
                   {data.categories.map((c) => (
                     <Link
@@ -372,19 +371,6 @@ export function SearchBox() {
                       className="rounded-full bg-gray-100 px-3 py-1 text-gray-700 hover:bg-gray-200 hover:text-gray-900"
                     >
                       {c.name}
-                    </Link>
-                  ))}
-                  {data.brands.map((b) => (
-                    <Link
-                      key={`b-${b.slug}`}
-                      href={`/brands/${b.slug}`}
-                      onClick={() => {
-                        remember();
-                        setOpen(false);
-                      }}
-                      className="rounded-full bg-brand-50 px-3 py-1 text-brand-800 hover:bg-brand-100"
-                    >
-                      {b.name}
                     </Link>
                   ))}
                 </div>

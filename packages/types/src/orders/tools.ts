@@ -6,13 +6,11 @@ export const PRODUCT_CSV_COLUMNS = [
   'sku',
   'name',
   'category',
-  'brand',
   'price',
   'compare_at_price',
   'short_description',
   'description',
   'weight_grams',
-  'tax_class',
   'status',
 ] as const;
 export type ProductCsvColumn = (typeof PRODUCT_CSV_COLUMNS)[number];

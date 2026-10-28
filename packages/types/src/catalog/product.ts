@@ -4,9 +4,7 @@ export const PRODUCT_STATUSES = Object.values(ProductStatus) as ProductStatus[];
 
 export const PRODUCT_STATUS_LABELS: Record<ProductStatus, string> = {
   DRAFT: 'Draft',
-  PENDING_REVIEW: 'In review',
   PUBLISHED: 'Published',
-  REJECTED: 'Rejected',
   ARCHIVED: 'Archived',
 };
 
@@ -76,15 +74,9 @@ export interface ProductVariantsInput {
   variants: ProductVariantInput[];
 }
 
-export interface ProductRejectInput {
-  reason: string;
-}
-
 export interface ProductFeatureInput {
   isFeatured: boolean;
 }
-
-export const PRODUCT_REASON_MIN = 10;
 
 /** Stable key for a combination of attribute values. */
 export const variantComboKey = (valueIds: string[]) => [...valueIds].sort().join('|');
@@ -113,7 +105,7 @@ export interface ProductRef {
   slug: string;
 }
 
-/** Full product (vendor edit screen, admin detail). Money as numbers in `currency`. */
+/** Full product (admin edit screen). Money as numbers in `currency`. */
 export interface ProductDto {
   id: string;
   name: string;
@@ -128,21 +120,15 @@ export interface ProductDto {
   /** SKU of the default variant. */
   sku: string;
   weightGrams: number | null;
-  /** TaxClass; null = standard. */
-  taxClass: string | null;
   videoUrl: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
   isFeatured: boolean;
-  /** Why an admin rejected / unpublished the product. */
-  rejectionReason: string | null;
   /** True when the product has variants with options (price & SKU are managed per variant). */
   hasOptions: boolean;
   variants: ProductVariantDto[];
   options: ProductOptionDto[];
   category: ProductRef;
-  brand: ProductRef | null;
-  vendor: ProductRef;
   images: ProductImageDto[];
   publishedAt: string | null;
   createdAt: string;
@@ -160,8 +146,6 @@ export interface ProductListItem {
   currency: string;
   imageUrl: string | null;
   categoryName: string;
-  brandName: string | null;
-  vendor: ProductRef;
   updatedAt: string;
 }
 
@@ -175,7 +159,6 @@ export interface ProductInput {
   name: string;
   slug?: string;
   categoryId: string;
-  brandId?: string | null;
   shortDescription?: string | null;
   description?: string | null;
   specifications?: ProductSpec[];
@@ -183,7 +166,6 @@ export interface ProductInput {
   compareAtPrice?: number | null;
   sku: string;
   weightGrams?: number | null;
-  taxClass?: string | null;
   videoUrl?: string | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
@@ -195,12 +177,11 @@ export interface ProductListQuery {
   status?: ProductStatus;
   search?: string;
   categoryId?: string;
-  vendorId?: string;
   page?: number;
   limit?: number;
 }
 
-/** What a product needs before it can be submitted for review (shown in the vendor form). */
+/** What a product needs before it can be published (shown in the admin form). */
 export function productSubmitProblems(
   p: Pick<ProductDto, 'images' | 'description' | 'basePrice'>,
 ): string[] {

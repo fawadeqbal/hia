@@ -5,7 +5,6 @@ import type {
   ProductInput,
   ProductListItem,
   ProductListQuery,
-  ProductRejectInput,
   ProductVariantsInput,
 } from '@ecommerce/types';
 import { api } from '../http';
@@ -23,7 +22,7 @@ const VENDOR = '/vendor/products';
 const ADMIN = '/admin/products';
 
 export const productsApi = {
-  // ---- seller (own products) ----
+  // ---- the shop's products ----
   vendorList: (params: ProductListQuery = {}) =>
     api<Paginated<ProductListItem>>(`${VENDOR}${toQuery(params)}`),
   vendorGet: (id: string) => api<ProductDto>(`${VENDOR}/${id}`),
@@ -38,13 +37,7 @@ export const productsApi = {
   saveVariants: (id: string, body: ProductVariantsInput) =>
     api<ProductDto>(`${VENDOR}/${id}/variants`, { method: 'PUT', body }),
 
-  // ---- admin (all vendors) ----
-  adminList: (params: ProductListQuery = {}) =>
-    api<Paginated<ProductListItem>>(`${ADMIN}${toQuery(params)}`),
-  adminGet: (id: string) => api<ProductDto>(`${ADMIN}/${id}`),
-  approve: (id: string) => api<ProductDto>(`${ADMIN}/${id}/approve`, { method: 'POST', body: {} }),
-  reject: (id: string, body: ProductRejectInput) =>
-    api<ProductDto>(`${ADMIN}/${id}/reject`, { method: 'POST', body }),
+  // ---- admin ----
   setFeatured: (id: string, body: ProductFeatureInput) =>
     api<ProductDto>(`${ADMIN}/${id}/featured`, { method: 'PATCH', body }),
 };

@@ -64,8 +64,7 @@ export async function sendOrderPlacedEmails(deps: OrderEmailDeps, orderId: strin
         ),
         subtotal: money(order.subtotal),
         shipping: money(order.shippingTotal),
-        // Only tax added on top changes the total; included tax is part of the item prices.
-        tax: money(order.taxAdded),
+        discount: Number(order.discountTotal) > 0 ? `−${money(order.discountTotal)}` : undefined,
         grandTotal: money(order.grandTotal),
         paymentMethod: payment,
         orderUrl: customerOrderUrl(deps.config, order),

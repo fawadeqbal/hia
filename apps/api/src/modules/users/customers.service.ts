@@ -119,8 +119,8 @@ export class CustomersService {
     const row = rows[0];
     if (!row) throw new NotFoundException('Customer not found');
 
-    const [user, addresses, recent, first, loyalty, reviews, returns, blocked, currency] =
-      await Promise.all([
+    const [user, addresses, recent, first, reviews, returns, blocked, currency] = await Promise.all(
+      [
         this.prisma.user.findUniqueOrThrow({
           where: { id },
           select: { lastLoginAt: true, googleId: true },
@@ -140,10 +140,6 @@ export class CustomersService {
           orderBy: { placedAt: 'asc' },
           select: { placedAt: true },
         }),
-        this.prisma.loyaltyAccount.findUnique({
-          where: { userId: id },
-          include: { tier: { select: { name: true } } },
-        }),
         this.prisma.review.count({ where: { userId: id } }),
         this.prisma.returnRequest.count({ where: { userId: id } }),
         row.status === 'BLOCKED'
@@ -154,7 +150,8 @@ export class CustomersService {
             })
           : Promise.resolve(null),
         this.currency(),
-      ]);
+      ],
+    );
 
     const item = this.toListItem(row, rules, new Date());
     const blockedAfter = (blocked?.after ?? null) as { reason?: string } | null;
@@ -168,13 +165,6 @@ export class CustomersService {
       blockedReason: blockedAfter?.reason ?? null,
       addresses: addresses.map(toAddressDto),
       recentOrders: recent.map(toOrderSummary),
-      loyalty: loyalty
-        ? {
-            points: loyalty.points,
-            lifetimePoints: loyalty.lifetimePoints,
-            tier: loyalty.tier?.name ?? null,
-          }
-        : null,
       reviews,
       returns,
       currency,

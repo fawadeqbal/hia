@@ -1,11 +1,9 @@
-import type { CheckoutTaxLine } from '../localization/localization';
 import type { OrderStatus, PaymentMethod, PaymentStatus } from '../enums';
 import type { CartItemDto } from '../cart/cart';
 import type { ShippingAddress } from '../users/address';
 import type { PaymentAttemptDto, PaymentOptionDto, PaymentSessionDto } from '../payments/payment';
 import type { ShippingOptionDto } from '../shipping/shipping';
 import type { CouponResultDto, DiscountLineDto } from '../promotions/promotion';
-import type { CheckoutGiftCardDto, CheckoutLoyaltyDto } from '../loyalty/loyalty';
 
 export type BadgeTone = 'gray' | 'green' | 'yellow' | 'red' | 'blue';
 
@@ -44,7 +42,6 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   WALLET: 'Wallet',
   BANK_TRANSFER: 'Bank transfer',
   COD: 'Cash on delivery',
-  GIFT_CARD: 'Gift card',
 };
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
@@ -112,17 +109,8 @@ export interface CheckoutGroup {
   estimatedDays: string | null;
   /** Parcel weight used for weight-based rates (0 when products have no weight). */
   weightGrams: number;
-  /** Discounts on this seller's items / shipping. */
+  /** Coupon discount on this parcel's items / delivery. */
   discount: number;
-  /** Part of `discount` paid by the seller (seller coupons). */
-  sellerFundedDiscount: number;
-  /** Share of points + gift card used for this seller's items (store-funded). */
-  tenders: number;
-  /** All tax on this seller's items (included + added). */
-  tax: number;
-  /** Part of `tax` added on top of prices (exclusive rates). */
-  taxAdded: number;
-  taxLines: CheckoutTaxLine[];
 }
 
 export interface CheckoutQuoteDto {
@@ -131,12 +119,6 @@ export interface CheckoutQuoteDto {
   subtotal: number;
   shippingTotal: number;
   discountTotal: number;
-  /** All tax (included in prices + added). */
-  taxTotal: number;
-  /** Tax added on top of prices; part of grandTotal. */
-  taxAdded: number;
-  /** Tax already included in prices (informational). */
-  taxIncluded: number;
   /** COD fee applied to this quote (0 unless the selected method is COD). */
   codFee: number;
   grandTotal: number;
@@ -152,12 +134,9 @@ export interface CheckoutQuoteDto {
   freeShippingAbove: number;
   /** Shipping zone that matched the destination; null = store default rate / no address yet. */
   shippingZone: string | null;
-  /** Automatic promotions and the coupon, as applied. */
+  /** The coupon discount, as applied. */
   discounts: DiscountLineDto[];
   coupon: CouponResultDto | null;
-  /** Signed-in customers: points balance and what this order uses (null for guests). */
-  loyalty: CheckoutLoyaltyDto | null;
-  giftCard: CheckoutGiftCardDto | null;
 }
 
 export interface PlaceOrderInput {
@@ -172,8 +151,6 @@ export interface PlaceOrderInput {
   /** Chosen delivery option per seller: { vendorId: rateId }. Cheapest when omitted. */
   shippingRateIds?: Record<string, string>;
   couponCode?: string | null;
-  redeemPoints?: boolean;
-  giftCardCode?: string | null;
   customerNote?: string | null;
   /** Random id per checkout attempt — a double click never creates two orders. */
   idempotencyKey: string;
@@ -223,8 +200,6 @@ export interface VendorOrderDto {
   status: OrderStatus;
   subtotal: number;
   shippingTotal: number;
-  taxTotal: number;
-  taxAdded: number;
   shippingMethod: string | null;
   items: OrderItemDto[];
   shipment: ShipmentDto | null;
@@ -244,13 +219,8 @@ export interface OrderDto {
   subtotal: number;
   shippingTotal: number;
   discountTotal: number;
-  taxTotal: number;
-  /** Part of taxTotal added on top of prices (the rest was included). */
-  taxAdded: number;
   grandTotal: number;
   couponCode: string | null;
-  loyaltyDiscount: number;
-  giftCardTotal: number;
   shippingAddress: ShippingAddress;
   customerNote: string | null;
   placedAt: string;
@@ -276,7 +246,6 @@ export interface OrderSummaryDto {
   currency: string;
   itemCount: number;
   imageUrl: string | null;
-  vendorCount: number;
   placedAt: string;
 }
 
@@ -293,7 +262,6 @@ export interface VendorOrderListItem {
   status: OrderStatus;
   itemCount: number;
   subtotal: number;
-  netAmount: number;
   currency: string;
   customerName: string;
   city: string;
@@ -310,11 +278,6 @@ export interface VendorOrderDetailDto {
   items: OrderItemDto[];
   subtotal: number;
   shippingTotal: number;
-  /** Tax on this sub-order; it belongs to the seller (included in netAmount). */
-  taxTotal: number;
-  taxAdded: number;
-  commissionAmount: number;
-  netAmount: number;
   /** Delivery option the customer chose, and its default courier. */
   shippingMethod: string | null;
   suggestedCourierId: string | null;

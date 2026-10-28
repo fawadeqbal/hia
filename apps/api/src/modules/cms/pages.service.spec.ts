@@ -8,7 +8,6 @@ const page = (over: Record<string, unknown> = {}) => ({
   id: 'p1',
   title: 'About us',
   slug: 'about-us',
-  locale: 'en',
   content: { blocks: [] },
   status: 'DRAFT',
   seoTitle: null,
@@ -55,13 +54,12 @@ describe('PagesService', () => {
 
     const data = prisma.page.create.mock.calls[0][0].data;
     expect(data.slug).toBe('about-us');
-    expect(data.locale).toBe('en');
     expect(data.publishedAt).toBeInstanceOf(Date);
     expect(result.content.blocks).toHaveLength(1);
     expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'cms.page.create' }));
   });
 
-  it('rejects a slug already used in the same locale', async () => {
+  it('rejects a slug that is already used', async () => {
     const { prisma, service } = setup();
     prisma.page.findFirst.mockResolvedValue({ id: 'other' });
     await expect(

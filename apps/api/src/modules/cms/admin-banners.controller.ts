@@ -18,7 +18,7 @@ import { BannersService } from './banners.service';
 
 @ApiTags('Admin · CMS banners')
 @ApiBearerAuth()
-@Roles(Role.ADMIN, Role.CONTENT_MANAGER)
+@Roles(Role.ADMIN)
 @Controller('admin/cms/banners')
 export class AdminBannersController {
   constructor(private readonly service: BannersService) {}

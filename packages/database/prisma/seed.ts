@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * HIA Furniture Solutions — seed for the single-shop build.
  *
@@ -17,8 +16,6 @@ const SHOP = {
   name: 'HIA Furniture Solutions',
   slug: 'hia-furniture',
   motto: 'Quality Products | Competitive Prices | Reliable Service',
-  description:
-    'Trusted supplier of office chair spare parts, office chairs, furniture and general order supplies — with chair repair and maintenance for homes, offices and institutions.',
 };
 const CURRENCY = 'PKR';
 const WAREHOUSE_CODE = 'HIA-MAIN';
@@ -33,120 +30,25 @@ const slugify = (s: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
-// ---------------------------------------------------------------- roles & permissions
+// ---------------------------------------------------------------- roles
 
 const ROLES: { name: string; description: string }[] = [
   { name: 'SUPER_ADMIN', description: 'Shop owner: full access to everything' },
-  { name: 'ADMIN', description: 'Full shop control except system settings' },
-  { name: 'CONTENT_MANAGER', description: 'Website pages, banners, menus' },
-  { name: 'MARKETING_MANAGER', description: 'Coupons and promotions' },
-  { name: 'SUPPORT_AGENT', description: 'Orders, returns, customer queries' },
-  { name: 'WAREHOUSE_STAFF', description: 'Stock, packing, shipping' },
-  // Kept because the code base still knows these roles; nobody is given them in the single-shop build.
-  { name: 'VENDOR', description: 'Store owner (unused in the single-shop build)' },
-  { name: 'VENDOR_STAFF', description: 'Store staff (unused in the single-shop build)' },
+  { name: 'ADMIN', description: 'Shop staff: everything except shop settings' },
+  // Role of the built-in shop account (the super admin owns the shop and passes this check).
+  { name: 'VENDOR', description: 'Shop account (built in)' },
   { name: 'CUSTOMER', description: 'Registered shopper' },
 ];
 
-const PERMISSION_GROUPS: Record<string, string[]> = {
-  catalog: [
-    'product.read',
-    'product.create',
-    'product.update',
-    'product.delete',
-    'product.approve',
-    'category.manage',
-  ],
-  inventory: ['stock.read', 'stock.adjust', 'warehouse.manage'],
-  orders: ['order.read', 'order.update', 'order.refund', 'order.create'],
-  returns: ['return.read', 'return.process'],
-  customers: ['customer.read', 'customer.update', 'customer.block'],
-  vendors: ['vendor.read', 'vendor.approve', 'vendor.suspend', 'payout.manage', 'commission.manage'],
-  promotions: ['coupon.manage', 'promotion.manage', 'giftcard.manage'],
-  loyalty: ['loyalty.manage'],
-  cms: ['page.manage', 'banner.manage', 'menu.manage', 'blog.manage', 'faq.manage'],
-  marketing: ['campaign.manage', 'subscriber.manage'],
-  support: ['ticket.read', 'ticket.reply', 'review.moderate', 'dispute.manage'],
-  reports: ['report.read', 'report.export'],
-  settings: ['settings.manage', 'role.manage', 'user.manage', 'email-template.manage', 'audit.read'],
-};
-
-const ROLE_PERMISSION_GROUPS: Record<string, string[] | '*'> = {
-  SUPER_ADMIN: '*',
-  ADMIN: Object.keys(PERMISSION_GROUPS).filter((g) => g !== 'settings'),
-  CONTENT_MANAGER: ['cms'],
-  MARKETING_MANAGER: ['promotions', 'marketing', 'loyalty', 'reports'],
-  SUPPORT_AGENT: ['support', 'returns', 'customers'],
-  WAREHOUSE_STAFF: ['inventory'],
-};
-
-async function seedRbac() {
-  const permissionKeys = Object.entries(PERMISSION_GROUPS).flatMap(([group, perms]) =>
-    perms.map((p) => `${group}.${p}`),
-  );
-  for (const key of permissionKeys) {
-    await prisma.permission.upsert({ where: { key }, update: {}, create: { key } });
-  }
+async function seedRoles() {
   for (const role of ROLES) {
-    const saved = await prisma.role.upsert({
+    await prisma.role.upsert({
       where: { name: role.name },
       update: { description: role.description },
       create: { ...role, isSystem: true },
     });
-    const groups = ROLE_PERMISSION_GROUPS[role.name];
-    if (!groups) continue;
-    const keys =
-      groups === '*'
-        ? permissionKeys
-        : permissionKeys.filter((k) => groups.includes(k.split('.')[0]!));
-    const perms = await prisma.permission.findMany({ where: { key: { in: keys } } });
-    await prisma.rolePermission.createMany({
-      data: perms.map((p) => ({ roleId: saved.id, permissionId: p.id })),
-      skipDuplicates: true,
-    });
   }
-  // Area permissions (view / manage) enforced by RolesGuard for custom roles.
-  // Keep in sync with ADMIN_AREAS in packages/types/src/rbac/rbac.ts (the seed can't import types).
-  const AREAS = [
-    'catalog',
-    'orders',
-    'returns',
-    'customers',
-    'vendors',
-    'inventory',
-    'shipping',
-    'promotions',
-    'loyalty',
-    'cms',
-    'marketing',
-    'reviews',
-    'reports',
-    'settings',
-  ];
-  const ALL_PERMISSION_KEYS = AREAS.flatMap((a) => [`${a}.view`, `${a}.manage`]);
-  const BUILT_IN_ROLE_AREAS: Record<string, string[] | '*'> = {
-    SUPER_ADMIN: '*',
-    ADMIN: AREAS.filter((a) => a !== 'settings'),
-    CONTENT_MANAGER: ['cms'],
-    MARKETING_MANAGER: ['promotions', 'loyalty', 'marketing', 'reports', 'customers'],
-    SUPPORT_AGENT: ['orders', 'returns', 'customers', 'reviews'],
-    WAREHOUSE_STAFF: ['inventory'],
-  };
-  for (const key of ALL_PERMISSION_KEYS) {
-    await prisma.permission.upsert({ where: { key }, update: {}, create: { key } });
-  }
-  for (const [roleName, areas] of Object.entries(BUILT_IN_ROLE_AREAS)) {
-    const role = await prisma.role.findUnique({ where: { name: roleName } });
-    if (!role) continue;
-    const keys =
-      areas === '*' ? ALL_PERMISSION_KEYS : areas.flatMap((a) => [`${a}.view`, `${a}.manage`]);
-    const perms = await prisma.permission.findMany({ where: { key: { in: keys } } });
-    await prisma.rolePermission.createMany({
-      data: perms.map((p) => ({ roleId: role.id, permissionId: p.id })),
-      skipDuplicates: true,
-    });
-  }
-  console.log(`  ✓ roles & permissions`);
+  console.log('  ✓ roles');
 }
 
 // ---------------------------------------------------------------- super admin + the shop
@@ -180,13 +82,8 @@ async function seedAdminAndShop() {
       name: SHOP.name,
       slug: SHOP.slug,
       email,
-      description: SHOP.description,
       status: 'APPROVED',
       approvedAt: new Date(),
-      policies: {
-        shipping: 'Delivery across Pakistan. Most orders arrive in 2–5 working days.',
-        returns: '7-day returns on unused items in original packing.',
-      },
     },
   });
   await prisma.warehouse.upsert({
@@ -205,16 +102,17 @@ async function seedAdminAndShop() {
 
 // ---------------------------------------------------------------- currency, payments, settings
 
-async function seedLocalization() {
+async function seedCurrencyAndPayments() {
   await prisma.currency.upsert({
     where: { code: CURRENCY },
     update: {},
-    create: { code: CURRENCY, name: 'Pakistani Rupee', symbol: 'Rs', exchangeRate: 1, isDefault: true },
-  });
-  await prisma.language.upsert({
-    where: { code: 'en' },
-    update: {},
-    create: { code: 'en', name: 'English', isDefault: true },
+    create: {
+      code: CURRENCY,
+      name: 'Pakistani Rupee',
+      symbol: 'Rs',
+      exchangeRate: 1,
+      isDefault: true,
+    },
   });
   // Test card gateway exists but is OFF: checkout offers Cash on Delivery only.
   // Turn online payments on later in Admin → Settings → Payments.
@@ -223,7 +121,7 @@ async function seedLocalization() {
     update: {},
     create: { code: 'mock', isEnabled: false, isTestMode: true, methods: ['CARD'], position: 0 },
   });
-  console.log('  ✓ PKR currency, English, COD only');
+  console.log('  ✓ PKR currency, COD only');
 }
 
 async function seedSettings() {
@@ -242,36 +140,20 @@ async function seedSettings() {
       value: "We're making some improvements and will be back shortly.",
     },
     { key: 'store.timezone', group: 'general', value: 'Asia/Karachi' },
-    { key: 'tax.enabled', group: 'tax', value: false },
-    { key: 'tax.defaultCountry', group: 'tax', value: 'PK' },
     { key: 'customers.newDays', group: 'customers', value: 30 },
     { key: 'customers.repeatOrders', group: 'customers', value: 2 },
     { key: 'customers.highValueSpend', group: 'customers', value: 50000 },
     { key: 'customers.inactiveDays', group: 'customers', value: 90 },
-    // Single shop: products go live on Publish, no commission, no payouts.
-    { key: 'marketplace.productApprovalRequired', group: 'vendors', value: false },
-    { key: 'marketplace.defaultCommissionRate', group: 'vendors', value: 0 },
     { key: 'checkout.guestCheckout', group: 'checkout', value: true },
     { key: 'checkout.reservationMinutes', group: 'checkout', value: 15 },
     { key: 'checkout.codFee', group: 'checkout', value: 0 },
     { key: 'checkout.codMaxOrderTotal', group: 'checkout', value: 0 }, // 0 = no limit
     { key: 'payments.codEnabled', group: 'payments', value: true },
-    { key: 'payments.onlineMethods', group: 'payments', value: '' },
-    { key: 'marketing.abandonedCartEnabled', group: 'marketing', value: false },
-    { key: 'marketing.winBackEnabled', group: 'marketing', value: false },
     { key: 'returns.windowDays', group: 'returns', value: 7 },
     { key: 'reviews.requireApproval', group: 'reviews', value: false },
     { key: 'questions.requireApproval', group: 'reviews', value: true },
     { key: 'shipping.flatRatePerVendor', group: 'shipping', value: 500 },
     { key: 'shipping.freeShippingAbove', group: 'shipping', value: 25000 },
-    // Reward points are off (0 = nothing earned).
-    { key: 'loyalty.pointsPerCurrencyUnit', group: 'loyalty', value: 0 },
-    { key: 'loyalty.pointValue', group: 'loyalty', value: 0 },
-    { key: 'loyalty.maxRedeemPercent', group: 'loyalty', value: 0 },
-    { key: 'loyalty.signupBonus', group: 'loyalty', value: 0 },
-    { key: 'loyalty.reviewPoints', group: 'loyalty', value: 0 },
-    { key: 'loyalty.referralPoints', group: 'loyalty', value: 0 },
-    { key: 'loyalty.expiryDays', group: 'loyalty', value: 365 },
   ];
   for (const s of settings) {
     await prisma.setting.upsert({
@@ -315,7 +197,12 @@ async function seedShipping() {
               estimatedDays: '2-5 working days',
               courier: { connect: { id: own.id } },
             },
-            { name: 'Pick up from shop', type: 'PICKUP', price: 0, estimatedDays: 'Ready next day' },
+            {
+              name: 'Pick up from shop',
+              type: 'PICKUP',
+              price: 0,
+              estimatedDays: 'Ready next day',
+            },
           ],
         },
       },
@@ -379,27 +266,31 @@ async function seedCategories() {
   console.log(`  ✓ categories (${CATEGORY_TREE.length} main groups)`);
 }
 
-const ATTRIBUTES: { name: string; code: string; type: 'select' | 'color'; values: [string, string?][] }[] =
-  [
-    {
-      name: 'Colour',
-      code: 'color',
-      type: 'color',
-      values: [
-        ['Black', '#111827'],
-        ['Grey', '#6b7280'],
-        ['Brown', '#6b3f22'],
-        ['Blue', '#1d4ed8'],
-        ['Chrome', '#c0c4cc'],
-      ],
-    },
-    {
-      name: 'Size',
-      code: 'size',
-      type: 'select',
-      values: [['50 mm'], ['60 mm'], ['320 mm'], ['350 mm'], ['Standard'], ['Heavy-duty']],
-    },
-  ];
+const ATTRIBUTES: {
+  name: string;
+  code: string;
+  type: 'select' | 'color';
+  values: [string, string?][];
+}[] = [
+  {
+    name: 'Colour',
+    code: 'color',
+    type: 'color',
+    values: [
+      ['Black', '#111827'],
+      ['Grey', '#6b7280'],
+      ['Brown', '#6b3f22'],
+      ['Blue', '#1d4ed8'],
+      ['Chrome', '#c0c4cc'],
+    ],
+  },
+  {
+    name: 'Size',
+    code: 'size',
+    type: 'select',
+    values: [['50 mm'], ['60 mm'], ['320 mm'], ['350 mm'], ['Standard'], ['Heavy-duty']],
+  },
+];
 
 const attributeValueSlug = (label: string) => label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
@@ -412,7 +303,9 @@ async function seedAttributes() {
     });
     for (const [i, [label, swatch]] of a.values.entries()) {
       await prisma.attributeValue.upsert({
-        where: { attributeId_value: { attributeId: attribute.id, value: attributeValueSlug(label) } },
+        where: {
+          attributeId_value: { attributeId: attribute.id, value: attributeValueSlug(label) },
+        },
         update: {},
         create: {
           attributeId: attribute.id,
@@ -427,7 +320,13 @@ async function seedAttributes() {
   console.log('  ✓ product options (colour, size)');
 }
 
-type SeedVariant = { sku: string; price: number; compareAt?: number; stock: number; options?: Record<string, string> };
+type SeedVariant = {
+  sku: string;
+  price: number;
+  compareAt?: number;
+  stock: number;
+  options?: Record<string, string>;
+};
 type SeedProduct = {
   slug: string;
   name: string;
@@ -447,7 +346,8 @@ const PRODUCTS: SeedProduct[] = [
     name: 'Office Chair Gas Lift Cylinder',
     category: 'gas-lifts',
     image: 'gas-lift.svg',
-    short: 'Replacement gas lift that fits most office chairs. Fixes a chair that sinks or will not stay up.',
+    short:
+      'Replacement gas lift that fits most office chairs. Fixes a chair that sinks or will not stay up.',
     description:
       'Standard-size gas lift (hydraulic cylinder) for office and computer chairs. Fits most chairs with a universal 50 mm base hole and a standard tapered top. Choose Heavy-duty for executive chairs and heavier users.',
     specs: [
@@ -459,7 +359,13 @@ const PRODUCTS: SeedProduct[] = [
     weightGrams: 1800,
     variants: [
       { sku: 'HIA-GL-STD', price: 2200, stock: 40, options: { size: 'Standard' } },
-      { sku: 'HIA-GL-HD', price: 2800, compareAt: 3200, stock: 25, options: { size: 'Heavy-duty' } },
+      {
+        sku: 'HIA-GL-HD',
+        price: 2800,
+        compareAt: 3200,
+        stock: 25,
+        options: { size: 'Heavy-duty' },
+      },
     ],
   },
   {
@@ -524,7 +430,8 @@ const PRODUCTS: SeedProduct[] = [
     category: 'chair-bases',
     image: 'chair-base.svg',
     short: 'Polished chrome steel base for executive chairs.',
-    description: 'Heavy-gauge chrome-plated steel five-star base for executive chairs. 350 mm radius.',
+    description:
+      'Heavy-gauge chrome-plated steel five-star base for executive chairs. 350 mm radius.',
     specs: [
       { label: 'Material', value: 'Chrome-plated steel' },
       { label: 'Radius', value: '350 mm' },
@@ -614,8 +521,20 @@ const PRODUCTS: SeedProduct[] = [
     featured: true,
     weightGrams: 18000,
     variants: [
-      { sku: 'HIA-CH-EXE-BLK', price: 38000, compareAt: 42000, stock: 6, options: { color: 'Black' } },
-      { sku: 'HIA-CH-EXE-BRN', price: 38000, compareAt: 42000, stock: 4, options: { color: 'Brown' } },
+      {
+        sku: 'HIA-CH-EXE-BLK',
+        price: 38000,
+        compareAt: 42000,
+        stock: 6,
+        options: { color: 'Black' },
+      },
+      {
+        sku: 'HIA-CH-EXE-BRN',
+        price: 38000,
+        compareAt: 42000,
+        stock: 4,
+        options: { color: 'Brown' },
+      },
     ],
   },
   {
@@ -832,7 +751,9 @@ const SEED_PAGES: { slug: string; title: string; blocks: SeedBlock[] }[] = [
   {
     slug: 'terms',
     title: 'Terms of service',
-    blocks: [p('By using this website you agree to these terms. Replace this text with your own terms.')],
+    blocks: [
+      p('By using this website you agree to these terms. Replace this text with your own terms.'),
+    ],
   },
   {
     slug: 'privacy',
@@ -847,7 +768,10 @@ const SEED_PAGES: { slug: string; title: string; blocks: SeedBlock[] }[] = [
 
 const SEED_MENUS: Record<
   'header' | 'footer',
-  { name: string; items: { label: string; url: string; children?: { label: string; url: string }[] }[] }
+  {
+    name: string;
+    items: { label: string; url: string; children?: { label: string; url: string }[] }[];
+  }
 > = {
   header: {
     name: 'Header menu',
@@ -931,11 +855,10 @@ const SEED_FAQS: { category: string; question: string; answer: string }[] = [
 async function seedCms() {
   for (const page of SEED_PAGES) {
     await prisma.page.upsert({
-      where: { slug_locale: { slug: page.slug, locale: 'en' } },
+      where: { slug: page.slug },
       update: {},
       create: {
         slug: page.slug,
-        locale: 'en',
         title: page.title,
         content: { blocks: page.blocks } as Prisma.InputJsonValue,
         status: 'PUBLISHED',
@@ -957,7 +880,13 @@ async function seedCms() {
       });
       for (const [j, child] of (item.children ?? []).entries()) {
         await prisma.menuItem.create({
-          data: { menuId: saved.id, parentId: parent.id, label: child.label, url: child.url, position: j },
+          data: {
+            menuId: saved.id,
+            parentId: parent.id,
+            label: child.label,
+            url: child.url,
+            position: j,
+          },
         });
       }
     }
@@ -970,9 +899,9 @@ async function seedCms() {
 
 async function main() {
   console.log('Seeding HIA Furniture Solutions…');
-  await seedRbac();
+  await seedRoles();
   const shop = await seedAdminAndShop();
-  await seedLocalization();
+  await seedCurrencyAndPayments();
   await seedSettings();
   await seedShipping();
   await seedCategories();

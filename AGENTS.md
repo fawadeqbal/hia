@@ -8,8 +8,11 @@ It exists so you do **not** have to explore the whole repo or guess conventions.
 > `SUPER_ADMIN` passes every `@Roles` check, so the **admin panel calls the store endpoints** (`/vendor/products`,
 > `/vendor/inventory`, `/vendor/orders/:id/status`) for products, stock and order status. Keep that design:
 > new shop features go in `apps/admin` + `apps/web`; do not reintroduce seller screens or seller wording.
-> Marketplace features (commission, payouts, loyalty, tax, online gateways, review before publish) are switched
-> off by seeded settings, not deleted. See README → "How the single shop works".
+> Marketplace-only features were **deleted** (code, endpoints, screens and database tables): seller sign-up and
+> approval, store pages, seller staff, brands, commissions, payouts, loyalty / gift cards / referrals, automatic
+> promotions, tax, currencies / languages, newsletter / campaigns, blog, SEO redirects, custom roles & permissions,
+> email-template editor, disputes. Do not bring them back unless the shop owner asks. Online payments are kept
+> (switched off) so a gateway can be added later.
 
 ---
 
@@ -28,8 +31,8 @@ It exists so you do **not** have to explore the whole repo or guess conventions.
    they show what the API returns (shared tables like `VENDOR_ORDER_TRANSITIONS` live in `packages/types`).
 
 Current progress and the next entity to build: **`docs/roadmap.md`**.
-Business flows (vendor, product, stock, order state machines): **`docs/architecture.md`**.
-Full product scope: **`docs/scope.md`**. URLs, logins, demo data: **`CREDENTIALS.md`**.
+Business flows (product, stock, order state machines): **`docs/architecture.md`**.
+What the shop does: **`docs/scope.md`**. URLs, logins, demo data: **`CREDENTIALS.md`**.
 
 ---
 
@@ -60,9 +63,10 @@ MinIO (S3), Mailpit (SMTP). **Email is the only notification channel.**
 apps/api/src/
   common/guards/        JwtAuthGuard (@Public routes still get the user if a valid token is sent), RolesGuard
   common/utils/         unique-slug.ts, stock-availability.ts (availableByVariant), settings.ts (readSetting), money.ts (toCents/fromCents)
-  modules/<domain>/     one Nest module per domain; implemented: auth, users, vendors, catalog/*, media,
-                        inventory, cart, checkout, orders, payments (gateways, logs), shipping, returns, reviews, wishlist, promotions, loyalty, payouts, notifications, audit
-apps/admin/src/  apps/vendor/src/
+  modules/<domain>/     one Nest module per domain: auth, users, catalog/*, search, recommendations, media, inventory,
+                        cart, checkout, orders (+ documents), payments, shipping, returns, reviews, wishlist,
+                        promotions (coupons), support (inquiries), cms, seo, settings, analytics, notifications, audit
+apps/admin/src/
   app/(dashboard)/…     thin pages          features/<entity>/…   list / detail / form components
   config/navigation.ts  sidebar             components/sidebar-shell.tsx  auth gate
 apps/web/src/
@@ -75,23 +79,23 @@ apps/web/src/
 
 ## 2. Where things go (decision table)
 
-| You need…                                                           | Put it in                                                                                                                 | Example                                                                                    |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| A type the API returns / accepts                                    | `packages/types/src/<domain>/<entity>.ts`                                                                                 | `catalog/brand.ts` → `BrandDto`, `BrandListItem`, `BrandInput`                             |
-| A form validation schema (frontend)                                 | `packages/types/src/schemas/<entity>.schema.ts`                                                                           | `brandFormSchema`, `emptyBrandForm`, `brandToForm`, `brandFormToInput`                     |
-| A constant list / enum / labels / badge tones / state-machine table | `packages/types` as `const X = … as const`                                                                                | `ATTRIBUTE_TYPES`, `ORDER_STATUS_LABELS`, `ORDER_STATUS_TONES`, `VENDOR_ORDER_TRANSITIONS` |
-| Pure helpers shared by API and UI                                   | `packages/types`                                                                                                          | `slugify`, `cartesian`, `findVariant`, `formatAddress`                                     |
-| Backend request validation                                          | `apps/api/src/modules/<module>/<entity>/dto/<entity>.dto.ts` (class-validator)                                            | `CreateBrandDto implements BrandInput`                                                     |
-| Business rules                                                      | `<entity>.service.ts` in the API; pure rules in `<x>-rules.ts` (unit-testable without Prisma)                             | `BrandsService`, `orders/order-rules.ts`                                                   |
-| Prisma include + mapper to DTO                                      | `<entity>.mapper.ts` (`const xInclude = {…} satisfies Prisma.XInclude`, `toXDto()`)                                       | `products/product.mapper.ts`, `orders/order.mapper.ts`                                     |
-| HTTP routes                                                         | admin: `admin-<entity>.controller.ts`; seller: `vendor-<entity>.controller.ts`; customer/public: `<entity>.controller.ts` | `AdminOrdersController`, `VendorOrdersController`, `OrdersController`                      |
-| A configurable number (fees, limits)                                | a `Setting` row seeded in `seedSettings()`, read with `readSetting(prisma, key, fallback)`                                | `shipping.flatRatePerVendor`                                                               |
-| A fetch call from any Next app                                      | `packages/api-client/src/endpoints/<entity>.ts`                                                                           | `brandsApi`, `ordersApi`                                                                   |
-| A cache key                                                         | `packages/api-client/src/query-keys.ts`                                                                                   | `queryKeys.brands.adminList`, `queryKeys.orders.detail(n)`                                 |
-| A reusable UI component                                             | `packages/ui/src/components/` + export in `index.ts`                                                                      | `DataTable`, `ImageUploadField`, `ReasonDialog`, `Timeline`                                |
-| An admin / seller screen                                            | `apps/<app>/src/app/(dashboard)/<route>/page.tsx` (thin) + `apps/<app>/src/features/<entity>/*`                           | `features/brands/brand-list.tsx`                                                           |
-| A storefront screen                                                 | `apps/web/src/app/<route>/page.tsx` (thin, metadata) + `apps/web/src/components/<domain>/*`                               | `components/checkout/checkout-view.tsx`                                                    |
-| Sample data                                                         | `packages/database/prisma/seed.ts` (idempotent `upsert`)                                                                  | `seedBrands()`                                                                             |
+| You need…                                                           | Put it in                                                                                                               | Example                                                                                    |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| A type the API returns / accepts                                    | `packages/types/src/<domain>/<entity>.ts`                                                                               | `catalog/category.ts` → `CategoryDto`, `CategoryListItem`, `CategoryInput`                 |
+| A form validation schema (frontend)                                 | `packages/types/src/schemas/<entity>.schema.ts`                                                                         | `categoryFormSchema`, `emptyCategoryForm`, `categoryToForm`, `categoryFormToInput`         |
+| A constant list / enum / labels / badge tones / state-machine table | `packages/types` as `const X = … as const`                                                                              | `ATTRIBUTE_TYPES`, `ORDER_STATUS_LABELS`, `ORDER_STATUS_TONES`, `VENDOR_ORDER_TRANSITIONS` |
+| Pure helpers shared by API and UI                                   | `packages/types`                                                                                                        | `slugify`, `cartesian`, `findVariant`, `formatAddress`                                     |
+| Backend request validation                                          | `apps/api/src/modules/<module>/<entity>/dto/<entity>.dto.ts` (class-validator)                                          | `CreateCategoryDto implements CategoryInput`                                               |
+| Business rules                                                      | `<entity>.service.ts` in the API; pure rules in `<x>-rules.ts` (unit-testable without Prisma)                           | `CategoriesService`, `orders/order-rules.ts`                                               |
+| Prisma include + mapper to DTO                                      | `<entity>.mapper.ts` (`const xInclude = {…} satisfies Prisma.XInclude`, `toXDto()`)                                     | `products/product.mapper.ts`, `orders/order.mapper.ts`                                     |
+| HTTP routes                                                         | admin: `admin-<entity>.controller.ts`; shop: `vendor-<entity>.controller.ts`; customer/public: `<entity>.controller.ts` | `AdminOrdersController`, `VendorOrdersController`, `OrdersController`                      |
+| A configurable number (fees, limits)                                | a `Setting` row seeded in `seedSettings()`, read with `readSetting(prisma, key, fallback)`                              | `shipping.flatRatePerVendor`                                                               |
+| A fetch call from any Next app                                      | `packages/api-client/src/endpoints/<entity>.ts`                                                                         | `categoriesApi`, `ordersApi`                                                               |
+| A cache key                                                         | `packages/api-client/src/query-keys.ts`                                                                                 | `queryKeys.categories.adminList`, `queryKeys.orders.detail(n)`                             |
+| A reusable UI component                                             | `packages/ui/src/components/` + export in `index.ts`                                                                    | `DataTable`, `ImageUploadField`, `ReasonDialog`, `Timeline`                                |
+| An admin screen                                                     | `apps/<app>/src/app/(dashboard)/<route>/page.tsx` (thin) + `apps/<app>/src/features/<entity>/*`                         | `features/categories/category-list.tsx`                                                    |
+| A storefront screen                                                 | `apps/web/src/app/<route>/page.tsx` (thin, metadata) + `apps/web/src/components/<domain>/*`                             | `components/checkout/checkout-view.tsx`                                                    |
+| Sample data                                                         | `packages/database/prisma/seed.ts` (idempotent `upsert`)                                                                | `seedCategories()`                                                                         |
 
 Apps import the client via `@/lib/api-client` (re-exports `@ecommerce/api-client`).
 
@@ -107,7 +111,7 @@ Apps import the client via `@/lib/api-client` (re-exports `@ecommerce/api-client
 
 ## 3. The per-entity recipe (follow in this order)
 
-For entity **X** (e.g. `Brand`), module **M** (e.g. `catalog`):
+For entity **X** (e.g. `Category`), module **M** (e.g. `catalog`):
 
 ### Step 1 — Shared types (`packages/types`)
 
@@ -131,15 +135,15 @@ For entity **X** (e.g. `Brand`), module **M** (e.g. `catalog`):
    - Block destructive actions that would break data with `ConflictException` and a human message
      (e.g. "has 4 products — hide it instead").
    - Multi-row changes: `this.prisma.$transaction(async (tx) => …)`.
-   - Ownership: seller endpoints look up the caller's vendor first and filter by `vendorId`; customer endpoints filter by `userId`.
+   - Ownership: shop (`/vendor/*`) endpoints look up the shop first and filter by `vendorId`; customer endpoints filter by `userId`.
      Return `NotFoundException` (not 403) for someone else's record.
    - Emails: call a private helper that wraps `notifications.sendEmail()` in try/catch — an email failure must never fail the action.
-3. Controllers: `@Controller('admin/M/xs')` + `@Roles(Role.ADMIN)`; seller `@Controller('vendor/xs')` + `@Roles(Role.VENDOR)`;
+3. Controllers: `@Controller('admin/M/xs')` + `@Roles(Role.ADMIN)`; shop `@Controller('vendor/xs')` + `@Roles(Role.VENDOR)` (the super admin passes);
    `@ApiTags(...)`, `@CurrentUser('sub') actorId`. Delete returns 204 (`@HttpCode(HttpStatus.NO_CONTENT)`).
    Declare fixed paths (e.g. `@Post('track')`) **before** parameter paths (`@Get(':orderNumber')`).
 4. Public read endpoint (if storefront needs it): add to the module's public controller with `@Public()`.
 5. Register controller + service in `M.module.ts` (and the module in `app.module.ts` if new).
-6. `x.service.spec.ts`: plain unit tests with a mocked Prisma object (see `brands.service.spec.ts`;
+6. `x.service.spec.ts`: plain unit tests with a mocked Prisma object (see `categories.service.spec.ts`;
    for transactions see `orders/orders.service.spec.ts`, which mocks `$transaction` with a `tx` object).
    Mock `findFirst` to return `null` when slug lookups happen.
 
@@ -154,7 +158,7 @@ For entity **X** (e.g. `Brand`), module **M** (e.g. `catalog`):
 
 ### Step 5 — Screens
 
-- Admin / seller (`apps/<app>/src/features/xs/`):
+- Admin (`apps/admin/src/features/xs/`):
   - `x-list.tsx` — `useQuery` (+ `keepPreviousData`) + `Tabs` status filter + search (`useDeferredValue`) + `DataTable` + `Pagination`.
   - `x-form.tsx` — `useForm` + `zodResolver(xFormSchema)` + `useMutation`; images via `<Controller>` + `ImageUploadField` + `mediaApi.uploadUrl(file, '<folder>')`.
   - `x-editor.tsx` — loads data for create/edit, renders the form (`key={id}`).
@@ -176,25 +180,24 @@ For entity **X** (e.g. `Brand`), module **M** (e.g. `catalog`):
 
 ## 4. Reference implementations (copy the closest one)
 
-| Pattern                                                                                           | Copy from                                                                                                                                  |
-| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Simple CRUD (name, slug, image, active)                                                           | **Brand** — `modules/catalog/brands/*`, `admin/features/brands/*`                                                                          |
-| Tree / parent-child, cycle prevention                                                             | **Category** — `modules/catalog/categories/*`                                                                                              |
-| Parent with editable child list (nested array, `useFieldArray`, transactional sync)               | **Attribute** — `modules/catalog/attributes/*`, `features/attributes/attribute-form.tsx`                                                   |
-| File upload                                                                                       | **Media** — `modules/media/*`, `ImageUploadField`                                                                                          |
-| Application → admin approval with reasons + emails                                                | **Vendor** — `modules/vendors/*`, `admin/features/vendors/*`, `vendor/app/register`, `vendor/app/onboarding`                               |
-| Seller-owned entity + moderation workflow, variant builder                                        | **Product** — `modules/catalog/products/*` (vendor + admin controllers, mapper), `vendor/features/products/*`, `admin/features/products/*` |
-| Quantities with a movement log                                                                    | **Inventory** — `modules/inventory/*` (`applyChange`), `vendor/features/inventory/*`                                                       |
-| Guest + signed-in state via cookie, merge at sign-in                                              | **Cart** — `modules/cart/*` (`CART_COOKIE`), `web/hooks/use-cart.ts`, `web/components/cart/cart-view.tsx`                                  |
-| Big transactional write, idempotency key, settings-driven totals                                  | **Checkout** — `modules/checkout/checkout.service.ts`                                                                                      |
-| State machine with per-role actions, history, emails, stock side effects                          | **Orders** — `modules/orders/*` (`order-rules.ts`, `order-stock.ts`, three controllers), `vendor/features/orders/order-detail.tsx`         |
-| Customer self-service CRUD in a modal                                                             | **Addresses** — `users.service.ts` (address methods), `web/components/account/addresses-view.tsx`                                          |
-| Public SEO page + client island                                                                   | **Product page** — `web/app/products/[slug]/page.tsx` + `components/catalog/product-purchase.tsx`                                          |
-| Auth / cookies                                                                                    | `modules/auth/*`, `apps/admin/src/app/login/*`, `web/components/auth/*`                                                                    |
-| External gateway adapter, signed idempotent webhooks, timed expiry                                | **Payments** — `modules/payments/*` (`providers/`, `payments.service.ts`)                                                                  |
-| Pure calculator + settings fallback, nested child rows                                            | **Shipping** — `modules/shipping/*` (`shipping-rules.ts`, `shipping-zones.service.ts`), `admin/features/shipping/*`                        |
-| One service, customer + seller + admin controllers with a scope; staff screens shared by two apps | **Returns** — `modules/returns/*` (`return-rules.ts`, `vendor-` / `admin-returns.controller.ts`), `vendor                                  | admin/features/returns/*` |
-| Sending email                                                                                     | `NotificationsService.sendEmail({ template: EmailTemplateKey.X, to, data })` — never send directly                                         |
+| Pattern                                                               | Copy from                                                                                                           |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Tree / parent-child, cycle prevention                                 | **Category** — `modules/catalog/categories/*`, `admin/features/categories/*`                                        |
+| Parent with editable child list (`useFieldArray`, transactional sync) | **Attribute** — `modules/catalog/attributes/*`, `features/attributes/attribute-form.tsx`                            |
+| File upload                                                           | **Media** — `modules/media/*`, `ImageUploadField`                                                                   |
+| Shop entity with publish workflow, variant builder                    | **Product** — `modules/catalog/products/*` (shop + admin controllers, mapper), `admin/features/products/*`          |
+| Quantities with a movement log                                        | **Inventory** — `modules/inventory/*` (`applyChange`), `admin/features/inventory/*`                                 |
+| Guest + signed-in state via cookie, merge at sign-in                  | **Cart** — `modules/cart/*` (`CART_COOKIE`), `web/hooks/use-cart.ts`, `web/components/cart/cart-view.tsx`           |
+| Big transactional write, idempotency key, settings-driven totals      | **Checkout** — `modules/checkout/checkout.service.ts`                                                               |
+| State machine with history, emails, stock side effects                | **Orders** — `modules/orders/*` (`order-rules.ts`, `order-stock.ts`), `admin/features/orders/order-detail.tsx`      |
+| Customer self-service CRUD in a modal                                 | **Addresses** — `users.service.ts` (address methods), `web/components/account/addresses-view.tsx`                   |
+| Public SEO page + client island                                       | **Product page** — `web/app/products/[slug]/page.tsx` + `components/catalog/product-purchase.tsx`                   |
+| Public form → admin inbox with status + notes                         | **Inquiries** — `modules/support/inquiries/*`, `web/app/contact`, `admin/features/inquiries/*`                      |
+| Auth / cookies                                                        | `modules/auth/*`, `apps/admin/src/app/login/*`, `web/components/auth/*`                                             |
+| External gateway adapter, signed idempotent webhooks, timed expiry    | **Payments** — `modules/payments/*` (`providers/`, `payments.service.ts`)                                           |
+| Pure calculator + settings fallback, nested child rows                | **Shipping** — `modules/shipping/*` (`shipping-rules.ts`, `shipping-zones.service.ts`), `admin/features/shipping/*` |
+| Customer + admin controllers on one service                           | **Returns** — `modules/returns/*` (`return-rules.ts`, `returns.controller.ts`, `admin-returns.controller.ts`)       |
+| Sending email                                                         | `NotificationsService.sendEmail({ template: EmailTemplateKey.X, to, data })` — never send directly                  |
 
 ---
 
@@ -223,14 +226,14 @@ For entity **X** (e.g. `Brand`), module **M** (e.g. `catalog`):
 
 **Frontend**
 
-- Server page files stay thin; client logic lives in `features/*` (admin/vendor) or `components/*` (web) with `'use client'`.
+- Server page files stay thin; client logic lives in `features/*` (admin) or `components/*` (web) with `'use client'`.
 - `useSearchParams()` must be inside `<Suspense>`.
 - In `useFieldArray`, do not name a field `id` (RHF reserves it) — use `valueId` etc.
 - Number inputs: `register('x', { valueAsNumber: true })` + `z.number()`.
 - Radio groups: `{...register('field')}` on each `<input type="radio" value=…>`.
 - Status badges: `<Badge tone={ORDER_STATUS_TONES[s]}>{ORDER_STATUS_LABELS[s]}</Badge>` — labels/tones come from `packages/types`.
 - After a mutation that returns the updated record: `setQueryData` for the detail, invalidate the list with `refetchType: 'none'`.
-- Order URLs for customers use the **order number** (`/account/orders/ORD-…`); admin/seller URLs use the id.
+- Order URLs for customers use the **order number** (`/account/orders/ORD-…`); admin URLs use the id.
 - New workspace package used by Next → add it to `transpilePackages` in each `next.config.ts`.
 
 **Environment (Windows + Git Bash)**
@@ -247,7 +250,7 @@ For entity **X** (e.g. `Brand`), module **M** (e.g. `catalog`):
 
 ```bash
 pnpm infra:up                 # Postgres, Redis, Mailpit, MinIO
-pnpm dev                      # all apps (or dev:admin / dev:api / dev:web / dev:vendor)
+pnpm dev                      # all apps (or dev:admin / dev:api / dev:web)
 pnpm db:migrate               # apply pending migrations
 pnpm db:migrate --name <x>    # after schema changes
 pnpm db:seed                  # idempotent sample data
@@ -268,7 +271,7 @@ customers register at http://localhost:3000/register.
 - [ ] Controller registered; visible in Swagger
 - [ ] Unit tests for the business rules pass
 - [ ] `xsApi` + `queryKeys.xs` in `packages/api-client`
-- [ ] Every screen the roadmap row lists (admin / seller / storefront) works in the browser
+- [ ] Every screen the roadmap row lists (admin / storefront) works in the browser
 - [ ] Emails (if any) arrive in Mailpit
 - [ ] Seed data added; `pnpm db:seed` runs twice without errors
 - [ ] `pnpm typecheck` passes
@@ -286,11 +289,11 @@ for every new step.
 
 ### 8.1 One step = three scripts, run in this order
 
-| Script            | Writes                                                                                                    | Typical content                                                                                                                                                                                             |
-| ----------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stepN_shared.py` | `packages/types`, `packages/api-client`, `packages/database/prisma/seed.ts` (+ `schema.prisma` if needed) | DTO interfaces, labels/tones/state tables, zod form schemas + `emptyXForm`/`xToForm`/`xFormToInput`, index exports, `xsApi` endpoints, `queryKeys.xs`, seed functions/settings                              |
-| `stepN_api.py`    | `apps/api/src/...`                                                                                        | `common/utils/*` helpers, DTOs (class-validator mirroring zod), `x-rules.ts` (pure logic), `x.mapper.ts` (`include` + `toXDto`), service, admin/vendor/public controllers, module registration, `*.spec.ts` |
-| `stepN_ui.py`     | `packages/ui`, `apps/web`, `apps/vendor`, `apps/admin`, `docs/roadmap.md`                                 | new shared components + `index.ts` export, `features/<x>/*` (admin/vendor), `components/<domain>/*` (web), thin `page.tsx` files, nav/header/cart patches, roadmap row → Done and next row → Next           |
+| Script            | Writes                                                                                                    | Typical content                                                                                                                                                                                           |
+| ----------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stepN_shared.py` | `packages/types`, `packages/api-client`, `packages/database/prisma/seed.ts` (+ `schema.prisma` if needed) | DTO interfaces, labels/tones/state tables, zod form schemas + `emptyXForm`/`xToForm`/`xFormToInput`, index exports, `xsApi` endpoints, `queryKeys.xs`, seed functions/settings                            |
+| `stepN_api.py`    | `apps/api/src/...`                                                                                        | `common/utils/*` helpers, DTOs (class-validator mirroring zod), `x-rules.ts` (pure logic), `x.mapper.ts` (`include` + `toXDto`), service, admin/shop/public controllers, module registration, `*.spec.ts` |
+| `stepN_ui.py`     | `packages/ui`, `apps/web`, `apps/admin`, `docs/roadmap.md`                                                | new shared components + `index.ts` export, `features/<x>/*` (admin), `components/<domain>/*` (web), thin `page.tsx` files, nav/header/cart patches, roadmap row → Done and next row → Next                |
 
 Shared runs first because API and UI import from it. Large steps can split further (`step6a_*`, `step6b_*`).
 

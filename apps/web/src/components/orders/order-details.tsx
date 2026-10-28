@@ -150,22 +150,10 @@ export function OrderDetails({ order, actions }: { order: OrderDto; actions?: Re
                 value={`−${money(order.discountTotal)}`}
               />
             ) : null}
-            {order.loyaltyDiscount > 0 ? (
-              <Line label="Points" value={`−${money(order.loyaltyDiscount)}`} />
-            ) : null}
-            {order.giftCardTotal > 0 ? (
-              <Line label="Gift card" value={`−${money(order.giftCardTotal)}`} />
-            ) : null}
-            {order.taxAdded > 0 ? <Line label="Tax" value={money(order.taxAdded)} /> : null}
             <div className="flex justify-between border-t border-gray-200 pt-2 text-base font-semibold">
               <span>Total</span>
               <span>{money(order.grandTotal)}</span>
             </div>
-            {order.taxTotal > order.taxAdded ? (
-              <p className="text-right text-xs text-gray-500">
-                Includes {money(order.taxTotal - order.taxAdded)} tax
-              </p>
-            ) : null}
           </Card>
 
           {order.customerNote ? (

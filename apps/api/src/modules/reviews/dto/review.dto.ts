@@ -18,7 +18,6 @@ import {
   type ModerationStatus,
   type QuestionInput,
   type ReviewInput,
-  type VendorReplyInput,
 } from '@ecommerce/types';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto';
 
@@ -58,14 +57,6 @@ export class ReviewDtoIn implements ReviewInput {
   @IsString()
   @MaxLength(2000)
   body?: string | null;
-}
-
-export class VendorReplyDto implements VendorReplyInput {
-  @ApiProperty({ description: 'Empty removes the reply' })
-  @Transform(trim)
-  @IsString()
-  @MaxLength(1000)
-  reply: string;
 }
 
 export class ModerateDto implements ModerateInput {

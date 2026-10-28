@@ -33,7 +33,7 @@ export class MediaController {
 
   /** Staff and vendors upload images (category/brand images, product photos, banners…). */
   @Post()
-  @Roles(Role.ADMIN, Role.CONTENT_MANAGER, Role.MARKETING_MANAGER, Role.VENDOR, Role.VENDOR_STAFF)
+  @Roles(Role.ADMIN, Role.VENDOR)
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -56,7 +56,7 @@ export class MediaController {
   }
 
   @Get()
-  @Roles(Role.ADMIN, Role.CONTENT_MANAGER)
+  @Roles(Role.ADMIN)
   list(@Query() query: MediaQueryDto): Promise<Paginated<MediaDto>> {
     return this.mediaService.list(query.page, query.limit, query.folder);
   }

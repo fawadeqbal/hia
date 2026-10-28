@@ -1,25 +1,20 @@
 import {
   allocate,
   computeDiscounts,
+  inScope,
   type EngineCoupon,
   type EngineLine,
-  type EnginePromotion,
 } from './discount-engine';
 
-const money = (c: number) => `$${(c / 100).toFixed(2)}`;
-const line = (
-  key: string,
-  vendorId: string,
-  unitCents: number,
-  quantity = 1,
-  categoryId = 'cat',
-): EngineLine => ({
+const money = (c: number) => `Rs ${(c / 100).toFixed(0)}`;
+const line = (key: string, unitCents: number, quantity = 1, over: Partial<EngineLine> = {}) => ({
   key,
-  vendorId,
+  vendorId: 'shop',
   productId: `p-${key}`,
-  categoryId,
+  categoryId: 'chair-parts',
   unitCents,
   quantity,
+  ...over,
 });
 const coupon = (over: Partial<EngineCoupon> = {}): EngineCoupon => ({
   code: 'SAVE10',
@@ -27,166 +22,98 @@ const coupon = (over: Partial<EngineCoupon> = {}): EngineCoupon => ({
   value: 10,
   minOrderTotal: null,
   maxDiscount: null,
-  vendorId: null,
   categoryIds: [],
   productIds: [],
-  stackable: true,
   ...over,
 });
-const flash = (percent: number, categoryIds: string[] = []): EnginePromotion => ({
-  id: 'f',
-  name: 'Flash sale',
-  type: 'FLASH_SALE',
-  rules: { percent, productIds: [], categoryIds, vendorIds: [] },
-});
-const groups = [
-  { vendorId: 'v1', shippingCents: 500 },
-  { vendorId: 'v2', shippingCents: 300 },
-];
+const groups = [{ vendorId: 'shop', shippingCents: 50_000 }];
 
-describe('discount engine', () => {
-  it('allocates in proportion, remainder to the largest', () => {
-    expect([
-      ...allocate(
-        100,
-        new Map([
-          ['a', 1],
-          ['b', 2],
-        ]),
-      ),
-    ]).toEqual([
-      ['a', 33],
-      ['b', 67],
-    ]);
+describe('discount engine (coupons)', () => {
+  it('no coupon = no discount', () => {
+    const r = computeDiscounts({ lines: [line('a', 100_000)], groups, coupon: null, money });
+    expect(r).toEqual({ byVendor: new Map(), totalCents: 0, coupon: null });
   });
 
-  it('applies a flash sale only to its category', () => {
-    const r = computeDiscounts({
-      lines: [line('a', 'v1', 10000, 1, 'phones'), line('b', 'v2', 5000, 1, 'books')],
-      groups,
-      promotions: [flash(20, ['phones'])],
-      coupon: null,
-      money,
-    });
-    expect(r.totalCents).toBe(2000);
-    expect(r.byVendor.get('v1')?.itemsCents).toBe(2000);
-    expect(r.byVendor.get('v2')).toBeUndefined();
-  });
-
-  it('buy 2 get 1 free', () => {
-    const r = computeDiscounts({
-      lines: [line('a', 'v1', 1000, 7)],
-      groups,
-      promotions: [
-        {
-          id: 'b',
-          name: 'B2G1',
-          type: 'BUY_X_GET_Y',
-          rules: { buyQuantity: 2, getQuantity: 1, productIds: [], categoryIds: [], vendorIds: [] },
-        },
-      ],
-      coupon: null,
-      money,
-    });
-    expect(r.totalCents).toBe(2000); // 7 → 2 free
-  });
-
-  it('picks the highest reached tier', () => {
-    const tiered: EnginePromotion = {
-      id: 't',
-      name: 'Spend more',
-      type: 'TIERED',
-      rules: {
-        tiers: [
-          { minSubtotal: 50, percent: 5 },
-          { minSubtotal: 100, percent: 10 },
-        ],
-      },
-    };
-    const r = computeDiscounts({
-      lines: [line('a', 'v1', 12000)],
-      groups,
-      promotions: [tiered],
-      coupon: null,
-      money,
-    });
-    expect(r.totalCents).toBe(1200);
-  });
-
-  it('stacks a stackable coupon on what is left after promotions', () => {
-    const r = computeDiscounts({
-      lines: [line('a', 'v1', 10000)],
-      groups,
-      promotions: [flash(10)],
-      coupon: coupon(),
-      money,
-    });
-    expect(r.totalCents).toBe(1000 + 900);
+  it('percentage coupon on the eligible items', () => {
+    const r = computeDiscounts({ lines: [line('a', 100_000, 2)], groups, coupon: coupon(), money });
+    expect(r.totalCents).toBe(20_000);
+    expect(r.byVendor.get('shop')).toEqual({ itemsCents: 20_000, shippingCents: 0 });
     expect(r.coupon).toEqual({ applied: true, message: null });
   });
 
-  it('non-stackable coupon: the better deal wins', () => {
-    const better = computeDiscounts({
-      lines: [line('a', 'v1', 10000)],
+  it('fixed amount never exceeds the eligible value, and respects the maximum', () => {
+    const fixed = computeDiscounts({
+      lines: [line('a', 30_000)],
       groups,
-      promotions: [flash(5)],
-      coupon: coupon({ stackable: false, value: 20 }),
+      coupon: coupon({ discountType: 'FIXED_AMOUNT', value: 500 }),
       money,
     });
-    expect(better.totalCents).toBe(2000);
-    expect(better.lines.map((l) => l.source)).toEqual(['coupon']);
-    const worse = computeDiscounts({
-      lines: [line('a', 'v1', 10000)],
-      groups,
-      promotions: [flash(30)],
-      coupon: coupon({ stackable: false, value: 20 }),
-      money,
-    });
-    expect(worse.totalCents).toBe(3000);
-    expect(worse.coupon?.applied).toBe(false);
-  });
-
-  it('enforces minimum order, caps and seller scope', () => {
-    const min = computeDiscounts({
-      lines: [line('a', 'v1', 4000)],
-      groups,
-      promotions: [],
-      coupon: coupon({ minOrderTotal: 50 }),
-      money,
-    });
-    expect(min.coupon).toEqual({ applied: false, message: 'Add $10.00 more to use this coupon' });
+    expect(fixed.totalCents).toBe(30_000);
     const capped = computeDiscounts({
-      lines: [line('a', 'v1', 100000)],
+      lines: [line('a', 1_000_000)],
       groups,
-      promotions: [],
-      coupon: coupon({ maxDiscount: 25 }),
+      coupon: coupon({ value: 50, maxDiscount: 1000 }),
       money,
     });
-    expect(capped.totalCents).toBe(2500);
-    const seller = computeDiscounts({
-      lines: [line('a', 'v1', 10000), line('b', 'v2', 10000)],
-      groups,
-      promotions: [],
-      coupon: coupon({ vendorId: 'v2', discountType: 'FIXED_AMOUNT', value: 15 }),
-      money,
-    });
-    expect(seller.byVendor.get('v2')).toEqual({
-      itemsCents: 1500,
-      shippingCents: 0,
-      vendorFundedCents: 1500,
-    });
-    expect(seller.byVendor.get('v1')).toBeUndefined();
+    expect(capped.totalCents).toBe(100_000);
   });
 
-  it('free shipping covers the eligible sellers only', () => {
+  it('free delivery coupon removes the delivery charge', () => {
     const r = computeDiscounts({
-      lines: [line('a', 'v1', 1000), line('b', 'v2', 1000, 1, 'books')],
+      lines: [line('a', 100_000)],
       groups,
-      promotions: [],
-      coupon: coupon({ discountType: 'FREE_SHIPPING', value: 0, categoryIds: ['books'] }),
+      coupon: coupon({ discountType: 'FREE_SHIPPING', value: 0 }),
       money,
     });
-    expect(r.totalCents).toBe(300);
-    expect(r.byVendor.get('v2')?.shippingCents).toBe(300);
+    expect(r.byVendor.get('shop')).toEqual({ itemsCents: 0, shippingCents: 50_000 });
+    expect(r.totalCents).toBe(50_000);
+  });
+
+  it('explains a minimum order and out-of-scope items', () => {
+    const min = computeDiscounts({
+      lines: [line('a', 100_000)],
+      groups,
+      coupon: coupon({ minOrderTotal: 2500 }),
+      money,
+    });
+    expect(min.coupon).toEqual({ applied: false, message: 'Add Rs 1500 more to use this coupon' });
+    const scope = computeDiscounts({
+      lines: [line('a', 100_000)],
+      groups,
+      coupon: coupon({ categoryIds: ['office-chairs'] }),
+      money,
+    });
+    expect(scope.coupon?.applied).toBe(false);
+    expect(scope.totalCents).toBe(0);
+  });
+
+  it('passes a coupon error through', () => {
+    const r = computeDiscounts({
+      lines: [line('a', 100_000)],
+      groups,
+      coupon: null,
+      couponError: { code: 'OLD', message: 'This coupon has expired' },
+      money,
+    });
+    expect(r.coupon).toEqual({ applied: false, message: 'This coupon has expired' });
+  });
+
+  it('scope: empty lists match everything; product and category lists must both match', () => {
+    expect(inScope({}, { productId: 'p1', categoryId: null })).toBe(true);
+    expect(inScope({ productIds: ['p1'] }, { productId: 'p1', categoryId: 'c' })).toBe(true);
+    expect(inScope({ categoryIds: ['c2'] }, { productId: 'p1', categoryId: 'c' })).toBe(false);
+  });
+
+  it('allocate splits by weight and gives the remainder to the largest', () => {
+    const out = allocate(
+      100,
+      new Map([
+        ['a', 1],
+        ['b', 2],
+      ]),
+    );
+    expect(out.get('a')).toBe(33);
+    expect(out.get('b')).toBe(67);
+    expect(allocate(0, new Map([['a', 1]])).size).toBe(0);
   });
 });

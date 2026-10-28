@@ -4,10 +4,8 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
-import type { ConfigService } from '@nestjs/config';
 import type { PrismaService } from '../../../prisma/prisma.service';
 import type { AuditService } from '../../audit/audit.service';
-import type { NotificationsService } from '../../notifications/notifications.service';
 import { ProductsService } from './products.service';
 
 const now = new Date('2026-01-01T00:00:00Z');
@@ -105,15 +103,11 @@ function setup() {
     $transaction: jest.fn((fn: (client: typeof tx) => Promise<unknown>) => fn(tx)),
   };
   const audit = { log: jest.fn() };
-  const notifications = { sendEmail: jest.fn() };
-  const config = { get: jest.fn((_key: string, fallback?: unknown) => fallback) };
   const service = new ProductsService(
     prisma as unknown as PrismaService,
     audit as unknown as AuditService,
-    notifications as unknown as NotificationsService,
-    config as unknown as ConfigService,
   );
-  return { prisma, tx, notifications, service };
+  return { prisma, tx, service };
 }
 
 const input = { name: 'Phone', categoryId: 'c1', basePrice: 100, sku: 'PH-1' };
@@ -149,15 +143,24 @@ describe('ProductsService — products', () => {
     );
   });
 
-  it('submits a complete draft for review when approval is required', async () => {
+  it('publishes a complete draft straight away', async () => {
     const { prisma, service } = setup();
     prisma.product.findFirst.mockResolvedValue(product());
     const result = await service.submit('u1', 'p1');
+    const data = prisma.product.update.mock.calls[0][0].data;
+    expect(data).toMatchObject({ status: 'PUBLISHED' });
+    expect(data.publishedAt).toBeInstanceOf(Date);
+    expect(result.status).toBe('PUBLISHED');
+  });
+
+  it('archiving a product takes it off the home page', async () => {
+    const { prisma, service } = setup();
+    prisma.product.findFirst.mockResolvedValue(product({ status: 'PUBLISHED', isFeatured: true }));
+    await service.archive('u1', 'p1');
     expect(prisma.product.update.mock.calls[0][0].data).toMatchObject({
-      status: 'PENDING_REVIEW',
-      rejectionReason: null,
+      status: 'ARCHIVED',
+      isFeatured: false,
     });
-    expect(result.status).toBe('PENDING_REVIEW');
   });
 
   it('refuses to submit a product without images', async () => {
@@ -254,44 +257,10 @@ describe('ProductsService — variants', () => {
   });
 });
 
-describe('ProductsService — moderation', () => {
-  it('approves a product in review and emails the vendor', async () => {
-    const { prisma, notifications, service } = setup();
-    prisma.product.findFirst.mockResolvedValue(product({ status: 'PENDING_REVIEW' }));
-
-    const result = await service.approve('p1', 'admin');
-
-    const data = prisma.product.update.mock.calls[0][0].data;
-    expect(data).toMatchObject({ status: 'PUBLISHED', rejectionReason: null });
-    expect(data.publishedAt).toBeInstanceOf(Date);
-    expect(result.status).toBe('PUBLISHED');
-    expect(notifications.sendEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ template: 'vendor.product-approved' }),
-    );
-  });
-
-  it('rejects with a reason and unfeatures the product', async () => {
-    const { prisma, service } = setup();
-    prisma.product.findFirst.mockResolvedValue(product({ status: 'PUBLISHED', isFeatured: true }));
-
-    await service.reject('p1', 'Images show a different product', 'admin');
-
-    expect(prisma.product.update.mock.calls[0][0].data).toMatchObject({
-      status: 'REJECTED',
-      rejectionReason: 'Images show a different product',
-      isFeatured: false,
-    });
-  });
-
-  it('cannot approve a draft', async () => {
-    const { prisma, service } = setup();
-    prisma.product.findFirst.mockResolvedValue(product({ status: 'DRAFT' }));
-    await expect(service.approve('p1')).rejects.toBeInstanceOf(BadRequestException);
-  });
-
+describe('ProductsService — home page', () => {
   it('only published products can be featured', async () => {
     const { prisma, service } = setup();
-    prisma.product.findFirst.mockResolvedValue(product({ status: 'PENDING_REVIEW' }));
+    prisma.product.findFirst.mockResolvedValue(product({ status: 'DRAFT' }));
     await expect(service.setFeatured('p1', true)).rejects.toBeInstanceOf(BadRequestException);
   });
 });

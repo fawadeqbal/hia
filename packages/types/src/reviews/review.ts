@@ -26,7 +26,6 @@ export interface ReviewDto {
   author: string;
   /** Bought and received the product (always true today: only buyers can review). */
   verified: boolean;
-  vendorReply: string | null;
   status: ModerationStatus;
   createdAt: string;
   updatedAt: string;
@@ -60,11 +59,6 @@ export interface ReviewInput {
   body?: string | null;
 }
 
-export interface VendorReplyInput {
-  /** Empty string removes the reply. */
-  reply: string;
-}
-
 export interface ModerateInput {
   status: Exclude<ModerationStatus, 'PENDING'>;
 }
@@ -72,8 +66,6 @@ export interface ModerateInput {
 export interface AnswerDto {
   id: string;
   body: string;
-  isVendor: boolean;
-  /** Store name for seller answers. */
   author: string;
   createdAt: string;
 }

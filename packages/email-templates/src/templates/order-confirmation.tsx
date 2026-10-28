@@ -14,7 +14,6 @@ export interface OrderConfirmationEmailProps {
   items?: OrderLine[];
   subtotal?: string;
   shipping?: string;
-  tax?: string;
   discount?: string;
   grandTotal?: string;
   paymentMethod?: string;
@@ -24,12 +23,11 @@ export interface OrderConfirmationEmailProps {
 export default function OrderConfirmationEmail({
   firstName = 'there',
   orderNumber = 'ORD-0001',
-  items = [{ name: 'Sample product', quantity: 1, total: '$0.00' }],
-  subtotal = '$0.00',
-  shipping = '$0.00',
-  tax = '$0.00',
+  items = [{ name: 'Sample product', quantity: 1, total: 'Rs 0' }],
+  subtotal = 'Rs 0',
+  shipping = 'Rs 0',
   discount,
-  grandTotal = '$0.00',
+  grandTotal = 'Rs 0',
   paymentMethod = 'Cash on Delivery',
   orderUrl = '#',
 }: OrderConfirmationEmailProps) {
@@ -37,7 +35,6 @@ export default function OrderConfirmationEmail({
     ['Subtotal', subtotal],
     ['Discount', discount],
     ['Shipping', shipping],
-    ['Tax', tax],
   ];
   return (
     <Layout preview={`Order ${orderNumber} confirmed`}>

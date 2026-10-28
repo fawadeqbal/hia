@@ -32,7 +32,6 @@ export interface PageListItem {
   id: string;
   title: string;
   slug: string;
-  locale: string;
   status: PublishState;
   publishedAt: string | null;
   updatedAt: string;
@@ -48,7 +47,6 @@ export interface PageInput {
   title: string;
   /** Generated from the title when omitted. */
   slug?: string;
-  locale?: string;
   content: PageContent;
   status: PublishState;
   seoTitle?: string | null;

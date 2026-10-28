@@ -104,7 +104,13 @@ describe('InquiriesService', () => {
     const { prisma, notifications, service } = setup();
     prisma.ticket.findUnique.mockResolvedValueOnce(null);
     await service.create(
-      { topic: 'REPAIR', name: 'Bilal', phone: '03001234567', email: '', message: 'Broken armrest on my chair.' },
+      {
+        topic: 'REPAIR',
+        name: 'Bilal',
+        phone: '03001234567',
+        email: '',
+        message: 'Broken armrest on my chair.',
+      },
       null,
     );
     expect(notifications.sendEmail).toHaveBeenCalledTimes(1);
@@ -117,7 +123,12 @@ describe('InquiriesService', () => {
     notifications.sendEmail.mockRejectedValue(new Error('smtp down'));
     await expect(
       service.create(
-        { topic: 'GENERAL', name: 'Sara', phone: '03001234567', message: 'Do you deliver to Lahore?' },
+        {
+          topic: 'GENERAL',
+          name: 'Sara',
+          phone: '03001234567',
+          message: 'Do you deliver to Lahore?',
+        },
         null,
       ),
     ).resolves.toEqual({ number: 'INQ-261028-AB12' });
@@ -157,7 +168,10 @@ describe('InquiriesService', () => {
     expect(tx.ticketMessage.create).toHaveBeenCalledWith({
       data: { ticketId: 't1', body: 'Quoted Rs 2,200 each.', authorId: 'admin1', isInternal: true },
     });
-    expect(tx.ticket.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { status: 'PENDING' } });
+    expect(tx.ticket.update).toHaveBeenCalledWith({
+      where: { id: 't1' },
+      data: { status: 'PENDING' },
+    });
   });
 
   it('404 for an unknown inquiry', async () => {

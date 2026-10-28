@@ -9,7 +9,7 @@ import { ReviewsService } from './reviews.service';
 
 @ApiTags('Admin · Reviews & Q&A')
 @ApiBearerAuth()
-@Roles(Role.ADMIN, Role.SUPPORT_AGENT)
+@Roles(Role.ADMIN)
 @Controller('admin')
 export class AdminReviewsController {
   constructor(

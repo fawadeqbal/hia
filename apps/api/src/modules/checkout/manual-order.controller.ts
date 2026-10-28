@@ -8,7 +8,7 @@ import { ManualOrderService } from './manual-order.service';
 
 @ApiTags('Admin · Manual orders')
 @ApiBearerAuth()
-@Roles(Role.ADMIN, Role.SUPPORT_AGENT)
+@Roles(Role.ADMIN)
 @Controller('admin/manual-orders')
 export class ManualOrderController {
   constructor(private readonly manual: ManualOrderService) {}

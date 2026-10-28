@@ -1,14 +1,7 @@
 import { Input, type InputProps } from '@ecommerce/ui';
 
 export type AddressFieldName =
-  | 'fullName'
-  | 'phone'
-  | 'line1'
-  | 'line2'
-  | 'city'
-  | 'state'
-  | 'postalCode'
-  | 'countryCode';
+  'fullName' | 'phone' | 'line1' | 'line2' | 'city' | 'state' | 'postalCode' | 'countryCode';
 
 /**
  * The address fields grid shared by checkout and the address book.

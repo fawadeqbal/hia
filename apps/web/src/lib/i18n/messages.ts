@@ -18,8 +18,6 @@ export const en = {
   'locale.currency': 'Currency',
   'locale.language': 'Language',
   'checkout.chargedIn': 'Prices shown in {display} are approximate. You pay in {base}.',
-  'checkout.tax': 'Tax',
-  'checkout.includesTax': 'Includes {amount} tax',
 } as const;
 
 export type MessageKey = keyof typeof en;

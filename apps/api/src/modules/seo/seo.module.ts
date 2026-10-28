@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AdminSeoController, SeoController } from './seo.controller';
+import { SeoController } from './seo.controller';
 import { SeoService } from './seo.service';
 
-/** Redirects and sitemap data. */
+/** Sitemap data for the storefront. */
 @Module({
-  controllers: [SeoController, AdminSeoController],
+  controllers: [SeoController],
   providers: [SeoService],
-  exports: [SeoService],
 })
 export class SeoModule {}

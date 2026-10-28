@@ -1,10 +1,4 @@
-import type {
-  AdminAttention,
-  AdminSalesReport,
-  ReportRangeQuery,
-  VendorAttention,
-  VendorSalesReport,
-} from '@ecommerce/types';
+import type { AdminAttention, AdminSalesReport, ReportRangeQuery } from '@ecommerce/types';
 import { api } from '../http';
 
 function rangeQuery(q: ReportRangeQuery): string {
@@ -19,7 +13,4 @@ export const reportsApi = {
   adminSales: (q: ReportRangeQuery = {}) =>
     api<AdminSalesReport>(`/admin/reports/sales${rangeQuery(q)}`),
   adminAttention: () => api<AdminAttention>('/admin/reports/attention'),
-  vendorSales: (q: ReportRangeQuery = {}) =>
-    api<VendorSalesReport>(`/vendor/reports/sales${rangeQuery(q)}`),
-  vendorAttention: () => api<VendorAttention>('/vendor/reports/attention'),
 };

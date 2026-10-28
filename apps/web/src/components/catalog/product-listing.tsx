@@ -11,13 +11,7 @@ import {
 } from '@ecommerce/types';
 import { Alert, EmptyState, cn } from '@ecommerce/ui';
 import { container } from '@/components/layout/container';
-import {
-  attributesApi,
-  brandsApi,
-  categoriesApi,
-  searchApi,
-  storefrontApi,
-} from '@/lib/api-client';
+import { attributesApi, categoriesApi, searchApi, storefrontApi } from '@/lib/api-client';
 import { FilterPanel } from './filter-panel';
 import { FilterSection, ShowMore } from './filter-parts';
 import { ProductCard } from './product-card';
@@ -76,21 +70,14 @@ function pageList(page: number, total: number): (number | '…')[] {
 export async function ProductListing({
   searchParams,
   fixedCategory,
-  fixedBrand,
-  fixedVendor,
   title,
   basePath = '/products',
-  header,
 }: {
   searchParams: SearchParams;
   fixedCategory?: string;
-  fixedBrand?: string;
-  fixedVendor?: string;
   title: string;
   /** Where "Reset" goes. */
   basePath?: string;
-  /** Rendered instead of the plain title (brand / store headers). */
-  header?: ReactNode;
 }) {
   const q = first(searchParams.q).trim();
   const values = all(searchParams.values);
@@ -98,8 +85,6 @@ export async function ProductListing({
   const query: StorefrontProductQuery = {
     q: q || undefined,
     category: fixedCategory ?? (first(searchParams.category) || undefined),
-    brand: fixedBrand ?? (first(searchParams.brand) || undefined),
-    vendor: fixedVendor,
     sort: (STOREFRONT_SORTS as readonly string[]).includes(sortParam)
       ? (sortParam as StorefrontSort)
       : undefined,
@@ -114,10 +99,9 @@ export async function ProductListing({
     limit: 24,
   };
 
-  const [result, tree, brands, attributes] = await Promise.allSettled([
+  const [result, tree, attributes] = await Promise.allSettled([
     storefrontApi.products(query, { cache: 'no-store' }),
     categoriesApi.tree(),
-    brandsApi.list(),
     attributesApi.filters(),
   ]);
 
@@ -157,7 +141,6 @@ export async function ProductListing({
     }
   };
   walk(topLevel, 0);
-  const brandList = brands.status === 'fulfilled' ? brands.value : [];
   const attributeList: AttributeDto[] =
     attributes.status === 'fulfilled' ? attributes.value.filter((a) => a.values.length > 0) : [];
   const total = result.status === 'fulfilled' ? result.value.meta.total : 0;
@@ -191,14 +174,6 @@ export async function ProductListing({
           },
         ]
       : []),
-    ...(!fixedBrand && query.brand
-      ? [
-          {
-            label: brandList.find((b) => b.slug === query.brand)?.name ?? query.brand,
-            href: href({ brand: undefined }),
-          },
-        ]
-      : []),
     ...values.map((id) => ({
       label: valueLabel.get(id) ?? 'Option',
       href: href({ values: values.filter((v) => v !== id).join(',') || undefined }),
@@ -226,23 +201,21 @@ export async function ProductListing({
 
   return (
     <div className={`${container} flex flex-col gap-5 pb-14 pt-[clamp(16px,2.4vw,28px)]`}>
-      {header ?? (
-        <div className="flex flex-col gap-1.5">
-          <nav aria-label="Breadcrumb" className="flex gap-2 text-[12.5px] text-gray-500">
-            <Link href="/" className="link-grow text-gray-500 hover:text-gray-900">
-              Home
-            </Link>
-            <span>/</span>
-            <span className="text-gray-900">{heading}</span>
-          </nav>
-          <div className="flex flex-wrap items-end justify-between gap-2.5 border-b border-gray-200 pb-5">
-            <h1 className="type-display text-[clamp(40px,5.4vw,72px)]">{heading}</h1>
-            <span className="pb-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-gray-500">
-              {total.toLocaleString()} {total === 1 ? 'style' : 'styles'}
-            </span>
-          </div>
+      <div className="flex flex-col gap-1.5">
+        <nav aria-label="Breadcrumb" className="flex gap-2 text-[12.5px] text-gray-500">
+          <Link href="/" className="link-grow text-gray-500 hover:text-gray-900">
+            Home
+          </Link>
+          <span>/</span>
+          <span className="text-gray-900">{heading}</span>
+        </nav>
+        <div className="flex flex-wrap items-end justify-between gap-2.5 border-b border-gray-200 pb-5">
+          <h1 className="type-display text-[clamp(40px,5.4vw,72px)]">{heading}</h1>
+          <span className="pb-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-gray-500">
+            {total.toLocaleString()} {total === 1 ? 'item' : 'items'}
+          </span>
         </div>
-      )}
+      </div>
 
       {!fixedCategory && topLevel.length > 0 ? (
         <div className="scrollbar-none flex gap-2 overflow-x-auto">
@@ -341,32 +314,6 @@ export async function ProductListing({
                 />
               </div>
             </FilterSection>
-
-            {!fixedBrand && brandList.length > 0 ? (
-              <FilterSection title="Brand" active={query.brand ? 1 : 0}>
-                <ShowMore
-                  keepOpen={
-                    Boolean(query.brand) &&
-                    !brandList.slice(0, 6).some((b) => b.slug === query.brand)
-                  }
-                  items={[{ id: '', slug: '', name: 'All brands' }, ...brandList].map((b) => (
-                    <label key={b.id || 'all'} className={checkRow}>
-                      <input
-                        type="radio"
-                        name="brand"
-                        value={b.slug}
-                        defaultChecked={(query.brand ?? '') === b.slug}
-                        className="peer sr-only"
-                      />
-                      <span aria-hidden className={box}>
-                        ✓
-                      </span>
-                      <span className="truncate">{b.name}</span>
-                    </label>
-                  ))}
-                />
-              </FilterSection>
-            ) : null}
 
             {attributeList.map((a) => {
               const swatches = a.values.every((v) => v.swatch);

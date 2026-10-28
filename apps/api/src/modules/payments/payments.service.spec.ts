@@ -57,7 +57,6 @@ function setup(orderStatus = 'PENDING_PAYMENT') {
       byName: jest.fn(async (code: string) => (code === provider.name ? provider : null)),
       active: jest.fn(async () => ({ provider, methods: provider.methods })),
     } as never,
-    { restoreForCancellation: jest.fn() } as never,
   );
   return { prisma, tx, service };
 }

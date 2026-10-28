@@ -18,15 +18,12 @@ export class ShippingAddressDto implements ShippingAddress {
   phone: string;
   @ApiProperty() @Transform(trim) @IsString() @Length(3, 200) line1: string;
   @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsString() @MaxLength(200) line2?:
-    | string
-    | null;
+    string | null;
   @ApiProperty() @Transform(trim) @IsString() @Length(2, 80) city: string;
   @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsString() @MaxLength(80) state?:
-    | string
-    | null;
+    string | null;
   @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsString() @MaxLength(20) postalCode?:
-    | string
-    | null;
+    string | null;
   @ApiProperty({ example: 'PK' }) @Transform(upper) @IsString() @Length(2, 2) countryCode: string;
 }
 

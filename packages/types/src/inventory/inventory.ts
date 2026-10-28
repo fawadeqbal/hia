@@ -1,11 +1,5 @@
 export type StockMovementType =
-  | 'PURCHASE'
-  | 'SALE'
-  | 'RETURN'
-  | 'ADJUSTMENT'
-  | 'TRANSFER'
-  | 'RESERVATION'
-  | 'RELEASE';
+  'PURCHASE' | 'SALE' | 'RETURN' | 'ADJUSTMENT' | 'TRANSFER' | 'RESERVATION' | 'RELEASE';
 
 export const MOVEMENT_TYPE_LABELS: Record<StockMovementType, string> = {
   PURCHASE: 'Restock',

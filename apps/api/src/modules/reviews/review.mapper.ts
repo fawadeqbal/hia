@@ -18,7 +18,6 @@ export function toReviewDto(r: ReviewRow): ReviewDto {
     body: r.body,
     author: authorName(r.user.firstName, r.user.lastName),
     verified: r.orderItemId !== null,
-    vendorReply: r.vendorReply,
     status: r.status as ModerationStatus,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
@@ -28,7 +27,7 @@ export function toReviewDto(r: ReviewRow): ReviewDto {
 
 export const questionInclude = {
   user: { select: { firstName: true, lastName: true } },
-  product: { select: { id: true, name: true, slug: true, vendor: { select: { name: true } } } },
+  product: productSelect,
   answers: { orderBy: { createdAt: 'asc' } },
 } satisfies Prisma.QuestionInclude;
 export type QuestionRow = Prisma.QuestionGetPayload<{ include: typeof questionInclude }>;
@@ -43,10 +42,9 @@ export function toQuestionDto(q: QuestionRow): QuestionDto {
     answers: q.answers.map((a) => ({
       id: a.id,
       body: a.body,
-      isVendor: a.isVendor,
-      author: a.isVendor ? q.product.vendor.name : 'Store team',
+      author: 'HIA team',
       createdAt: a.createdAt.toISOString(),
     })),
-    product: { id: q.product.id, name: q.product.name, slug: q.product.slug },
+    product: q.product,
   };
 }

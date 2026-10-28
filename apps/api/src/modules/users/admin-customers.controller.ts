@@ -8,7 +8,7 @@ import { BlockCustomerDto, CustomerQueryDto } from './dto/customer.dto';
 
 @ApiTags('Admin · Customers')
 @ApiBearerAuth()
-@Roles(Role.ADMIN, Role.SUPPORT_AGENT, Role.MARKETING_MANAGER)
+@Roles(Role.ADMIN)
 @Controller('admin/customers')
 export class AdminCustomersController {
   constructor(private readonly customers: CustomersService) {}
@@ -31,7 +31,7 @@ export class AdminCustomersController {
 
   /** Blocking is limited to admins and support agents. */
   @Post(':id/block')
-  @Roles(Role.ADMIN, Role.SUPPORT_AGENT)
+  @Roles(Role.ADMIN)
   block(
     @Param('id') id: string,
     @Body() dto: BlockCustomerDto,
@@ -41,7 +41,7 @@ export class AdminCustomersController {
   }
 
   @Post(':id/unblock')
-  @Roles(Role.ADMIN, Role.SUPPORT_AGENT)
+  @Roles(Role.ADMIN)
   unblock(@Param('id') id: string, @CurrentUser('sub') actorId: string): Promise<CustomerDetail> {
     return this.customers.unblock(id, actorId);
   }

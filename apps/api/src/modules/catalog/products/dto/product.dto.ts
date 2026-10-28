@@ -21,19 +21,16 @@ import {
 import {
   MAX_PRODUCT_IMAGES,
   MAX_VARIANTS,
-  PRODUCT_REASON_MIN,
   PRODUCT_STATUSES,
   SKU_REGEX,
   SLUG_REGEX,
   type ProductFeatureInput,
   type ProductImageInput,
   type ProductInput,
-  type ProductRejectInput,
   type ProductSpec,
   type ProductStatus,
   type ProductVariantInput,
   type ProductVariantsInput,
-  TAX_CLASSES,
 } from '@ecommerce/types';
 import { PaginationQueryDto } from '../../../../common/dto/pagination.dto';
 
@@ -73,7 +70,6 @@ export class CreateProductDto implements ProductInput {
   slug?: string;
 
   @ApiProperty() @IsString() categoryId: string;
-  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsString() brandId?: string | null;
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
   @IsString()
@@ -121,10 +117,6 @@ export class CreateProductDto implements ProductInput {
   @Max(9_999_999)
   weightGrams?: number | null;
 
-  @ApiPropertyOptional({ enum: TAX_CLASSES, nullable: true, description: 'Null = standard' })
-  @IsOptional()
-  @IsIn(TAX_CLASSES)
-  taxClass?: string | null;
   @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUrl(URL_OPTIONS) videoUrl?:
     string | null;
   @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsString() @MaxLength(70) seoTitle?:
@@ -187,14 +179,6 @@ export class SaveVariantsDto implements ProductVariantsInput {
   variants: ProductVariantInputDto[];
 }
 
-export class RejectProductDto implements ProductRejectInput {
-  @ApiProperty({ minLength: PRODUCT_REASON_MIN })
-  @Transform(trim)
-  @IsString()
-  @Length(PRODUCT_REASON_MIN, 1000)
-  reason: string;
-}
-
 export class FeatureProductDto implements ProductFeatureInput {
   @ApiProperty() @IsBoolean() isFeatured: boolean;
 }
@@ -206,5 +190,4 @@ export class ManageProductQueryDto extends PaginationQueryDto {
   status?: ProductStatus;
   @ApiPropertyOptional() @IsOptional() @Transform(trim) @IsString() @MaxLength(100) search?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() categoryId?: string;
-  @ApiPropertyOptional({ description: 'Admin only' }) @IsOptional() @IsString() vendorId?: string;
 }

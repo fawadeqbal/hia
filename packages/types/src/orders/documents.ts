@@ -6,10 +6,7 @@ export interface OrderNoteDto {
   id: string;
   content: string;
   isCustomerVisible: boolean;
-  /** Null = whole order (staff note). */
-  vendorOrderId: string | null;
-  vendorName: string | null;
-  author: { name: string; kind: 'STAFF' | 'SELLER' };
+  author: { name: string };
   createdAt: string;
   canDelete: boolean;
 }
@@ -17,15 +14,11 @@ export interface OrderNoteDto {
 export interface OrderNoteInput {
   content: string;
   isCustomerVisible: boolean;
-  /** Admin only: attach to one seller's sub-order. */
-  vendorOrderId?: string | null;
 }
 
 /** What the customer sees on their order page. */
 export interface CustomerOrderNoteDto {
   id: string;
   content: string;
-  /** "Store" or the seller's name. */
-  from: string;
   createdAt: string;
 }

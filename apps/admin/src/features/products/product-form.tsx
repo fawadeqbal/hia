@@ -17,7 +17,6 @@ import {
   productToForm,
   slugify,
   type AttributeDto,
-  type BrandDto,
   type FlatCategoryOption,
   type ProductDto,
   type ProductFormValues,
@@ -43,20 +42,13 @@ import { VariantsEditor } from './variants-editor';
 interface ProductFormProps {
   product?: ProductDto;
   categories: FlatCategoryOption[];
-  brands: BrandDto[];
   attributes: AttributeDto[];
   currency: string;
 }
 
 type DangerAction = 'archive' | 'delete';
 
-export function ProductForm({
-  product,
-  categories,
-  brands,
-  attributes,
-  currency,
-}: ProductFormProps) {
+export function ProductForm({ product, categories, attributes, currency }: ProductFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [danger, setDanger] = useState<DangerAction | null>(null);
@@ -126,14 +118,17 @@ export function ProductForm({
       if (!product) return;
       const fresh = await productsApi.vendorGet(product.id);
       queryClient.setQueryData(queryKeys.products.vendorDetail(product.id), fresh);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.products.all, refetchType: 'none' });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.products.all,
+        refetchType: 'none',
+      });
     },
   });
 
   const name = watch('name');
   const slug = watch('slug');
   const problems = product ? productSubmitProblems(product) : [];
-  const canSubmit = product && (product.status === 'DRAFT' || product.status === 'REJECTED');
+  const canSubmit = product && product.status === 'DRAFT';
 
   return (
     <form
@@ -301,16 +296,6 @@ export function ProductForm({
                 <CardTitle>Status</CardTitle>
                 <ProductStatusBadge status={product.status} />
               </div>
-              {product.status === 'PENDING_REVIEW' ? (
-                <p className="text-sm text-gray-600">
-                  Waiting to be published.
-                </p>
-              ) : null}
-              {product.status === 'REJECTED' && product.rejectionReason ? (
-                <Alert tone="error" title="Changes requested">
-                  {product.rejectionReason}
-                </Alert>
-              ) : null}
               {product.status === 'PUBLISHED' ? (
                 <p className="text-sm text-gray-600">Live on the website.</p>
               ) : null}
@@ -377,7 +362,9 @@ export function ProductForm({
                 />
                 <span>
                   <span className="font-medium text-gray-900">Show on the home page</span>
-                  <span className="block text-xs text-gray-500">Listed under featured products.</span>
+                  <span className="block text-xs text-gray-500">
+                    Listed under featured products.
+                  </span>
                 </span>
               </label>
               {featured.error ? <Alert tone="error">{featured.error.message}</Alert> : null}
@@ -433,14 +420,6 @@ export function ProductForm({
               }))}
               error={errors.categoryId?.message}
             />
-            {brands.length > 0 ? (
-              <Select
-                label="Brand (optional)"
-                {...register('brandId')}
-                placeholder="No brand"
-                options={brands.map((b) => ({ value: b.id, label: b.name }))}
-              />
-            ) : null}
           </Card>
 
           <Card className="space-y-4">

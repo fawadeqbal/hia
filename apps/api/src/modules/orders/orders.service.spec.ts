@@ -4,7 +4,6 @@ import type { PrismaService } from '../../prisma/prisma.service';
 import type { AuditService } from '../audit/audit.service';
 import type { NotificationsService } from '../notifications/notifications.service';
 import type { PaymentsService } from '../payments/payments.service';
-import type { LoyaltyService } from '../loyalty/loyalty.service';
 import { OrdersService } from './orders.service';
 
 const vendorOrder = (status: string) => ({
@@ -99,7 +98,6 @@ function setup(status: string) {
     { sendEmail: jest.fn() } as unknown as NotificationsService,
     { get: jest.fn((_k: string, f?: unknown) => f) } as unknown as ConfigService,
     { refundOrder: jest.fn() } as unknown as PaymentsService,
-    { awardForOrder: jest.fn(), restoreForCancellation: jest.fn() } as unknown as LoyaltyService,
   );
   return { tx, service };
 }

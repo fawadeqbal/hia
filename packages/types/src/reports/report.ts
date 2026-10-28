@@ -31,8 +31,6 @@ export interface SalesKpis {
   itemsSold: number;
   discounts: number;
   shipping: number;
-  /** Platform commission on those orders. */
-  commission: number;
   /** Refunds paid out in the period (any order). */
   refunds: number;
   newCustomers: number;
@@ -62,14 +60,6 @@ export interface TopProductRow {
   revenue: number;
 }
 
-export interface TopVendorRow {
-  vendorId: string;
-  name: string;
-  orders: number;
-  sales: number;
-  commission: number;
-}
-
 export interface TopCategoryRow {
   categoryId: string;
   name: string;
@@ -86,50 +76,16 @@ export interface AdminSalesReport {
   byStatus: BreakdownRow[];
   byPaymentMethod: BreakdownRow[];
   topProducts: TopProductRow[];
-  topVendors: TopVendorRow[];
   topCategories: TopCategoryRow[];
 }
 
 export interface AdminAttention {
-  pendingVendors: number;
-  productsInReview: number;
   openReturns: number;
   lowStock: number;
-  ordersAwaitingSellers: number;
+  /** Orders placed (paid or cash on delivery) and not yet confirmed. */
+  ordersToConfirm: number;
   /** Website inquiries (repair, quote, questions) still marked New. */
   newInquiries: number;
-}
-
-// ---------------------------------------------------------------- vendor
-
-export interface VendorKpis {
-  /** Σ item subtotals of the seller's sub-orders (not cancelled / unpaid). */
-  sales: number;
-  orders: number;
-  averageOrderValue: number;
-  itemsSold: number;
-  commission: number;
-  netEarnings: number;
-  refunds: number;
-  cancelledOrders: number;
-  cancellationRate: number;
-}
-
-export interface VendorSalesReport {
-  range: ReportRange;
-  currency: string;
-  kpis: VendorKpis;
-  previous: VendorKpis;
-  series: SeriesPoint[];
-  byStatus: BreakdownRow[];
-  topProducts: TopProductRow[];
-}
-
-export interface VendorAttention {
-  ordersToFulfil: number;
-  lowStock: number;
-  openReturns: number;
-  rejectedProducts: number;
 }
 
 // ---------------------------------------------------------------- presets & helpers (pure, shared by API and UI)

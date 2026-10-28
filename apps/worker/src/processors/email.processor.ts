@@ -19,26 +19,8 @@ export class EmailProcessor extends WorkerHost {
   }
 
   async process(job: Job<EmailJobPayload>): Promise<void> {
-    const { template, to, data, logId, locale = 'en' } = job.data;
-
-    const override = await this.prisma.emailTemplate.findUnique({
-      where: { key_locale: { key: template, locale } },
-    });
-    if (override && !override.isActive) {
-      this.logger.warn(`Template ${template} is disabled; skipping`);
-      return;
-    }
-
-    const rendered = await renderEmail(
-      template,
-      data ?? {},
-      override
-        ? {
-            subject: override.subject,
-            ...((override.overrides ?? {}) as Record<string, string | null>),
-          }
-        : undefined,
-    );
+    const { template, to, data, logId } = job.data;
+    const rendered = await renderEmail(template, data ?? {});
 
     try {
       const result = await this.mail.send({ to, ...rendered });

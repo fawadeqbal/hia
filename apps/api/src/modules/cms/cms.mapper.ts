@@ -15,7 +15,6 @@ export function toPageListItem(p: Page): PageListItem {
     id: p.id,
     title: p.title,
     slug: p.slug,
-    locale: p.locale,
     status: p.status,
     publishedAt: p.publishedAt?.toISOString() ?? null,
     updatedAt: p.updatedAt.toISOString(),

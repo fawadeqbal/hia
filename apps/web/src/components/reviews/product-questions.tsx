@@ -62,8 +62,7 @@ export function ProductQuestions({ productId, slug }: { productId: string; slug:
                 <span className="font-medium">A: </span>
                 {a.body}
                 <p className="mt-1 text-xs text-gray-500">
-                  {a.author}
-                  {a.isVendor ? ' (shop)' : ''} · {formatDate(a.createdAt)}
+                  {a.author}· {formatDate(a.createdAt)}
                 </p>
               </div>
             ))}
